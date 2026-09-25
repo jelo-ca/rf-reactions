@@ -9,7 +9,9 @@
 ### Deviations from PLAN.md
 | Deviation | Why |
 |---|---|
-| `DEMO_SETS = ["ALL"]` (all 8 Riftcodex sets) instead of `OGN` | Human choice (H1). ~1.45k printings → bigger embeddings (~67MB at 1280-d × 9 rows) and harder accuracy; expect PCA (§6.3) in Phase 1. |
+| Pool = booster sets `OGN, SFD, UNL, VEN` + Nexus Night promos (untagged `OPP` printings) | Human (2026-09-25): app is for standard booster packs only; Nexus Night is the one promo exception. Excluded: OGS (starter), PR, JDG, tagged OPP (`(Metal)`, etc.). Nexus Night isn't labelled in either source → rule "untagged OPP" (human-approved, may include a few non-NN promos). |
+| `INCLUDE_ALL_PRINTINGS = False` | Other printings of pool names (metal, judge, starter) can't be pulled from boosters. Holding one will match its base card — accepted. |
+| Pool size ~1.3k base printings (vs ~350 for OGN) | Bigger embeddings (~1287 × 9 × 1280 × 4B ≈ 59MB) and harder accuracy; expect PCA (§6.3) in Phase 1. |
 | `pipeline/http.py` → `pipeline/httpclient.py` | `http.py` shadows stdlib `http`, breaking `requests`. |
 | Extra helpers `rawcache.py`, `cardsio.py`, `imagehashing.py` | Keep fetch scripts thin, logic testable. |
 | `PriceSource` takes cards.csv rows (dicts), not `CardRecord`s | Matching happens after image/hash columns exist. |
@@ -57,3 +59,10 @@
 - subTypeName values: `Normal`, `Foil`. 510 cards have both → 510 foil rows.
 - Auto-matched: **1838 / 1866 = 98.5%** ✅ (≥ 95%). Methods: tcgplayer_id 1651, set_and_number 187. Fields: marketPrice 1834, midPrice 4.
 - Unmatched: **28, all OPP promos** (24 `(Metal)` + OPP-181…205 odd numbers) — product exists on TCGplayer, but TCGCSV has no price rows. → H3.
+
+### Final pool (after booster-only rule, 2026-09-25) — Phase 0 accepted
+- **1287 base printings + 510 foil rows = 1797**, 947 names. OGN 516, SFD 411, UNL 403, VEN 363, OPP (Nexus Night) 104 (counts incl. foil rows).
+- Variants: normal 976, alt_art 207, promo 104, foil 510.
+- Prices: **1797 / 1797 = 100% auto** (tcgplayer_id 1610, set_and_number 187; marketPrice 1793, midPrice 4). 0 unmatched, no manual overrides needed (all 28 no-price items were excluded promos).
+- Look-alike groups: 180.
+- **Reused-image variants: 104 = every Nexus Night promo** — source serves the base card art. Until real images are supplied (H7, `data/cards/image_overrides/<printing_id>.png`), a Nexus Night promo is treated as "same picture" as its base → app shows the cheaper printing with a hint. The 19 VEN alt arts flagged earlier dropped out: their `AA` twins were tagged duplicates now excluded.

@@ -4,7 +4,7 @@
 Build local web app that identifies a held-up Riftbound card (exact printing) in <300ms p95, shows its price, and fires a value-scaled reaction — per `PLAN.md` (source of truth).
 
 ## Current Phase
-Phase 0 (in progress)
+Phase 1 (next — branch `feat/phase-1-offline-pipeline`)
 
 ## Phases
 Full specs + acceptance criteria live in `PLAN.md`. Do not start next phase until acceptance passes.
@@ -17,10 +17,11 @@ Full specs + acceptance criteria live in `PLAN.md`. Do not start next phase unti
 - [x] pHash, look-alike groups (182), reused-image variants (164) → NOTES.md
 - [x] `sources/prices_tcgcsv.py` + `fetch_prices.py` (19/20 req, 510 foil rows, 98.5% auto)
 - [x] Fixture-based tests, no network (13 pass)
-- [ ] **H3 (BLOCKING):** human fills 28 OPP promo prices in `manual_overrides.csv` → `fetch_prices.py --rematch` → 100%
-- [ ] H7 (optional): real images for owned promos in `image_overrides/`
-- [ ] Merge `feat/phase-0-fetch-cache` → main `--no-ff`, msg `phase-0: ...`
-- **Status:** in_progress — waiting on H3
+- [x] Pool narrowed (human): booster sets OGN/SFD/UNL/VEN + Nexus Night (untagged OPP); OGS/PR/JDG/Metal out
+- [x] H3: not needed — 100% auto price coverage after narrowing (1797/1797)
+- [ ] H7 (optional, carry forward): real images for Nexus Night promos (all 104 reuse base art)
+- [x] Merge `feat/phase-0-fetch-cache` → main `--no-ff`
+- **Status:** complete
 
 ### Phase 1: Offline pipeline (§4)
 - [ ] config, ingest, model, augment, export_onnx, embed, layout, prices, parity, build_data.sh
@@ -61,7 +62,7 @@ Full specs + acceptance criteria live in `PLAN.md`. Do not start next phase unti
 |----------|-----------|
 | Repo root = current dir (`rf-reaction`) | PLAN.md name `rift-pulls/` is illustrative |
 | Use `py` launcher for Python on this machine | `python` not on PATH; `py` → 3.13.7 |
-| DEMO_SETS = all 8 Riftcodex sets (~1451 printings) | User choice (H1). Deviation: PLAN default OGN. Risks: accuracy (bigger pool), embeddings.bin ≈ 1.45k×9×1280×4B ≈ 67MB > 25MB warn → PCA 1280→256 likely needed in Phase 1 |
+| ~~DEMO_SETS = all 8 sets~~ → booster sets OGN/SFD/UNL/VEN + Nexus Night (untagged OPP), OGS excluded | User: booster packs only, NN only promo exception. 1287 base printings; embeddings ≈ 59MB → PCA 1280→256 likely in Phase 1 |
 | Rename `pipeline/http.py` → `httpclient.py` | `http.py` shadows stdlib `http` → breaks `requests` when run from pipeline/ |
 | Pipeline venv at `pipeline/.venv` (py 3.13) | Isolate deps |
 | TCGCSV group match: abbreviation first, rc tcgplayer_id fallback | rc id wrong for OPP, null for VEN |

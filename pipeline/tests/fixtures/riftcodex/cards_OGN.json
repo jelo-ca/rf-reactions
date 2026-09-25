@@ -1,0 +1,228 @@
+[
+ {
+  "id": "69bc5bc6d308c64675ca86b6",
+  "name": "Blazing Scorcher",
+  "riftbound_id": "ogn-001-298",
+  "tcgplayer_id": "652771",
+  "collector_number": 1,
+  "attributes": {
+   "energy": 5,
+   "might": 5,
+   "power": null
+  },
+  "classification": {
+   "type": "Unit",
+   "supertype": null,
+   "rarity": "Common",
+   "domain": [
+    "Fury"
+   ]
+  },
+  "text": {
+   "rich": "<p>[Accelerate] (You may pay :rb_energy_1::rb_rune_fury: as an additional cost to have me enter ready.)</p>",
+   "plain": "[Accelerate] (You may pay :rb_energy_1::rb_rune_fury: as an additional cost to have me enter ready.)",
+   "flavour": null
+  },
+  "set": {
+   "set_id": "OGN",
+   "label": "Origins"
+  },
+  "media": {
+   "image_url": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/15ed971e4029a92b362a81ccadf309fb81e40b81-744x1039.png?accountingTag=RB",
+   "artist": "Envar Studio",
+   "accessibility_text": "Riftbound Unit: Blazing Scorcher. [Accelerate] (You may pay [1][C] as an additional cost to have me enter ready.)"
+  },
+  "tags": [
+   "Dragon",
+   "Noxus"
+  ],
+  "orientation": "portrait",
+  "metadata": {
+   "clean_name": "Blazing Scorcher",
+   "updated_on": "2026-07-10T22:44:23.319395+00:00",
+   "alternate_art": false,
+   "overnumbered": false,
+   "signature": false
+  },
+  "new": false
+ },
+ {
+  "id": "69bc5bc7d308c64675ca86bd",
+  "name": "Fury Rune (Alternate Art)",
+  "riftbound_id": "ogn-007a-298",
+  "tcgplayer_id": "652778",
+  "collector_number": 7,
+  "attributes": {
+   "energy": null,
+   "might": null,
+   "power": null
+  },
+  "classification": {
+   "type": "Rune",
+   "supertype": "Basic",
+   "rarity": "Showcase",
+   "domain": [
+    "Fury"
+   ]
+  },
+  "text": {
+   "rich": "",
+   "plain": "",
+   "flavour": null
+  },
+  "set": {
+   "set_id": "OGN",
+   "label": "Origins"
+  },
+  "media": {
+   "image_url": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/09da06c69d07d4e72dde703737ef167472c715af-1488x2078.png",
+   "artist": "Fairfoul",
+   "accessibility_text": "Riftbound Rune: Fury Rune."
+  },
+  "tags": [],
+  "orientation": "portrait",
+  "metadata": {
+   "clean_name": "Fury Rune Alternate Art",
+   "updated_on": "2026-03-19T20:25:43.048640+00:00",
+   "alternate_art": true,
+   "overnumbered": false,
+   "signature": false
+  },
+  "new": null
+ },
+ {
+  "id": "69bc5bc6d308c64675ca86bc",
+  "name": "Fury Rune",
+  "riftbound_id": "ogn-007-298",
+  "tcgplayer_id": "652777",
+  "collector_number": 7,
+  "attributes": {
+   "energy": null,
+   "might": null,
+   "power": null
+  },
+  "classification": {
+   "type": "Rune",
+   "supertype": "Basic",
+   "rarity": "Common",
+   "domain": [
+    "Fury"
+   ]
+  },
+  "text": {
+   "rich": "",
+   "plain": "",
+   "flavour": null
+  },
+  "set": {
+   "set_id": "OGN",
+   "label": "Origins"
+  },
+  "media": {
+   "image_url": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/12bcd0cde5d9ff4640e82945001e9fef863530f1-744x1039.png",
+   "artist": "Greg Ghielmetti & Leah Chen",
+   "accessibility_text": "Riftbound Rune: Fury Rune."
+  },
+  "tags": [],
+  "orientation": "portrait",
+  "metadata": {
+   "clean_name": "Fury Rune",
+   "updated_on": "2026-03-26T17:26:44.901327+00:00",
+   "alternate_art": false,
+   "overnumbered": false,
+   "signature": false
+  },
+  "new": null
+ },
+ {
+  "id": "69bc5bd7d308c64675ca87f9",
+  "name": "Kai'Sa - Daughter of the Void (Signature)",
+  "riftbound_id": "ogn-299*-298",
+  "tcgplayer_id": "653094",
+  "collector_number": 299,
+  "attributes": {
+   "energy": null,
+   "might": null,
+   "power": null
+  },
+  "classification": {
+   "type": "Legend",
+   "supertype": null,
+   "rarity": "Showcase",
+   "domain": [
+    "Fury",
+    "Mind"
+   ]
+  },
+  "text": {
+   "rich": "<p>:rb_exhaust:: [Reaction] \u2014 [Add] :rb_rune_rainbow:. Use only to play spells. (Abilities that add resources can't be reacted to.)</p>",
+   "plain": ":rb_exhaust:: [Reaction] \u2014 [Add] :rb_rune_rainbow:. Use only to play spells. (Abilities that add resources can't be reacted to.)",
+   "flavour": null
+  },
+  "set": {
+   "set_id": "OGN",
+   "label": "Origins"
+  },
+  "media": {
+   "image_url": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/ae8e68af43400f61f7391c0a6ee339fd718a7540-1488x2078.png?accountingTag=RB",
+   "artist": "Jason Chan",
+   "accessibility_text": "Riftbound Legend: Daughter of the Void. [T]: [Reaction] \u2014 [Add] [C]. Use only to play spells. (Abilities that add resources can't be reacted to.)"
+  },
+  "tags": [
+   "Kai'Sa"
+  ],
+  "orientation": "portrait",
+  "metadata": {
+   "clean_name": "KaiSa Daughter of the Void Signature",
+   "updated_on": "2026-07-10T22:44:40.487422+00:00",
+   "alternate_art": false,
+   "overnumbered": false,
+   "signature": true
+  },
+  "new": false
+ },
+ {
+  "id": "69bc5bd5d308c64675ca87e0",
+  "name": "Altar to Unity",
+  "riftbound_id": "ogn-275-298",
+  "tcgplayer_id": "653069",
+  "collector_number": 275,
+  "attributes": {
+   "energy": null,
+   "might": null,
+   "power": null
+  },
+  "classification": {
+   "type": "Battlefield",
+   "supertype": null,
+   "rarity": "Uncommon",
+   "domain": [
+    "Colorless"
+   ]
+  },
+  "text": {
+   "rich": "<p>When you hold here, play a 1 :rb_might: Recruit unit token in your base.</p>",
+   "plain": "When you hold here, play a 1 :rb_might: Recruit unit token in your base.",
+   "flavour": null
+  },
+  "set": {
+   "set_id": "OGN",
+   "label": "Origins"
+  },
+  "media": {
+   "image_url": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/2392529560dc9af72596c6fc65b4c0356bbc44d1-1038x744.png?accountingTag=RB",
+   "artist": "Kudos Productions",
+   "accessibility_text": "Riftbound Battlefield: Altar to Unity. When you hold here, play a 1 [S] Recruit unit token in your base."
+  },
+  "tags": [],
+  "orientation": "landscape",
+  "metadata": {
+   "clean_name": "Altar to Unity",
+   "updated_on": "2026-07-10T22:44:39.041432+00:00",
+   "alternate_art": false,
+   "overnumbered": false,
+   "signature": false
+  },
+  "new": false
+ }
+]

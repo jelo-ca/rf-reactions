@@ -142,4 +142,5 @@ def parse_card(item: dict) -> CardRecord:
         source_id=item["id"],
         tcgplayer_id=str(item["tcgplayer_id"]) if item.get("tcgplayer_id") else None,
         orientation=item.get("orientation") or "portrait",
+        variant_tag=variant_tag(item["name"]),
     )

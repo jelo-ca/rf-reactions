@@ -20,6 +20,7 @@ class CardRecord:
     source_id: str
     tcgplayer_id: str | None
     orientation: str = "portrait"
+    variant_tag: str | None = None   # "(Metal)", "(Alternate Art)", … from the source name
 
 
 @dataclass

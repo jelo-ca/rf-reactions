@@ -1,0 +1,256 @@
+{
+ "totalItems": 365,
+ "success": true,
+ "errors": [],
+ "results": [
+  {
+   "productId": 635366,
+   "name": "Origins - Booster Pack",
+   "cleanName": "Origins Booster Pack",
+   "imageUrl": "https://tcgplayer-cdn.tcgplayer.com/product/635366_200w.jpg",
+   "categoryId": 89,
+   "groupId": 24344,
+   "url": "https://www.tcgplayer.com/product/635366/riftbound-league-of-legends-trading-card-game-origins-origins-booster-pack",
+   "modifiedOn": "2025-10-31T04:10:11.627",
+   "imageCount": 1,
+   "presaleInfo": {
+    "isPresale": false,
+    "releasedOn": "2025-10-31T00:00:00",
+    "note": null
+   },
+   "extendedData": []
+  },
+  {
+   "productId": 652771,
+   "name": "Blazing Scorcher",
+   "cleanName": "Blazing Scorcher",
+   "imageUrl": "https://tcgplayer-cdn.tcgplayer.com/product/652771_200w.jpg",
+   "categoryId": 89,
+   "groupId": 24344,
+   "url": "https://www.tcgplayer.com/product/652771/riftbound-league-of-legends-trading-card-game-origins-blazing-scorcher",
+   "modifiedOn": "2026-08-13T13:32:06.837",
+   "imageCount": 1,
+   "presaleInfo": {
+    "isPresale": false,
+    "releasedOn": null,
+    "note": null
+   },
+   "extendedData": [
+    {
+     "name": "Rarity",
+     "displayName": "Rarity",
+     "value": "Common"
+    },
+    {
+     "name": "Number",
+     "displayName": "Number",
+     "value": "001/298"
+    },
+    {
+     "name": "Description",
+     "displayName": "Description",
+     "value": "[ACCELERATE] <em>(You may pay 1 and 1 Fury as an additional cost to have me enter ready.)</em>"
+    },
+    {
+     "name": "Energy Cost",
+     "displayName": "Energy Cost",
+     "value": "5"
+    },
+    {
+     "name": "Power Cost",
+     "displayName": "Power Cost",
+     "value": "0"
+    },
+    {
+     "name": "Might",
+     "displayName": "Might",
+     "value": "5"
+    },
+    {
+     "name": "Card Type",
+     "displayName": "Card Type",
+     "value": "Unit"
+    },
+    {
+     "name": "Tag",
+     "displayName": "Tag",
+     "value": "Noxus;Dragon"
+    },
+    {
+     "name": "Domain",
+     "displayName": "Domain",
+     "value": "Fury"
+    }
+   ]
+  },
+  {
+   "productId": 652777,
+   "name": "Fury Rune",
+   "cleanName": "Fury Rune",
+   "imageUrl": "https://tcgplayer-cdn.tcgplayer.com/product/652777_200w.jpg",
+   "categoryId": 89,
+   "groupId": 24344,
+   "url": "https://www.tcgplayer.com/product/652777/riftbound-league-of-legends-trading-card-game-origins-fury-rune",
+   "modifiedOn": "2026-08-13T13:32:07.523",
+   "imageCount": 1,
+   "presaleInfo": {
+    "isPresale": false,
+    "releasedOn": null,
+    "note": null
+   },
+   "extendedData": [
+    {
+     "name": "Rarity",
+     "displayName": "Rarity",
+     "value": "Common"
+    },
+    {
+     "name": "Number",
+     "displayName": "Number",
+     "value": "007/298"
+    },
+    {
+     "name": "Energy Cost",
+     "displayName": "Energy Cost",
+     "value": "0"
+    },
+    {
+     "name": "Power Cost",
+     "displayName": "Power Cost",
+     "value": "0"
+    },
+    {
+     "name": "Might",
+     "displayName": "Might",
+     "value": "0"
+    },
+    {
+     "name": "Card Type",
+     "displayName": "Card Type",
+     "value": "Rune"
+    },
+    {
+     "name": "Domain",
+     "displayName": "Domain",
+     "value": "Fury"
+    }
+   ]
+  },
+  {
+   "productId": 652778,
+   "name": "Fury Rune (Alternate Art)",
+   "cleanName": "Fury Rune Alternate Art",
+   "imageUrl": "https://tcgplayer-cdn.tcgplayer.com/product/652778_200w.jpg",
+   "categoryId": 89,
+   "groupId": 24344,
+   "url": "https://www.tcgplayer.com/product/652778/riftbound-league-of-legends-trading-card-game-origins-fury-rune-alternate-art",
+   "modifiedOn": "2026-08-13T13:32:07.587",
+   "imageCount": 1,
+   "presaleInfo": {
+    "isPresale": false,
+    "releasedOn": null,
+    "note": null
+   },
+   "extendedData": [
+    {
+     "name": "Rarity",
+     "displayName": "Rarity",
+     "value": "Showcase"
+    },
+    {
+     "name": "Number",
+     "displayName": "Number",
+     "value": "007a/298"
+    },
+    {
+     "name": "Energy Cost",
+     "displayName": "Energy Cost",
+     "value": "0"
+    },
+    {
+     "name": "Power Cost",
+     "displayName": "Power Cost",
+     "value": "0"
+    },
+    {
+     "name": "Might",
+     "displayName": "Might",
+     "value": "0"
+    },
+    {
+     "name": "Card Type",
+     "displayName": "Card Type",
+     "value": "Rune"
+    },
+    {
+     "name": "Domain",
+     "displayName": "Domain",
+     "value": "Fury"
+    }
+   ]
+  },
+  {
+   "productId": 653094,
+   "name": "Kai'Sa, Daughter of the Void (Signature)",
+   "cleanName": "KaiSa Daughter of the Void Signature",
+   "imageUrl": "https://tcgplayer-cdn.tcgplayer.com/product/653094_200w.jpg",
+   "categoryId": 89,
+   "groupId": 24344,
+   "url": "https://www.tcgplayer.com/product/653094/riftbound-league-of-legends-trading-card-game-origins-kaisa-daughter-of-the-void-signature",
+   "modifiedOn": "2026-08-13T13:32:45.74",
+   "imageCount": 1,
+   "presaleInfo": {
+    "isPresale": false,
+    "releasedOn": null,
+    "note": null
+   },
+   "extendedData": [
+    {
+     "name": "Rarity",
+     "displayName": "Rarity",
+     "value": "Showcase"
+    },
+    {
+     "name": "Number",
+     "displayName": "Number",
+     "value": "299*/298"
+    },
+    {
+     "name": "Description",
+     "displayName": "Description",
+     "value": "Exhaust: [REACTION] - [ADD Rune]. Use only to play spells. <em>(Abilities that add resources can't be reacted to.)</em>"
+    },
+    {
+     "name": "Energy Cost",
+     "displayName": "Energy Cost",
+     "value": "0"
+    },
+    {
+     "name": "Power Cost",
+     "displayName": "Power Cost",
+     "value": "0"
+    },
+    {
+     "name": "Might",
+     "displayName": "Might",
+     "value": "0"
+    },
+    {
+     "name": "Card Type",
+     "displayName": "Card Type",
+     "value": "Legend"
+    },
+    {
+     "name": "Tag",
+     "displayName": "Tag",
+     "value": "Kai'Sa"
+    },
+    {
+     "name": "Domain",
+     "displayName": "Domain",
+     "value": "Fury;Mind"
+    }
+   ]
+  }
+ ]
+}

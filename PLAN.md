@@ -158,7 +158,11 @@ export interface Card {
   variant: Variant;
   imageHash: string;         // same hash = same picture (e.g. normal vs foil)
   imageUrl: string;          // /data/images/<file>, for the price card UI
+  pool: Pool;                // which kind of pack this printing comes from (§6.4b)
 }
+
+export type Pool = "booster" | "nexus_night";
+export type PackMode = "booster" | "nexus_night";  // user setting: what kind of pack is being opened
 
 export interface Price { printingId: string; priceUsd: number; source: string; asOf: string; }
 
@@ -552,7 +556,7 @@ Two questions, answered separately: **which card is it** (name), then **which pr
 4. `siblings` = every printing with `best`'s name, taken from `cards.json` — **not** just those in the top 5, so a promo that scored slightly low still gets considered.
 5. If there's only one sibling → accept (`ok`).
 6. Group siblings by `imageHash`.
-   - **Same picture group** (e.g. normal vs. foil): they can't be told apart visually. Pick the **cheapest** printing in the group and mark `same_image_cheapest` so the UI shows a "could be foil: $X" hint.
+   - **Same picture group** (e.g. normal vs. foil): they can't be told apart visually. Pick the **cheapest** printing in the group and mark `same_image_cheapest` so the UI shows a "could be foil: $X" hint. In `nexus_night` pack mode, the group's Nexus Night printings are preferred first (§6.4b).
 7. If siblings span **different picture groups** (promo, alt art, special layout):
    - Compute `layoutScore` between the live crop's layout signature (§4.7a, computed in the worker from the same 224×320 image) and each group's reference signature. Record `layoutMs`.
    - Combine: `combined = EMBED_W · embeddingScore + LAYOUT_W · layoutScore` (start with 0.5 / 0.5; calibrate in §6.8).
@@ -562,6 +566,16 @@ Two questions, answered separately: **which card is it** (name), then **which pr
 Add to `config.ts`: `EMBED_W: 0.5`, `LAYOUT_W: 0.5`, `LAYOUT_MARGIN_T: 0.03` (initial values; calibrated in §6.8).
 
 **Never** pick the cheapest across *different* pictures — that would label a valuable promo as its base card.
+
+### 6.4b Pack mode (human request, 2026-09-25)
+Nexus Night promos reuse their base card's picture, so the camera alone can't tell a Nexus Night promo from its booster printing — but the user knows which kind of pack they're opening. A **pack mode** setting (`booster` default | `nexus_night`) resolves it so the shown price is right.
+
+- Every printing carries `pool` (`nexus_night` = untagged OPP printings, else `booster`), set by `ingest.py`.
+- **`booster` mode:** printings with `pool = nexus_night` are removed before search results are used — from `top`, `runnerUp` and `siblings` (Nexus Night cards can't come out of a booster).
+- **`nexus_night` mode:** all printings stay candidates (a pack may mix contents). Inside a **same-picture** group (rule 6), prefer the Nexus Night printings: pick the cheapest *of those*; only if the group has none, fall back to the cheapest overall. Different-picture groups still go through the layout check (rule 7).
+- Reference implementation: `pipeline/packmode.py` (unit tested; used by `eval.py`). The app's `vision/packMode.ts` must match it.
+- UI: toggle with `N`, shown as a badge next to the guide box and in the debug panel; remembered in `localStorage` (wrapped in try/catch, default `booster`). Changing the mode never re-fires a reaction for the card already shown.
+- Session metrics record the pack mode with each result.
 
 ### 6.4a "Which one?" chooser (`ui/VariantChooser.tsx`)
 - When status is `ask`, show both options side by side (reference image, set/variant label, price) with keys `1` / `2`.

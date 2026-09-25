@@ -34,8 +34,14 @@ Full specs + acceptance criteria live in `PLAN.md`. Do not start next phase unti
 - **Status:** complete
 - Carry to Phase 3: 19 weak look-alike groups (tune EMBED_WEIGHT/LAYOUT_WEIGHT on real photos); 59MB embeddings (measure before PCA); H7 Nexus Night images
 
+### Pack mode (§6.4b, human request) — branch `feat/pack-mode`
+- [x] PLAN.md spec + `pool` in cards.json + pipeline/packmode.py + tests (68 pass)
+- [ ] TS port `vision/packMode.ts` + `N` toggle + badge + localStorage (Phase 2/3)
+- [ ] eval.py uses packmode (Phase 3)
+
 ### Phase 2: App shell, camera, guide box, stability (§5)
 - [ ] Vite React-TS app, camera + device picker, guide box mapping, signals, state machine, debug panel, vitest
+- [ ] Pack mode toggle (`N`) + badge + localStorage
 - **Status:** pending
 
 ### Phase 3: Vision worker, recognition, eval (§6)

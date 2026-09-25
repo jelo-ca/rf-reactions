@@ -17,6 +17,7 @@ import rawcache
 from cardsio import CARD_COLUMNS, FOIL_SUFFIX, read_csv, write_csv
 from httpclient import HttpClient
 from imagehashing import canonicalize, report
+from packmode import pool_of
 from sources.base import CardRecord
 from sources.riftcodex import RiftcodexSource
 
@@ -24,7 +25,7 @@ SOURCES = {"riftcodex": RiftcodexSource}
 
 
 def is_nexus_night(r: CardRecord) -> bool:
-    return r.set_code == config.NEXUS_NIGHT_SET and r.variant_tag is None
+    return pool_of(r.set_code, r.variant_tag) == "nexus_night"
 
 
 def select_pool(records: list[CardRecord], sets: list[str]) -> list[CardRecord]:

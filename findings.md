@@ -64,6 +64,13 @@
 - `Number` format `"001/298"`; variants: `"007a/298"` (alt art), `"306*/298"` (signature/overnumbered star). Parse number = part before `/`, keep suffix.
 - Riftcodex `tcgplayer_id` == TCGCSV `productId` (e.g. 652771 Blazing Scorcher) ✅ — cascade step 1 works.
 
+### Phase 1 layout sanity FAIL (2026-09-25)
+- `sanity.py` layout-only: 88.4% overall, 57/180 groups ≥ 95% (target: every group ≥ 95%).
+- Two kinds of look-alike group (visual check, `scratchpad/group.png`):
+  1. **Different art, same frame** (e.g. Veteran Poro SFD-099 vs UNL-223 alt art): layout can't separate by design; embedding should.
+  2. **Same art, tiny overlay** (e.g. Lee Sin OGN-304 vs OGN-304S signature = gold autograph scrawl): near-identical everywhere; hard for any method.
+- Running `scratchpad/diag_layout.py`: per group layout-only vs embed-only vs combined 0.5/0.5, pHash min distance.
+
 ## Technical Decisions
 | Decision | Rationale |
 |----------|-----------|

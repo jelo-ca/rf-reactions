@@ -1,0 +1,6 @@
+# Phase 0 — fetch & cache
+requests==2.34.2
+python-dotenv==1.2.3
+imagehash==4.3.2
+pillow==12.3.0
+pytest==9.1.1

@@ -67,6 +67,8 @@ Full specs + acceptance criteria live in `PLAN.md`. Do not start next phase unti
 | Pipeline venv at `pipeline/.venv` (py 3.13) | Isolate deps |
 | TCGCSV group match: abbreviation first, rc tcgplayer_id fallback | rc id wrong for OPP, null for VEN |
 | Foil row only when Normal+Foil both priced; Foil-only card → base row takes Foil price | Many TCGCSV cards Foil-only |
+| Keep `data/` inside OneDrive (1.1GB images, more in Phase 1) | User choice 2026-09-25 (option 3). Watch for sync file-lock errors on large writes |
+| E2E fetch tests with fake HTTP server + temp `config` paths | User asked to close gap: scripts' main() were untested. Caught real bug (OPP not fetched on fresh run) |
 
 ## Errors Encountered
 | Error | Attempt | Resolution |

@@ -2,6 +2,15 @@
 
 ## Phase 0 — Fetch & cache
 
+### Testing (`cd pipeline && .venv/Scripts/python -m pytest tests -q` → 27 pass)
+- Offline always: `conftest.py` makes `requests.Session.get` fail for every test.
+- Unit tests: parsing, pool filter, matching cascade, overrides, pHash grouping (trimmed real fixtures in `tests/fixtures/`, regenerate with `tests/make_fixtures.py`).
+- E2E (`test_fetch_e2e.py`): a fake HTTP server serves the fixtures + generated images; all `config` paths point at a temp dir (real `data/` untouched). Covers HTTP retry/403/cache/User-Agent, `fetch_raw` paging/resume/budget, and `fetch_cards` / `fetch_prices` `main()` including 0-request re-runs, frozen prices, and the override → `--rematch` loop.
+- Bug caught by E2E: after narrowing `DEMO_SETS`, a fresh fetch skipped OPP (Nexus Night). Fixed in `RiftcodexSource.fetch_raw`.
+
+### Cache location
+- Everything under `data/` (gitignored), kept inside OneDrive by choice. Raw API responses: `data/raw/<source>/<UTC timestamp>/` with `_complete` marker; images `data/cards/images/` (~1.1GB).
+
 ### Environment
 - Windows 11, Python 3.13.7 via `py` launcher (venv: `pipeline/.venv`), Node 22.18, npm 11.13.
 - Pinned Phase 0 deps: see `pipeline/requirements.txt`.

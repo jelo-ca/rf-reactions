@@ -29,7 +29,10 @@ class RiftcodexSource:
         (raw / SETS_FILE).write_text(json.dumps(set_list, indent=1), encoding="utf-8")
 
         all_ids = [s["set_id"] for s in set_list["items"]]
-        wanted = all_ids if ("ALL" in sets or config.INCLUDE_ALL_PRINTINGS) else sets
+        if "ALL" in sets or config.INCLUDE_ALL_PRINTINGS:
+            wanted = all_ids
+        else:  # Nexus Night promos live in a non-booster set
+            wanted = [s for s in all_ids if s in sets or s == config.NEXUS_NIGHT_SET]
         for set_id in wanted:
             items: list[dict] = []
             page = 1

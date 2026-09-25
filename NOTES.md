@@ -33,4 +33,27 @@
 - Category 89 verified. Group match by abbreviation first — Riftcodex's OPP id (24343) is actually PR's group; VEN has none (TCGCSV 24698).
 - `subTypeName` values: `Normal`, `Foil`. Many cards are Foil-only → base printing takes the Foil price; `F` foil row only when both exist.
 
-_(results appended after full run)_
+- VEN: Riftcodex `card_count` 358 includes 131 stale duplicate pairs (same id + image, one without tcgplayer_id) → 263 real printings after dedupe.
+
+### Results (2026-09-25)
+**Cards** (`fetch_cards.py`, raw `20260925T203217Z`)
+- 1356 base printings, 954 card names. Sets: OGN 352, OGS 24, SFD 288, UNL 280, VEN 263, PR 13, JDG 3, OPP 133.
+- Variants: normal 1000, alt_art 207, promo 149 (+ 510 foil rows from prices → 1866 total).
+- Images: 1336 downloaded in 1157 requests (shared URLs fetched once); 67 landscape rotated; 0 unreadable; 0 duplicate ids.
+- Re-run without `--refresh`: **0 network requests** ✅.
+- Look-alike groups (same name, >1 distinct picture): **182** → need the layout check (full list: `data/cards/lookalikes.json`).
+- **Reused-image variants (H7): 164** — the source serves the *base card's* image for these, raw pHash distance 0 (3 at distance 2):
+  | Kind | Count | Example |
+  |---|---|---|
+  | OPP promos (incl. Metal) | 130 | `OPP-255` → same image as `OGN-255` |
+  | PR promos | 12 | `PR-066` → `OGN-066` |
+  | JDG promos | 3 | `JDG-111` → `OGN-111` |
+  | VEN alt arts | 19 | `VEN-021AA` → `VEN-021A` |
+  Until a real photo/scan is placed in `data/cards/image_overrides/<printing_id>.png`, these are "same picture" as their base → the app would pick the cheaper printing (`same_image_cheapest`). **Realistic plan:** supply overrides only for promos you actually own/demo; accept the rest.
+
+**Prices** (`fetch_prices.py`, raw `20260925T204211Z`)
+- TCGCSV `as_of` **2026-09-25T20:05:42Z**, category 89. Groups: OGN 24344, OGS 24439, SFD 24519, UNL 24560, VEN 24698, PR 24343, OPP 24528, JDG 24552.
+- **19 / 20 requests** ✅.
+- subTypeName values: `Normal`, `Foil`. 510 cards have both → 510 foil rows.
+- Auto-matched: **1838 / 1866 = 98.5%** ✅ (≥ 95%). Methods: tcgplayer_id 1651, set_and_number 187. Fields: marketPrice 1834, midPrice 4.
+- Unmatched: **28, all OPP promos** (24 `(Metal)` + OPP-181…205 odd numbers) — product exists on TCGplayer, but TCGCSV has no price rows. → H3.

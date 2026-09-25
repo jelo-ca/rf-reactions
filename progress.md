@@ -26,6 +26,11 @@
 - Full fetch_cards running in background (~1.5 img/s)
 - Written: sources/prices_tcgcsv.py, fetch_prices.py (merge() pure), tests/{conftest,make_fixtures,test_riftcodex,test_prices,test_imagehashing}.py
 - pytest: 12 passed, 1 skipped (tcgcsv fixture pending real snapshot)
+- Full fetch_cards: 1356 printings, 1336 images; VEN 263 (131 stale dup pairs in source) — verified correct
+- Reused-image check: 164 variants with pHash dist 0 to base → source reuses base image (H7)
+- User asked for feature branches: created `feat/phase-0-fetch-cache`, 6 logical commits; workflow in task_plan.md + memory
+- fetch_prices: 19 requests, 98.5% auto, 28 OPP promos no_price → H3
+- Rerun fetch_cards: 0 network requests; integrity OK; tcgcsv fixture generated; pytest 13 passed
 
 ## Test Results
 | Test | Input | Expected | Actual | Status |
@@ -37,6 +42,8 @@
 | 2026-09-25 | `python`/`python3` not found | 1 | Use `py` launcher |
 | 2026-09-25 | `ValueError: unexpected riftbound_id: 'sfd-t03'` | 1 | Accept 2-part ids (tokens/runes) |
 | 2026-09-25 | VEN runes duplicated in source (stale records) | 1 | `dedupe()` keeps record w/ tcgplayer_id |
+| 2026-09-25 | `UnicodeEncodeError` cp1252 printing `→`/🧑 | 1 | sed missed emoji |
+| 2026-09-25 | same | 2 | Edit tool → ASCII-only prints |
 
 ## 5-Question Reboot Check
 | Question | Answer |

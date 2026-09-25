@@ -11,15 +11,16 @@ Full specs + acceptance criteria live in `PLAN.md`. Do not start next phase unti
 
 ### Phase 0: Fetch & cache (PLAN.md §4.0)
 - [x] H1: ALL sets; CONTACT = anjoelocalderon@gmail.com
-- [ ] Scaffold `pipeline/` (requirements, config.py, httpclient.py, sources/base.py)
+- [x] Scaffold `pipeline/` (requirements, config.py, httpclient.py, sources/base.py)
 - [x] Verify Riftcodex + TCGCSV with one test request each (log in findings.md)
-- [ ] `sources/riftcodex.py` + `fetch_cards.py` (`--limit 20` first, then full)
-- [ ] pHash, look-alike groups, reused-image promos → NOTES.md (H7)
-- [ ] `sources/prices_tcgcsv.py` + `fetch_prices.py` (≤20 requests, foil rows)
-- [ ] Fixture-based tests, no network
-- [ ] H3: human fills `manual_overrides.csv` → 100% price coverage
-- [ ] NOTES.md records + commit `phase-0: ...`
-- **Status:** pending
+- [x] `sources/riftcodex.py` + `fetch_cards.py` (1356 printings, 0-request rerun)
+- [x] pHash, look-alike groups (182), reused-image variants (164) → NOTES.md
+- [x] `sources/prices_tcgcsv.py` + `fetch_prices.py` (19/20 req, 510 foil rows, 98.5% auto)
+- [x] Fixture-based tests, no network (13 pass)
+- [ ] **H3 (BLOCKING):** human fills 28 OPP promo prices in `manual_overrides.csv` → `fetch_prices.py --rematch` → 100%
+- [ ] H7 (optional): real images for owned promos in `image_overrides/`
+- [ ] Merge `feat/phase-0-fetch-cache` → main `--no-ff`, msg `phase-0: ...`
+- **Status:** in_progress — waiting on H3
 
 ### Phase 1: Offline pipeline (§4)
 - [ ] config, ingest, model, augment, export_onnx, embed, layout, prices, parity, build_data.sh
@@ -70,6 +71,12 @@ Full specs + acceptance criteria live in `PLAN.md`. Do not start next phase unti
 | Error | Attempt | Resolution |
 |-------|---------|------------|
 | `python` / `python3` not found (catchup script) | 1 | Used `py` launcher — works |
+
+## Git Workflow (user request 2026-09-25)
+- One branch per phase/feature off `main`: `feat/phase-N-<slug>` (e.g. `feat/phase-0-fetch-cache`), `fix/<slug>` for fixes.
+- Small logical commits, Conventional Commits (`feat(pipeline): ...`, `test: ...`, `docs: ...`, `chore: ...`).
+- Phase done + acceptance passes → merge to `main` with `--no-ff`, merge message `phase-N: <summary + key numbers>` (PLAN §12).
+- Never commit data/, .venv, .env.
 
 ## Notes
 - Deviations, calibration results, library quirks → `NOTES.md` (per PLAN.md §12). Research/web content → `findings.md` only.

@@ -23,14 +23,18 @@ from sources.riftcodex import RiftcodexSource
 SOURCES = {"riftcodex": RiftcodexSource}
 
 
+def is_nexus_night(r: CardRecord) -> bool:
+    return r.set_code == config.NEXUS_NIGHT_SET and r.variant_tag is None
+
+
 def select_pool(records: list[CardRecord], sets: list[str]) -> list[CardRecord]:
-    """Filter to demo sets, then add every other printing of the same names."""
+    """Booster sets + Nexus Night promos, optionally plus every other printing of the same names."""
     if "ALL" in sets:
         return records
-    pool = [r for r in records if r.set_code in sets]
+    pool = [r for r in records if r.set_code in sets or is_nexus_night(r)]
     if config.INCLUDE_ALL_PRINTINGS:
         names = {r.name for r in pool}
-        extra = [r for r in records if r.set_code not in sets and r.name in names]
+        extra = [r for r in records if r not in pool and r.name in names]
         by_set = Counter(r.set_code for r in extra)
         print(f"  printing coverage: +{len(extra)} printings from other sets {dict(by_set)}")
         pool += extra

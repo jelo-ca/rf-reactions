@@ -21,9 +21,12 @@ APP_PUBLIC = ROOT / "app" / "public"
 CARD_SOURCE = "riftcodex"          # riftcodex (default) | riot | gallery
 RIFTCODEX_BASE = "https://api.riftcodex.com"
 RIFTCODEX_PAGE_SIZE = 100
-DEMO_SETS = ["ALL"]                # "ALL" = every set Riftcodex lists (H1)
+# Pool = what can come out of a standard booster pack (human, 2026-09-25).
+# Add new booster sets here when they release. Starter (OGS), PR and JDG promos are out.
+DEMO_SETS = ["OGN", "SFD", "UNL", "VEN"]
+NEXUS_NIGHT_SET = "OPP"            # Nexus Night promos: the untagged OPP printings (no "(Metal)", etc.)
 PROMO_SETS = {"PR", "JDG", "OPP"}  # printings from these sets get variant=promo
-INCLUDE_ALL_PRINTINGS = True       # pull every printing of each pool card name, across all sets
+INCLUDE_ALL_PRINTINGS = False      # off: other printings (metal, judge, starter) can't be pulled from boosters
 
 PRICE_PROVIDER = "tcgcsv"
 TCGCSV_ROOT = "https://tcgcsv.com"

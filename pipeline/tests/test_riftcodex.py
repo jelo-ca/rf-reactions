@@ -41,3 +41,12 @@ def test_stale_duplicate_dropped():
     r = parsed()
     assert r["VEN-R01"].tcgplayer_id == "706028"
     assert sum(1 for pid in r if pid.startswith("VEN-R01")) == 1
+
+
+def test_pool_is_boosters_plus_nexus_night():
+    from fetch_cards import select_pool
+    recs = RiftcodexSource().parse(FIXTURES / "riftcodex")
+    ids = {r.printing_id for r in select_pool(recs, ["OGN", "SFD", "VEN"])}
+    assert "OPP-017" in ids          # plain OPP promo = Nexus Night
+    assert "OPP-017M" not in ids     # (Metal) excluded
+    assert {"OGN-007A", "OGN-299S", "SFD-T03", "VEN-R01"} <= ids

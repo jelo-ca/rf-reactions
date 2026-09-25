@@ -76,6 +76,7 @@ LAYOUT_W, LAYOUT_H = 56, 80        # edge-map size = 224×320 box-averaged 4×4 
 LAYOUT_GRID = (4, 5)               # cols, rows → 20 tiles of 14×16 pixels
 LAYOUT_MIN_MEAN = 1e-3             # edge-map mean floor (near-blank image guard)
 LAYOUT_TILE_EPS = 1e-3             # tile norm below this = no edges (normalized units; real edges ~1+)
+EMBED_WEIGHT, LAYOUT_WEIGHT = 0.5, 0.5  # §6.4 combined score (PLAN EMBED_W/LAYOUT_W; renamed: LAYOUT_W is the map width) (initial; calibrated in Phase 3, mirror in app config.ts)
 ONNX_OPSET = 17
 ONNX_PARITY_MIN_COS = 0.999
 EMBED_WARN_MB = 25

@@ -1,5 +1,11 @@
 """All pipeline constants. No magic numbers elsewhere."""
+import sys
 from pathlib import Path
+
+# Windows consoles default to cp1252; libraries (e.g. torch.onnx) print emoji.
+for _stream in (sys.stdout, sys.stderr):
+    if hasattr(_stream, "reconfigure"):
+        _stream.reconfigure(encoding="utf-8", errors="replace")
 
 # --- Paths ---------------------------------------------------------------
 ROOT = Path(__file__).resolve().parent.parent
@@ -58,6 +64,13 @@ PHASH_SAME_MAX_DIST = 4            # pHash Hamming distance ≤ this → "same p
 INPUT_W, INPUT_H = 224, 320        # portrait, close to card ratio, both divisible by 32
 BACKBONE = "mobilenetv3_large_100" # timm name; pretrained, num_classes=0
 AUG_PER_IMAGE = 8
+AUG_PERSPECTIVE = (0.02, 0.06)     # perspective warp scale
+AUG_ROTATE_DEG = 5
+AUG_FRAME_JITTER = 0.04            # each edge moves in/out up to 4%
+AUG_TEMP_SHIFT = 0.08              # ± R/B gain for white balance
+AUG_GLARE_P = 0.6
+AUG_GLARE_OPACITY = (0.15, 0.5)
+AUG_JPEG_QUALITY = (50, 91)        # [low, high)
 SEED = 1234
 LAYOUT_W, LAYOUT_H = 56, 80        # edge-map size = 224×320 box-averaged 4×4 (exact, no resampler)
 LAYOUT_GRID = (4, 5)               # cols, rows → 20 tiles of 14×16 pixels

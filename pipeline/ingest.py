@@ -13,6 +13,7 @@ from PIL import Image
 
 import config
 from cardsio import FOIL_SUFFIX, read_csv
+from packmode import pool_of
 from sources.base import VARIANTS
 
 
@@ -48,6 +49,8 @@ def to_card_json(c: dict) -> dict:
         "printingId": c["printing_id"], "name": c["name"], "setCode": c["set_code"],
         "collectorNumber": c["collector_number"], "rarity": c["rarity"], "variant": c["variant"],
         "imageHash": c["image_hash"], "imageUrl": f"/data/images/{ui_image_name(c['image_file'])}",
+        # cards.csv only holds pool printings, so any Nexus Night-set row is a Nexus Night promo.
+        "pool": pool_of(c["set_code"]),
     }
 
 
@@ -77,6 +80,7 @@ def main() -> None:
     size = sum(p.stat().st_size for p in config.APP_IMAGES.glob("*.jpg")) / 1e6
     print(f"cards.json: {len(cards)} printings, {len({c['name'] for c in cards})} names")
     print(f"variants: {dict(Counter(c['variant'] for c in cards))}")
+    print(f"pools: {dict(Counter(pool_of(c['set_code']) for c in cards))}")
     print(f"UI images: {written} written, {size:.0f}MB total")
 
 

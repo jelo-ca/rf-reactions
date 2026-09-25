@@ -116,6 +116,12 @@ The app never uses layout alone; §6.4 combines them. Human approved the new bar
 - pytest 58 pass · ONNX parity 1.000000 · leave-one-out 98.7% · look-alike combined 98.8% · aug_preview approved by human.
 - Open for later: embeddings 59MB (> 25MB warn) → measure load + searchMs in Phase 3 before PCA.
 
+## Pack mode (human request, 2026-09-25) — PLAN §6.4b added
+- Setting `booster` (default) | `nexus_night`. Booster: Nexus Night printings excluded from candidates. Nexus Night: inside a same-picture group, Nexus Night printings win (cheapest of them); others still match normally.
+- `cards.json` gains `pool` (booster 1693, nexus_night 104). Reference logic `pipeline/packmode.py` (tested); `fetch_cards.is_nexus_night` now uses the same `pool_of` rule. TS port `vision/packMode.ts` must match; UI toggle `N` comes with Phase 2/3.
+- Impact: 85 same-picture groups resolve differently; median +$0.54, max Ahri - Nine-Tailed Fox $1.58 (OGN-255) → $317.31 (OPP-255). The other 19 Nexus Night promos have their own picture.
+- Cosmetic: some OPP ids get `X`/`X2` suffixes (e.g. `OPP-193X`, `OPP-009X2`) — several untagged OPP records share one riftbound_id. Harmless; revisit if ids are shown to users.
+
 ## Phase 0 — final pool
 
 ### Final pool (after booster-only rule, 2026-09-25) — Phase 0 accepted

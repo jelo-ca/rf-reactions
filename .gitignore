@@ -1,0 +1,24 @@
+# Data (fetched/generated) — keep folder structure only
+data/**
+!data/**/
+!data/**/.gitkeep
+!data/prices/manual_overrides.csv
+!data/cards/image_overrides/*.png
+
+# Python
+pipeline/.venv/
+pipeline/.env
+pipeline/out/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Node
+node_modules/
+app/dist/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

@@ -23,11 +23,17 @@ Full specs + acceptance criteria live in `PLAN.md`. Do not start next phase unti
 - [x] Merge `feat/phase-0-fetch-cache` → main `--no-ff`
 - **Status:** complete
 
-### Phase 1: Offline pipeline (§4)
-- [ ] config, ingest, model, augment, export_onnx, embed, layout, prices, parity, build_data.sh
-- [ ] pytest, ONNX parity ≥0.999, leave-one-out ≥95%, layout sanity ≥95%
+### Phase 1: Offline pipeline (§4) — branch `feat/phase-1-offline-pipeline`
+- [ ] Install torch (CPU), timm, onnx, onnxruntime, albumentations; pin in requirements
+- [x] layout.py (written), ingest.py (written), prices.py (written)
+- [ ] augment.py + aug_preview.png
+- [ ] model.py, export_onnx.py (ONNX vs torch cos ≥ 0.999)
+- [ ] embed.py (non-foil printings × (1 clean + 8 aug)), size check
+- [ ] parity.py, scripts/build_data.sh
+- [ ] tests: layout, ingest validation, prices, augment determinism, output shapes/unit length
+- [ ] sanity.py: leave-one-out ≥95%, layout sanity ≥95% per group → NOTES
 - [ ] H: approve `aug_preview.png`
-- **Status:** pending
+- **Status:** in_progress
 
 ### Phase 2: App shell, camera, guide box, stability (§5)
 - [ ] Vite React-TS app, camera + device picker, guide box mapping, signals, state machine, debug panel, vitest
@@ -68,6 +74,10 @@ Full specs + acceptance criteria live in `PLAN.md`. Do not start next phase unti
 | TCGCSV group match: abbreviation first, rc tcgplayer_id fallback | rc id wrong for OPP, null for VEN |
 | Foil row only when Normal+Foil both priced; Foil-only card → base row takes Foil price | Many TCGCSV cards Foil-only |
 | Keep `data/` inside OneDrive (1.1GB images, more in Phase 1) | User choice 2026-09-25 (option 3). Watch for sync file-lock errors on large writes |
+| Hardware: i7-1255U, 16GB, Iris Xe, no CUDA → CPU torch | Only inference/export, no training needed yet |
+| UI images = 372×520 JPEG q85 in app/public/data/images (not PNG copies) | 1.1GB PNG → ~50MB |
+| Embed only non-foil printings | Foil = same image; decide finds foil siblings via cards.json + imageHash |
+| layout.bin only for printings in look-alike names | decide only calls layoutScore across different-picture siblings; keeps file small |
 | E2E fetch tests with fake HTTP server + temp `config` paths | User asked to close gap: scripts' main() were untested. Caught real bug (OPP not fetched on fresh run) |
 
 ## Errors Encountered

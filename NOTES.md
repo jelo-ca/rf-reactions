@@ -69,6 +69,29 @@
 - Auto-matched: **1838 / 1866 = 98.5%** ✅ (≥ 95%). Methods: tcgplayer_id 1651, set_and_number 187. Fields: marketPrice 1834, midPrice 4.
 - Unmatched: **28, all OPP promos** (24 `(Metal)` + OPP-181…205 odd numbers) — product exists on TCGplayer, but TCGCSV has no price rows. → H3.
 
+## Phase 1 — Offline pipeline
+
+### Environment / versions
+- CPU only: i7-1255U (10 cores), 16GB RAM, Intel Iris Xe (no CUDA). torch CPU wheels.
+- Pinned: torch 2.14.0+cpu, torchvision 0.29.0+cpu, timm 1.0.30, onnx 1.23.0, onnxscript 0.7.2, onnxruntime 1.30.0, albumentations 2.0.8, opencv-python-headless 5.0.0.93, numpy 2.5.3.
+- `config.py` switches stdout/stderr to UTF-8 on import: torch.onnx prints emoji and the Windows console (cp1252) crashes.
+
+### Deviations
+| Deviation | Why |
+|---|---|
+| ONNX **opset 18** (PLAN: 17) | torch 2.14 uses the torch.export-based exporter; it upgraded 17→18. Ops: Conv, HardSwish, HardSigmoid, ReduceMean, Relu, Add, Mul, Div, Sub, Reshape, ReduceL2, Clip, Expand — all supported by ORT web (wasm + webgpu). |
+| Layout signature: float64 math, mean **floor** 1e-3 instead of `+1e-6`; empty tiles (norm < 1e-3) in both maps score 1 | Float noise on near-blank images was amplified to non-zero signatures; identical cards with plain areas scored only ~0.2. TS port must copy these rules. |
+| UI images are 372×520 JPEG q85 (67MB) instead of copied PNGs (1.1GB) | Price card only needs ~370px. |
+| Only non-foil printings are embedded; `layout.bin` only covers printings of look-alike names | Foils share the image; decide reaches them via cards.json + imageHash. Layout only runs across differently-pictured siblings. |
+| `meta.json` has extra `rowsPerPrinting` | sanity/eval need row layout (row % 9 == 0 is the clean image). |
+| Augmentation at 448×640 then bilinear to 224×320 | Blur/noise at camera-like scale; final resize identical to clean refs (§4.5). |
+
+### Results
+- ONNX vs PyTorch: worst cosine **1.000000** over 5 images ✅. `embedder.onnx` 17.1MB, input `[1,3,320,224]` → `embedding [1,1280]`.
+- ingest: 1797 printings, 947 names, UI images 67MB.
+
+## Phase 0 — final pool
+
 ### Final pool (after booster-only rule, 2026-09-25) — Phase 0 accepted
 - **1287 base printings + 510 foil rows = 1797**, 947 names. OGN 516, SFD 411, UNL 403, VEN 363, OPP (Nexus Night) 104 (counts incl. foil rows).
 - Variants: normal 976, alt_art 207, promo 104, foil 510.

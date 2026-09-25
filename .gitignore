@@ -22,3 +22,9 @@ app/dist/
 Thumbs.db
 .vscode/
 .idea/
+
+# Generated app data (built by scripts/build_data.sh)
+app/public/data/*
+!app/public/data/tiers.json
+app/public/models/
+app/public/fixtures/

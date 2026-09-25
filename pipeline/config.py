@@ -16,6 +16,11 @@ UNMATCHED_CSV = PRICES_DIR / "unmatched.csv"
 MANUAL_OVERRIDES_CSV = PRICES_DIR / "manual_overrides.csv"
 EVAL_DIR = DATA / "eval"
 APP_PUBLIC = ROOT / "app" / "public"
+APP_DATA = APP_PUBLIC / "data"
+APP_IMAGES = APP_DATA / "images"
+APP_MODEL = APP_PUBLIC / "models" / "embedder.onnx"
+APP_PARITY = APP_PUBLIC / "fixtures" / "parity"
+OUT_DIR = ROOT / "pipeline" / "out"
 
 # --- Sources -------------------------------------------------------------
 CARD_SOURCE = "riftcodex"          # riftcodex (default) | riot | gallery
@@ -56,3 +61,11 @@ AUG_PER_IMAGE = 8
 SEED = 1234
 LAYOUT_W, LAYOUT_H = 56, 80        # edge-map size = 224×320 box-averaged 4×4 (exact, no resampler)
 LAYOUT_GRID = (4, 5)               # cols, rows → 20 tiles of 14×16 pixels
+LAYOUT_MIN_MEAN = 1e-3             # edge-map mean floor (near-blank image guard)
+LAYOUT_TILE_EPS = 1e-3             # tile norm below this = no edges (normalized units; real edges ~1+)
+ONNX_OPSET = 17
+ONNX_PARITY_MIN_COS = 0.999
+EMBED_WARN_MB = 25
+UI_IMAGE_W, UI_IMAGE_H = 372, 520  # price-card UI images (JPEG), half the 744×1039 source
+UI_IMAGE_QUALITY = 85
+PARITY_COUNT = 5

@@ -69,6 +69,55 @@
 - Auto-matched: **1838 / 1866 = 98.5%** ✅ (≥ 95%). Methods: tcgplayer_id 1651, set_and_number 187. Fields: marketPrice 1834, midPrice 4.
 - Unmatched: **28, all OPP promos** (24 `(Metal)` + OPP-181…205 odd numbers) — product exists on TCGplayer, but TCGCSV has no price rows. → H3.
 
+## Phase 1 — Offline pipeline
+
+### Environment / versions
+- CPU only: i7-1255U (10 cores), 16GB RAM, Intel Iris Xe (no CUDA). torch CPU wheels.
+- Pinned: torch 2.14.0+cpu, torchvision 0.29.0+cpu, timm 1.0.30, onnx 1.23.0, onnxscript 0.7.2, onnxruntime 1.30.0, albumentations 2.0.8, opencv-python-headless 5.0.0.93, numpy 2.5.3.
+- `config.py` switches stdout/stderr to UTF-8 on import: torch.onnx prints emoji and the Windows console (cp1252) crashes.
+
+### Deviations
+| Deviation | Why |
+|---|---|
+| ONNX **opset 18** (PLAN: 17) | torch 2.14 uses the torch.export-based exporter; it upgraded 17→18. Ops: Conv, HardSwish, HardSigmoid, ReduceMean, Relu, Add, Mul, Div, Sub, Reshape, ReduceL2, Clip, Expand — all supported by ORT web (wasm + webgpu). |
+| Layout signature: float64 math, mean **floor** 1e-3 instead of `+1e-6`; empty tiles (norm < 1e-3) in both maps score 1 | Float noise on near-blank images was amplified to non-zero signatures; identical cards with plain areas scored only ~0.2. TS port must copy these rules. |
+| UI images are 372×520 JPEG q85 (67MB) instead of copied PNGs (1.1GB) | Price card only needs ~370px. |
+| Only non-foil printings are embedded; `layout.bin` only covers printings of look-alike names | Foils share the image; decide reaches them via cards.json + imageHash. Layout only runs across differently-pictured siblings. |
+| `meta.json` has extra `rowsPerPrinting` | sanity/eval need row layout (row % 9 == 0 is the clean image). |
+| Augmentation at 448×640 then bilinear to 224×320 | Blur/noise at camera-like scale; final resize identical to clean refs (§4.5). |
+
+### Results
+- ONNX vs PyTorch: worst cosine **1.000000** over 5 images ✅. `embedder.onnx` 17.1MB, input `[1,3,320,224]` → `embedding [1,1280]`.
+- ingest: 1797 printings, 947 names, UI images 67MB.
+- embed: 1287 printings × 9 rows = **11,583 × 1280 = 59.3MB** in 27.6 min (0.8 printings/s on CPU, augmentation-bound). Over the 25MB warning → revisit in Phase 3 (PCA 1280→256 baked into ONNX if load time or searchMs p95 > 20ms).
+- layout.bin: 461 printings (look-alike names), 8.3MB. prices.json: 1797, median $0.28, max $3,624.82.
+- parity fixtures: OGN-007 (look-alike group), OGN-001, OGN-232, SFD-054, UNL-026.
+- **Leave-one-out: 98.7% ✅** (target 95%). Top misses are signature ↔ normal twins (OGN-301→301S, OGN-306S→306, OGN-303→303S): same art, different frame → layout check's job. Rest are single cross-card misses.
+
+### Look-alike acceptance — bar changed (human decision 2026-09-25)
+PLAN's bar ("layout alone beats every sibling ≥ 95% in every group") **failed: 88.4%, 57/180 groups**. Diagnosis: two kinds of group —
+1. *Different art, same frame* (e.g. Veteran Poro SFD-099 vs UNL-223): layout can't separate by design; the embedding does.
+2. *Same art, tiny overlay* (signature showcase vs overnumbered, e.g. Lee Sin OGN-304 vs 304S — a thin gold autograph; pHash distance 6): hard for anything.
+
+The app never uses layout alone; §6.4 combines them. Human approved the new bar: **combined (0.5·embed + 0.5·layout) ≥ 95% overall**. Embed scores use the clean reference row only (conservative vs the app's best-of-9 rows).
+
+| Score | Overall (3688 aug images) | Groups ≥ 95% |
+|---|---|---|
+| layout only | 88.4% | 57/180 |
+| embed only | 98.3% | 159/180 |
+| **combined 0.5/0.5** | **98.8% ✅** | 161/180 |
+
+**19 weak groups → Phase 3 calibration** (`pipeline/out/sanity_groups.json`):
+- Base vs alt art where layout is right but embed is weak (Poppy - Paragon C69 L94 E69, Lillia - Fae Fawn C75, Viktor - Innovator C81 L100 E62, Jhin - Murderous Artist C81 L100, Rumble, Azir): a higher LAYOUT_WEIGHT should fix these — tune on real photos.
+- Signature vs overnumbered showcase (Lee Sin, Yasuo, Volibear, Leona, Irelia, Aphelios): expect `ask` (chooser) on stage.
+- `config.EMBED_W/LAYOUT_W` renamed **`EMBED_WEIGHT/LAYOUT_WEIGHT`** (LAYOUT_W already = edge-map width 56; the clash broke the layout code). App `config.ts` should use the same names.
+
+### Phase 1 accepted ✅
+- pytest 58 pass · ONNX parity 1.000000 · leave-one-out 98.7% · look-alike combined 98.8% · aug_preview approved by human.
+- Open for later: embeddings 59MB (> 25MB warn) → measure load + searchMs in Phase 3 before PCA.
+
+## Phase 0 — final pool
+
 ### Final pool (after booster-only rule, 2026-09-25) — Phase 0 accepted
 - **1287 base printings + 510 foil rows = 1797**, 947 names. OGN 516, SFD 411, UNL 403, VEN 363, OPP (Nexus Night) 104 (counts incl. foil rows).
 - Variants: normal 976, alt_art 207, promo 104, foil 510.

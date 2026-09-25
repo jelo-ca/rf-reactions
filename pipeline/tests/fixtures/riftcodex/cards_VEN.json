@@ -1,0 +1,90 @@
+[
+ {
+  "id": "6a517605ad64d2d80a4f038d",
+  "name": "Fury Rune",
+  "riftbound_id": "ven-r01",
+  "tcgplayer_id": null,
+  "collector_number": 1,
+  "attributes": {
+   "energy": null,
+   "might": null,
+   "power": null
+  },
+  "classification": {
+   "type": "Rune",
+   "supertype": "Basic",
+   "rarity": "Common",
+   "domain": [
+    "Fury"
+   ]
+  },
+  "text": {
+   "rich": "<p>[NO TEXT]</p>",
+   "plain": "[NO TEXT]",
+   "flavour": null
+  },
+  "set": {
+   "set_id": "VEN",
+   "label": "Vendetta"
+  },
+  "media": {
+   "image_url": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/f95ed6ba0c4d4d357c45bf5bdb1a8e540af1f85f-744x1039.png?accountingTag=RB",
+   "artist": "Greg Ghielmetti & Leah Chen",
+   "accessibility_text": "Riftbound Rune: Fury Rune. [NO TEXT]"
+  },
+  "tags": [],
+  "orientation": "portrait",
+  "metadata": {
+   "clean_name": null,
+   "updated_on": "2026-07-10T22:45:25.167051+00:00",
+   "alternate_art": false,
+   "overnumbered": false,
+   "signature": false
+  },
+  "new": true
+ },
+ {
+  "id": "6a56ab96ff602fd324f47618",
+  "name": "Fury Rune",
+  "riftbound_id": "ven-r01",
+  "tcgplayer_id": "706028",
+  "collector_number": 1,
+  "attributes": {
+   "energy": null,
+   "might": null,
+   "power": null
+  },
+  "classification": {
+   "type": "Rune",
+   "supertype": "Basic",
+   "rarity": "Common",
+   "domain": [
+    "Fury"
+   ]
+  },
+  "text": {
+   "rich": "<p>[NO TEXT]</p>",
+   "plain": "[NO TEXT]",
+   "flavour": null
+  },
+  "set": {
+   "set_id": "VEN",
+   "label": "Vendetta"
+  },
+  "media": {
+   "image_url": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/f95ed6ba0c4d4d357c45bf5bdb1a8e540af1f85f-744x1039.png?accountingTag=RB",
+   "artist": "Greg Ghielmetti & Leah Chen",
+   "accessibility_text": "Riftbound Rune: Fury Rune. [NO TEXT]"
+  },
+  "tags": [],
+  "orientation": "portrait",
+  "metadata": {
+   "clean_name": "Fury Rune",
+   "updated_on": "2026-07-14T21:35:18.198449+00:00",
+   "alternate_art": false,
+   "overnumbered": false,
+   "signature": false
+  },
+  "new": false
+ }
+]

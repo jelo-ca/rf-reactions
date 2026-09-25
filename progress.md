@@ -31,6 +31,9 @@
 - User asked for feature branches: created `feat/phase-0-fetch-cache`, 6 logical commits; workflow in task_plan.md + memory
 - fetch_prices: 19 requests, 98.5% auto, 28 OPP promos no_price → H3
 - Rerun fetch_cards: 0 network requests; integrity OK; tcgcsv fixture generated; pytest 13 passed
+- User: booster packs only + Nexus Night. Asked how to ID NN (no label in data) → "all plain OPP promos"; OGS excluded
+- Pool rebuilt offline: 1797 printings, prices 100% auto, 0 unmatched; pytest 14 passed
+- Phase 0 COMPLETE → merged to main
 
 ## Test Results
 | Test | Input | Expected | Actual | Status |

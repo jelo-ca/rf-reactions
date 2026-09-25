@@ -34,6 +34,10 @@
 - User: booster packs only + Nexus Night. Asked how to ID NN (no label in data) → "all plain OPP promos"; OGS excluded
 - Pool rebuilt offline: 1797 printings, prices 100% auto, 0 unmatched; pytest 14 passed
 - Phase 0 COMPLETE → merged to main
+- User: keep data in OneDrive; add fetch E2E tests before Phase 1
+- Branch `test/fetch-e2e`: tests/test_fetch_e2e.py (13 tests: HTTP retry/403/cache/UA, fetch_raw paging/resume/budget, fetch_cards + fetch_prices main() end to end in tmp sandbox)
+- Found + fixed bug: fetch_raw skipped OPP (Nexus Night) on a fresh fetch once DEMO_SETS narrowed
+- pytest: 27 passed
 
 ## Test Results
 | Test | Input | Expected | Actual | Status |
@@ -47,6 +51,7 @@
 | 2026-09-25 | VEN runes duplicated in source (stale records) | 1 | `dedupe()` keeps record w/ tcgplayer_id |
 | 2026-09-25 | `UnicodeEncodeError` cp1252 printing `→`/🧑 | 1 | sed missed emoji |
 | 2026-09-25 | same | 2 | Edit tool → ASCII-only prints |
+| 2026-09-25 | E2E test: fresh fetch missed OPP → Nexus Night pool empty | 1 | fetch_raw adds NEXUS_NIGHT_SET |
 
 ## 5-Question Reboot Check
 | Question | Answer |

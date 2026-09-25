@@ -1,0 +1,46 @@
+[
+ {
+  "id": "69c700533fb41419ee7cebb2",
+  "name": "Gold // Buff",
+  "riftbound_id": "sfd-t03",
+  "tcgplayer_id": "678188",
+  "collector_number": 3,
+  "attributes": {
+   "energy": null,
+   "might": null,
+   "power": null
+  },
+  "classification": {
+   "type": "Gear",
+   "supertype": "Token",
+   "rarity": "Common",
+   "domain": [
+    "Colorless"
+   ]
+  },
+  "text": {
+   "rich": "<p>Kill this, :rb_exhaust:: [Reaction] \u2014 [Add] :rb_rune_rainbow:. (Abilities that add resources can't be reacted to.)</p>",
+   "plain": "Kill this, :rb_exhaust:: [Reaction] \u2014 [Add] :rb_rune_rainbow:. (Abilities that add resources can't be reacted to.)",
+   "flavour": null
+  },
+  "set": {
+   "set_id": "SFD",
+   "label": "Spiritforged"
+  },
+  "media": {
+   "image_url": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/e878c39b562a4e870e93b819c6d85cdf3fdc5238-744x1039.png?accountingTag=RB",
+   "artist": "Kudos Productions",
+   "accessibility_text": "Riftbound Gear: Gold. Kill this, [T]: [Reaction] \u2014 [Add] [A]. (Abilities that add resources can't be reacted to.)"
+  },
+  "tags": [],
+  "orientation": "portrait",
+  "metadata": {
+   "clean_name": "Gold Buff",
+   "updated_on": "2026-07-10T22:44:59.606681+00:00",
+   "alternate_art": false,
+   "overnumbered": false,
+   "signature": false
+  },
+  "new": false
+ }
+]

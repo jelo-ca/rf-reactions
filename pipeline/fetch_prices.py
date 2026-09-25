@@ -61,7 +61,7 @@ def main() -> None:
     args = ap.parse_args()
 
     if config.PRICES_CSV.exists() and not (args.force or args.rematch):
-        print(f"{config.PRICES_CSV} exists — prices are frozen. Use --rematch (offline) or --force (new snapshot).")
+        print(f"{config.PRICES_CSV} exists - prices are frozen. Use --rematch (offline) or --force (new snapshot).")
         return
     cards = read_csv(config.CARDS_CSV)
     if not cards:
@@ -95,9 +95,9 @@ def main() -> None:
     print(f"Priced: {len(price_rows)}  auto: {auto} ({100 * auto / len(all_cards):.1f}%)  manual: {len(price_rows) - auto}")
     print(f"Match methods: {dict(Counter(p['match_method'] for p in price_rows))}")
     print(f"Price fields: {dict(Counter(p['price_field'] for p in price_rows))}")
-    print(f"Unmatched: {len(unmatched)} {dict(Counter(u['reason'].split('(')[0] for u in unmatched))} → {config.UNMATCHED_CSV}")
+    print(f"Unmatched: {len(unmatched)} {dict(Counter(u['reason'].split('(')[0] for u in unmatched))} -> {config.UNMATCHED_CSV}")
     if unmatched:
-        print("🧑 HUMAN (H3): fill gaps in data/prices/manual_overrides.csv, then run: python fetch_prices.py --rematch")
+        print("HUMAN (H3): fill gaps in data/prices/manual_overrides.csv, then run: python fetch_prices.py --rematch")
 
 
 if __name__ == "__main__":

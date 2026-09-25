@@ -89,6 +89,32 @@
 ### Results
 - ONNX vs PyTorch: worst cosine **1.000000** over 5 images ✅. `embedder.onnx` 17.1MB, input `[1,3,320,224]` → `embedding [1,1280]`.
 - ingest: 1797 printings, 947 names, UI images 67MB.
+- embed: 1287 printings × 9 rows = **11,583 × 1280 = 59.3MB** in 27.6 min (0.8 printings/s on CPU, augmentation-bound). Over the 25MB warning → revisit in Phase 3 (PCA 1280→256 baked into ONNX if load time or searchMs p95 > 20ms).
+- layout.bin: 461 printings (look-alike names), 8.3MB. prices.json: 1797, median $0.28, max $3,624.82.
+- parity fixtures: OGN-007 (look-alike group), OGN-001, OGN-232, SFD-054, UNL-026.
+- **Leave-one-out: 98.7% ✅** (target 95%). Top misses are signature ↔ normal twins (OGN-301→301S, OGN-306S→306, OGN-303→303S): same art, different frame → layout check's job. Rest are single cross-card misses.
+
+### Look-alike acceptance — bar changed (human decision 2026-09-25)
+PLAN's bar ("layout alone beats every sibling ≥ 95% in every group") **failed: 88.4%, 57/180 groups**. Diagnosis: two kinds of group —
+1. *Different art, same frame* (e.g. Veteran Poro SFD-099 vs UNL-223): layout can't separate by design; the embedding does.
+2. *Same art, tiny overlay* (signature showcase vs overnumbered, e.g. Lee Sin OGN-304 vs 304S — a thin gold autograph; pHash distance 6): hard for anything.
+
+The app never uses layout alone; §6.4 combines them. Human approved the new bar: **combined (0.5·embed + 0.5·layout) ≥ 95% overall**. Embed scores use the clean reference row only (conservative vs the app's best-of-9 rows).
+
+| Score | Overall (3688 aug images) | Groups ≥ 95% |
+|---|---|---|
+| layout only | 88.4% | 57/180 |
+| embed only | 98.3% | 159/180 |
+| **combined 0.5/0.5** | **98.8% ✅** | 161/180 |
+
+**19 weak groups → Phase 3 calibration** (`pipeline/out/sanity_groups.json`):
+- Base vs alt art where layout is right but embed is weak (Poppy - Paragon C69 L94 E69, Lillia - Fae Fawn C75, Viktor - Innovator C81 L100 E62, Jhin - Murderous Artist C81 L100, Rumble, Azir): a higher LAYOUT_WEIGHT should fix these — tune on real photos.
+- Signature vs overnumbered showcase (Lee Sin, Yasuo, Volibear, Leona, Irelia, Aphelios): expect `ask` (chooser) on stage.
+- `config.EMBED_W/LAYOUT_W` renamed **`EMBED_WEIGHT/LAYOUT_WEIGHT`** (LAYOUT_W already = edge-map width 56; the clash broke the layout code). App `config.ts` should use the same names.
+
+### Phase 1 accepted ✅
+- pytest 58 pass · ONNX parity 1.000000 · leave-one-out 98.7% · look-alike combined 98.8% · aug_preview approved by human.
+- Open for later: embeddings 59MB (> 25MB warn) → measure load + searchMs in Phase 3 before PCA.
 
 ## Phase 0 — final pool
 

@@ -4,7 +4,7 @@
 Build local web app that identifies a held-up Riftbound card (exact printing) in <300ms p95, shows its price, and fires a value-scaled reaction — per `PLAN.md` (source of truth).
 
 ## Current Phase
-Phase 1 (next — branch `feat/phase-1-offline-pipeline`)
+Phase 2 (next — branch `feat/phase-2-app-shell`)
 
 ## Phases
 Full specs + acceptance criteria live in `PLAN.md`. Do not start next phase until acceptance passes.
@@ -24,16 +24,15 @@ Full specs + acceptance criteria live in `PLAN.md`. Do not start next phase unti
 - **Status:** complete
 
 ### Phase 1: Offline pipeline (§4) — branch `feat/phase-1-offline-pipeline`
-- [ ] Install torch (CPU), timm, onnx, onnxruntime, albumentations; pin in requirements
-- [x] layout.py (written), ingest.py (written), prices.py (written)
-- [ ] augment.py + aug_preview.png
-- [ ] model.py, export_onnx.py (ONNX vs torch cos ≥ 0.999)
-- [ ] embed.py (non-foil printings × (1 clean + 8 aug)), size check
-- [ ] parity.py, scripts/build_data.sh
-- [ ] tests: layout, ingest validation, prices, augment determinism, output shapes/unit length
-- [ ] sanity.py: leave-one-out ≥95%, layout sanity ≥95% per group → NOTES
-- [ ] H: approve `aug_preview.png`
-- **Status:** in_progress
+- [x] Install torch (CPU), timm, onnx, onnxruntime, albumentations; pin in requirements
+- [x] layout.py, ingest.py, prices.py, augment.py, model.py, export_onnx.py (cos 1.000000, opset 18)
+- [x] embed.py: 11,583 × 1280 = 59MB (27.6 min)
+- [x] parity.py, scripts/build_data.sh
+- [x] tests: 58 pass
+- [x] sanity: leave-one-out 98.7%; look-alike combined 98.8% (bar changed by human from layout-only per group)
+- [x] H: aug_preview approved
+- **Status:** complete
+- Carry to Phase 3: 19 weak look-alike groups (tune EMBED_WEIGHT/LAYOUT_WEIGHT on real photos); 59MB embeddings (measure before PCA); H7 Nexus Night images
 
 ### Phase 2: App shell, camera, guide box, stability (§5)
 - [ ] Vite React-TS app, camera + device picker, guide box mapping, signals, state machine, debug panel, vitest

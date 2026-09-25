@@ -39,6 +39,20 @@
 - Found + fixed bug: fetch_raw skipped OPP (Nexus Night) on a fresh fetch once DEMO_SETS narrowed
 - pytest: 27 passed
 
+### Phase 1: Offline pipeline
+- **Status:** in_progress (branch feat/phase-1-offline-pipeline)
+- CPU torch etc installed + pinned; written layout, ingest, prices, model, augment, export_onnx, embed, parity, sanity, build_data.sh; tests 57 pass
+- Fixed: layout float noise amplification; empty-tile scoring bug; cp1252 crash from torch.onnx emoji
+- ONNX parity cos 1.000000; opset 18; embed 11583x1280 = 59MB (27.6 min)
+- Leave-one-out 98.7% PASS
+- Layout sanity 88.4%, 57/180 groups FAIL → diagnosing (findings.md)
+- diag_layout.py attempt 1 crashed at json.dump (numpy int64) after full run; fixed, re-running
+- Diag: layout 89.0% (57/180), embed 98.1% (159), combined 98.7% (161)
+- User: Phase 1 bar = combined >= 95% overall; aug_preview APPROVED
+- sanity.py rewritten to official combined check; config name clash (LAYOUT_W weight vs width) broke 7 tests → renamed EMBED_WEIGHT/LAYOUT_WEIGHT; 58 tests pass
+- Final sanity: LOO 98.7%, combined 98.8% (161/180 groups), 19 weak groups → Phase 3
+- Phase 1 COMPLETE → merged to main
+
 ## Test Results
 | Test | Input | Expected | Actual | Status |
 |------|-------|----------|--------|--------|
@@ -52,6 +66,9 @@
 | 2026-09-25 | `UnicodeEncodeError` cp1252 printing `→`/🧑 | 1 | sed missed emoji |
 | 2026-09-25 | same | 2 | Edit tool → ASCII-only prints |
 | 2026-09-25 | E2E test: fresh fetch missed OPP → Nexus Night pool empty | 1 | fetch_raw adds NEXUS_NIGHT_SET |
+| 2026-09-25 | torch.onnx emoji → cp1252 UnicodeEncodeError | 1 | config.py reconfigures stdout UTF-8 |
+| 2026-09-25 | diag json.dump numpy int64 | 1 | int() cast |
+| 2026-09-25 | `EMBED_W, LAYOUT_W = 0.5, 0.5` overwrote LAYOUT_W (map width) | 1 | renamed to *_WEIGHT |
 
 ## 5-Question Reboot Check
 | Question | Answer |

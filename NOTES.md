@@ -116,6 +116,17 @@ The app never uses layout alone; §6.4 combines them. Human approved the new bar
 - pytest 58 pass · ONNX parity 1.000000 · leave-one-out 98.7% · look-alike combined 98.8% · aug_preview approved by human.
 - Open for later: embeddings 59MB (> 25MB warn) → measure load + searchMs in Phase 3 before PCA.
 
+## Phase 2 — App shell (2026-09-26)
+- Stack: Vite 8.3, React 19.2, TypeScript 6.0 (`strict: true` added — template omits it), vitest 5.0, oxlint. Deps: onnxruntime-web 1.30, comlink 4.4, canvas-confetti 1.9; dev `@types/canvas-confetti` (types only). `jsdom` tried and removed (all tested logic is DOM-free).
+- `npm create vite` refuses non-empty dirs and `app/public` already had pipeline output → scaffolded in scratchpad, copied in with `cp -rn`.
+- Generated `app/public/{data,models,fixtures}` gitignored (except `data/tiers.json`). `vite build` copies ~175MB of public data into `dist/` — delete after local builds (OneDrive).
+- Keys: D debug, N pack mode, B capture background, M mirror (CSS only; crops use the raw frame).
+- Guide box colours: grey idle, yellow hold still, blue recognizing, green flash on reaction.
+- Browser check (Chrome, "720p HD Camera" 1280×720, element 1920×808, object-fit cover): 30–31 fps; overlay centred ±1px, aspect 0.699 vs 0.700; empty-box presence ~1.0 (threshold 18); IDLE→CANDIDATE→RECOGNIZING→COOLDOWN observed with the stub.
+- Fix: background auto-capture after 15 frames (0.5s) grabbed the frame mid auto-exposure → presence stuck at 57–86. Now 60 frames (~2s). `B` recaptures any time.
+- `RecognitionResult` gains `packMode` (logged per result, §6.4b).
+- Human live check 2026-09-26: real card held in the box runs the full flow. Still→recognize latency not reported; Phase 3 metrics will record it. **Phase 2 accepted.**
+
 ## Pack mode (human request, 2026-09-25) — PLAN §6.4b added
 - Setting `booster` (default) | `nexus_night`. Booster: Nexus Night printings excluded from candidates. Nexus Night: inside a same-picture group, Nexus Night printings win (cheapest of them); others still match normally.
 - `cards.json` gains `pool` (booster 1693, nexus_night 104). Reference logic `pipeline/packmode.py` (tested); `fetch_cards.is_nexus_night` now uses the same `pool_of` rule. TS port `vision/packMode.ts` must match; UI toggle `N` comes with Phase 2/3.

@@ -1,0 +1,37 @@
+// Runtime thresholds — the single place for tunable numbers (PLAN.md §5.6, §6.4).
+// Initial values; calibrated in Phase 3.
+export const CFG = {
+  // Stability (§5.4–5.5)
+  PRESENT_T: 18, // mean abs diff vs background (0–255)
+  MOTION_T: 4, // mean abs diff between consecutive frames
+  STABLE_FRAMES: 3,
+  SHARP_T: 60, // Laplacian variance
+  EMPTY_FRAMES: 10,
+  RETRIES: 2,
+
+  // Recognition (§6.4) — names mirror pipeline/config.py
+  ACCEPT_T: 0.75, // cosine score
+  MARGIN_T: 0.05, // best minus runner-up (different card names)
+  EMBED_WEIGHT: 0.5,
+  LAYOUT_WEIGHT: 0.5,
+  LAYOUT_MARGIN_T: 0.03,
+
+  // Geometry (§5.2–5.3)
+  MODEL_W: 224,
+  MODEL_H: 320,
+  GUIDE_HEIGHT_FRAC: 0.55, // guide box height as a fraction of the video height
+  TINY_W: 48, // per-frame analysis image (grayscale)
+  TINY_H: 68,
+  SHARP_W: 112, // sharpness crop, only when motion is low
+  SHARP_H: 160,
+
+  // Camera (§5.1)
+  CAMERA_IDEAL_W: 1920,
+  CAMERA_IDEAL_H: 1080,
+  BACKGROUND_WARMUP_FRAMES: 60, // auto-capture the empty background after ~2s (lets auto-exposure settle)
+
+  // Phase 2 recognition stub
+  STUB_RECOGNIZE_MS: 250,
+} as const;
+
+export type Config = typeof CFG;

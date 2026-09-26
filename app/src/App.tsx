@@ -9,6 +9,7 @@ import { CaptureMode } from "./ui/CaptureMode";
 import { DebugPanel } from "./ui/DebugPanel";
 import { ResultChip } from "./ui/ResultChip";
 import { usePackMode } from "./ui/usePackMode";
+import { useRingLight } from "./ui/useRingLight";
 import { VariantChooser } from "./ui/VariantChooser";
 import { useRecognizer } from "./vision/useRecognizer";
 
@@ -19,6 +20,7 @@ export default function App() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [deviceId, setDeviceId] = useState<string | null>(null);
   const [mirror, setMirror] = useState(false);
+  const { ring, cycleRing } = useRingLight();
   const [showDebug, setShowDebug] = useState(true);
   const [flash, setFlash] = useState(false);
   const [capture, setCapture] = useState(false);
@@ -64,12 +66,24 @@ export default function App() {
       else if (k === "b") captureBackground();
       else if (k === "m") setMirror((v) => !v);
       else if (k === "c") setCapture((v) => !v);
+      else if (k === "l") cycleRing();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [togglePackMode, captureBackground]);
+  }, [togglePackMode, captureBackground, cycleRing]);
 
-  const { overlay, videoSize } = useGuideOverlay(videoRef, !!stream);
+  // Lighting changed: re-capture the empty background once auto-exposure has settled.
+  const firstRing = useRef(true);
+  useEffect(() => {
+    if (firstRing.current) {
+      firstRing.current = false;
+      return;
+    }
+    const t = setTimeout(captureBackground, CFG.RING_BACKGROUND_DELAY_MS);
+    return () => clearTimeout(t);
+  }, [ring, captureBackground]);
+
+  const { overlay, videoSize } = useGuideOverlay(videoRef, !!stream, ring);
   const phase = stats.state.phase;
   const boxClass = flash
     ? "recognized"
@@ -103,9 +117,12 @@ export default function App() {
         <label>
           <input type="checkbox" checked={mirror} onChange={(e) => setMirror(e.target.checked)} /> Mirror
         </label>
+        <button type="button" onClick={cycleRing} title="L" className={ring === "off" ? "" : "ring-on"}>
+          Ring light: {ring}
+        </button>
       </header>
 
-      <main className="stage">
+      <main className={`stage ring-${ring}`}>
         {(error || dataError || rec.initError) && (
           <p className="error" role="alert">{error ?? dataError ?? rec.initError}</p>
         )}
@@ -139,13 +156,13 @@ export default function App() {
         )}
         {capture && <CaptureMode cards={cards} videoRef={videoRef} />}
       </main>
-      <footer className="keys">D debug · N pack mode · B background · M mirror · C capture mode</footer>
+      <footer className="keys">D debug · N pack mode · B background · M mirror · C capture mode · L ring light</footer>
     </div>
   );
 }
 
 /** Guide box in element pixels; recomputed when the element or the video resolution changes. */
-function useGuideOverlay(videoRef: React.RefObject<HTMLVideoElement | null>, active: boolean) {
+function useGuideOverlay(videoRef: React.RefObject<HTMLVideoElement | null>, active: boolean, layoutKey: string) {
   const [overlay, setOverlay] = useState<{ x: number; y: number; w: number; h: number } | null>(null);
   const [videoSize, setVideoSize] = useState({ w: 0, h: 0 });
 
@@ -157,7 +174,9 @@ function useGuideOverlay(videoRef: React.RefObject<HTMLVideoElement | null>, act
       const vh = video.videoHeight;
       if (!vw || !vh) return;
       const box = guideBoxVideoRect(vw, vh, CFG.GUIDE_HEIGHT_FRAC, CFG.MODEL_W, CFG.MODEL_H);
-      setOverlay(videoRectToElement(box, vw, vh, video.clientWidth, video.clientHeight, FIT));
+      const r = videoRectToElement(box, vw, vh, video.clientWidth, video.clientHeight, FIT);
+      // The overlay is positioned in the stage; the video may be inset (ring light padding).
+      setOverlay({ ...r, x: r.x + video.offsetLeft, y: r.y + video.offsetTop });
       setVideoSize({ w: vw, h: vh });
     };
     const ro = new ResizeObserver(update);
@@ -170,7 +189,7 @@ function useGuideOverlay(videoRef: React.RefObject<HTMLVideoElement | null>, act
       video.removeEventListener("loadedmetadata", update);
       video.removeEventListener("resize", update);
     };
-  }, [videoRef, active]);
+  }, [videoRef, active, layoutKey]);
 
   return { overlay, videoSize };
 }

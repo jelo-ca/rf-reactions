@@ -28,6 +28,7 @@ export const CFG = {
   // Camera (§5.1)
   CAMERA_IDEAL_W: 1920,
   CAMERA_IDEAL_H: 1080,
+  RING_BACKGROUND_DELAY_MS: 1500, // after toggling the ring light, recapture the background once exposure settles
   BACKGROUND_WARMUP_FRAMES: 60, // auto-capture the empty background after ~2s (lets auto-exposure settle)
 
 } as const;

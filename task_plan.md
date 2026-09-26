@@ -45,8 +45,9 @@ Full specs + acceptance criteria live in `PLAN.md`. Do not start next phase unti
 - [x] Diagnosis: domain gap (framing 65–85%, backlight/cast/haze, hand, tilt) + backbone embeds frame > art
 - [x] augment v2 (realistic webcam crops) + per-image channel standardization in the model
 - [x] Fine-tune (SupCon + hard negatives, real-photo validation): **step 250 → real top-1 61%, median rank 1**; killed at step 275 by low-memory guard; human chose to use step 250
-- [ ] Rebuild with fine-tuned weights (export ✅ cos 1.000000 → embed → export_search → parity) — running, `pipeline/out/rebuild.log`
-- [ ] `eval.py` on the 18 photos (in-sample: they selected the checkpoint) + restart dev server
+- [x] Rebuild with fine-tuned weights: export cos 1.000000, embed 26.8 min, recognizer 76.5 MB, parity fixtures
+- [x] `eval.py` (18 in-sample photos): **top-1 61.1%, top-5 83.3%, median rank 1**; scores now ~0.35–0.45 → provisional calibration ACCEPT_T 0.44 / MARGIN_T 0.04 (8/18 accepted, 0 wrong) applied to config.ts; weakest: SFD-042 Brutalizer
+- [x] Dev server restarted
 - [ ] HUMAN: live retest (Discipline first); re-approve aug preview v2
 - [ ] HUMAN (H4): fresh eval set — ≥ 20 printings × 3, hard pairs × 5, varied lighting, **not** used for checkpoint selection
 - [ ] Optional: resume fine-tuning (2 workers, close Chrome) with online hard-negative mining if real top-1 plateaus

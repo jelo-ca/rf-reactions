@@ -95,11 +95,12 @@
 - Fine-tune #2: step 0 real top-1 0% (median rank 101, standardization w/o training), synth 39%; **step 250: real top-1 61% (median rank 1), synth 97.5%, margin +0.33**; loss 0.004 (batches getting easy)
 - Low-memory guard killed training at step 275 + dev server (free RAM 6.8/15.7 GB after). best.pt = step 250 kept.
 - Human chose: use step-250 checkpoint now → rebuild (export, embed, export_search, parity) running → out/rebuild.log; then restart dev server for live test
+- Rebuild done (fine-tuned): eval 18 photos top-1 61.1%, top-5 83.3%, median rank 1; provisional ACCEPT_T 0.44 / MARGIN_T 0.04 (8/18 accepted, 0 wrong); dev server restarted
 
 ## 5-Question Reboot Check (updated 2026-09-26)
 | Question | Answer |
 |----------|--------|
-| Where am I? | Phase 3, branch `feat/finetune-embedder`: rebuilding app data with the fine-tuned step-250 checkpoint |
+| Where am I? | Phase 3, branch `feat/finetune-embedder`: fine-tuned app data built; waiting on human live retest + fresh eval set |
 | Where am I going? | eval → human live retest → fresh eval set → calibrate → Phase 3 acceptance → Phases 4–7 |
 | What's the goal? | Identify held-up card printing in < 300 ms p95 with ≥ 90% top-1 and 0 wrong accepts; show price; react |
 | What have I learned? | Synthetic metrics (98.7%) didn't predict real photos (0%); fix the data/domain first; see `docs/retrospective.md` |

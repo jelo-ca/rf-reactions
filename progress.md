@@ -83,15 +83,25 @@
 | 2026-09-26 | parity page hung on signatures() | 1 | copy ORT output (SAB view not transferable) — not enough |
 | 2026-09-26 | same | 2 | serialize session.run (overlapping runs hang on WebGPU) — fixed |
 | 2026-09-26 | parity rows doubled, no verdict | 1 | cancelled flag for StrictMode's discarded effect |
+| 2026-09-26 | fine-tune #2 + dev server killed by low-memory guard at step 275 | 1 | kept step-250 best.pt; if resuming: 2 workers, close Chrome tabs |
 
-## 5-Question Reboot Check
-| Question | Answer |
-|----------|--------|
-| Where am I? | Phase 0, not started |
-| Where am I going? | Phases 0–7 per PLAN.md |
-| What's the goal? | Card-recognition reaction demo, <300ms, ≥90% acc |
-| What have I learned? | See findings.md |
-| What have I done? | Planning files created |
 - Browser fixture run found JS search 82/91 ms (p50/p95) → baked search into recognizer.onnx → 0.5/1.4 ms; recognize call p95 49 ms
 - "OGN-007 → VEN-R01" investigated: identical-art reprint in same picture group, correct per rule (documented)
 - Live recognition wired into App (chooser, result chip, debug timings); 58 app tests
+- Human: OGN-058 Discipline ranks 3–5 live; asked for ring light → added (L)
+- Diagnosis: pretrained embeds frame > art; real eval photos (18) top-1 0%, median rank 16 → big domain gap (framing, backlight/cast/haze, hand)
+- Fine-tune #1 (weak augments) stopped; augment v2 + per-image standardization + real-photo validation; fine-tune #2 running (out/finetune_run.log)
+- decide.py (Python mirror, 10 tests) + eval.py (report + calibrate); pipeline tests 79
+- Fine-tune #2: step 0 real top-1 0% (median rank 101, standardization w/o training), synth 39%; **step 250: real top-1 61% (median rank 1), synth 97.5%, margin +0.33**; loss 0.004 (batches getting easy)
+- Low-memory guard killed training at step 275 + dev server (free RAM 6.8/15.7 GB after). best.pt = step 250 kept.
+- Human chose: use step-250 checkpoint now → rebuild (export, embed, export_search, parity) running → out/rebuild.log; then restart dev server for live test
+
+## 5-Question Reboot Check (updated 2026-09-26)
+| Question | Answer |
+|----------|--------|
+| Where am I? | Phase 3, branch `feat/finetune-embedder`: rebuilding app data with the fine-tuned step-250 checkpoint |
+| Where am I going? | eval → human live retest → fresh eval set → calibrate → Phase 3 acceptance → Phases 4–7 |
+| What's the goal? | Identify held-up card printing in < 300 ms p95 with ≥ 90% top-1 and 0 wrong accepts; show price; react |
+| What have I learned? | Synthetic metrics (98.7%) didn't predict real photos (0%); fix the data/domain first; see `docs/retrospective.md` |
+| What have I done? | Phases 0–2 + pack mode merged; Phase 3 app pipeline complete; fine-tune step 250 = 61% real top-1 |
+

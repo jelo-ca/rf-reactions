@@ -39,10 +39,14 @@ Full specs + acceptance criteria live in `PLAN.md`. Do not start next phase unti
 - [ ] TS port `vision/packMode.ts` + `N` toggle + badge + localStorage (Phase 2/3)
 - [ ] eval.py uses packmode (Phase 3)
 
-### Phase 2: App shell, camera, guide box, stability (§5)
-- [ ] Vite React-TS app, camera + device picker, guide box mapping, signals, state machine, debug panel, vitest
-- [ ] Pack mode toggle (`N`) + badge + localStorage
-- **Status:** pending
+### Phase 2: App shell, camera, guide box, stability (§5) — branch `feat/phase-2-app-shell`
+- [x] Vite 8 / React 19 / TS 6 strict app (scaffolded in scratchpad, copied into app/), vitest 5
+- [x] camera + device picker, guide box mapping (cover/contain), signals, state machine, debug panel (D)
+- [x] Pack mode toggle (N) + badge + localStorage; TS packMode.ts mirrors Python tests
+- [x] 33 vitest pass; tsc/oxlint clean; build OK
+- [x] Browser check (Chrome, 720p HD Camera 1280x720): 30fps, overlay centred (aspect 0.699), noise floor ~1, full IDLE→CANDIDATE→RECOGNIZING→COOLDOWN with stub
+- [ ] **HUMAN:** hold a real card: RECOGNIZING within ~150ms ("still → recognize" in debug panel); remove → IDLE; device picker switch
+- **Status:** in_progress — waiting on human live check
 
 ### Phase 3: Vision worker, recognition, eval (§6)
 - [ ] Worker + ORT, crop/tensor, search, decide, chooser, capture mode, parity page

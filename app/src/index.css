@@ -80,3 +80,28 @@ body { background: var(--bg); color: var(--text); }
 @media (prefers-reduced-motion: reduce) {
   .guide { transition: none; }
 }
+
+.capture {
+  position: absolute; top: 12px; right: 12px; width: 320px; max-height: calc(100% - 24px); overflow: auto;
+  background: var(--panel); border: 1px solid #2c2f39; border-radius: 8px; padding: 10px 12px; font-size: 13px;
+}
+.capture h2 { font-size: 12px; margin: 0 0 8px; color: var(--muted); text-transform: uppercase; }
+.capture input {
+  width: 100%; background: #1b1d24; color: var(--text); border: 1px solid #2c2f39;
+  border-radius: 6px; padding: 6px 8px; font: inherit;
+}
+.capture .results { list-style: none; margin: 6px 0; padding: 0; }
+.capture .results button {
+  width: 100%; text-align: left; background: none; color: var(--text); border: 0;
+  padding: 4px 6px; border-radius: 4px; font: inherit; cursor: pointer;
+}
+.capture .results button:hover { background: #22252e; }
+.capture .results i { color: var(--muted); font-style: normal; }
+.capture .selected { display: flex; gap: 10px; margin: 8px 0; }
+.capture .selected img { width: 72px; border-radius: 4px; }
+.capture .hint { margin-top: 6px; color: var(--hold); }
+.capture .last { display: flex; align-items: center; gap: 8px; margin: 8px 0; font-size: 11px; color: var(--muted); }
+.capture .last img { width: 45px; border: 1px solid #2c2f39; }
+.capture .muted, .capture code { color: var(--muted); }
+.capture kbd { border: 1px solid #444a58; border-radius: 3px; padding: 0 4px; }
+.error-inline { color: var(--bad); }

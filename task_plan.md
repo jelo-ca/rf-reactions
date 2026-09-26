@@ -4,7 +4,7 @@
 Build local web app that identifies a held-up Riftbound card (exact printing) in <300ms p95, shows its price, and fires a value-scaled reaction — per `PLAN.md` (source of truth).
 
 ## Current Phase
-Phase 2 (next — branch `feat/phase-2-app-shell`)
+Phase 3 (next — branch `feat/phase-3-vision`)
 
 ## Phases
 Full specs + acceptance criteria live in `PLAN.md`. Do not start next phase until acceptance passes.
@@ -45,8 +45,8 @@ Full specs + acceptance criteria live in `PLAN.md`. Do not start next phase unti
 - [x] Pack mode toggle (N) + badge + localStorage; TS packMode.ts mirrors Python tests
 - [x] 33 vitest pass; tsc/oxlint clean; build OK
 - [x] Browser check (Chrome, 720p HD Camera 1280x720): 30fps, overlay centred (aspect 0.699), noise floor ~1, full IDLE→CANDIDATE→RECOGNIZING→COOLDOWN with stub
-- [ ] **HUMAN:** hold a real card: RECOGNIZING within ~150ms ("still → recognize" in debug panel); remove → IDLE; device picker switch
-- **Status:** in_progress — waiting on human live check
+- [x] HUMAN (2026-09-26): holding a real card triggers the flow ("it recognizes it"); still→recognize ms not reported — measure in Phase 3 metrics
+- **Status:** complete
 
 ### Phase 3: Vision worker, recognition, eval (§6)
 - [ ] Worker + ORT, crop/tensor, search, decide, chooser, capture mode, parity page

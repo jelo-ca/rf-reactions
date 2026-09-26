@@ -71,6 +71,20 @@
   2. **Same art, tiny overlay** (e.g. Lee Sin OGN-304 vs OGN-304S signature = gold autograph scrawl): near-identical everywhere; hard for any method.
 - Running `scratchpad/diag_layout.py`: per group layout-only vs embed-only vs combined 0.5/0.5, pHash min distance.
 
+### Live miss: OGN-058 Discipline ranks 3rd–5th (human, 2026-09-26)
+- Reference-space check: Discipline clean vs other Spells (Call to Glory 0.807, Whirlwind 0.805, …0.77) is **higher** than vs its own augmented rows (min 0.516, mean 0.707).
+- ⇒ ImageNet MobileNetV3 features encode the card-type frame more than the art; camera distortion moves an embedding further than the Spell-vs-Spell difference. Also implies live scores often < ACCEPT_T 0.75.
+- Fix chosen: fine-tune (PLAN §6 fallback 4) with SupCon + hard negatives from pretrained neighbours. Timing: ~4.3 s/step steady state on CPU (P=24 classes × K=2).
+
+### First real eval photos (human, 18 photos: OGN-058, SFD-042, UNL-042) — pretrained model
+- **top-1 0%, top-5 16.7%, median rank 16**, top scores 0.40–0.51 → all rejected at ACCEPT_T 0.75.
+- Visual check (`scratchpad/eval_vs_ref.png`) — real crops differ from augmentations in 3 ways:
+  1. **Framing**: card fills only ~70–85% of the guide box, off-centre; hand, face, room visible around it. Augment only moved edges ±4%.
+  2. **Exposure/colour**: backlit (bright window behind user) → dark, washed out, strong blue/purple cast, low-contrast haze (sleeve/screen reflection). Augment brightness/contrast ±25%, WB ±8% — far too mild.
+  3. **Tilt**: larger than ±5° / perspective 0.06.
+- Fine-tune run #1 (weak augments) stopped before step 1 eval; retraining on the same weak augments won't close this gap.
+- Plan: (a) realistic augment v2 (card scale 0.65–1.0 at random offset on photo-like backgrounds + hand occlusion, haze/veil, strong colour cast, gamma, backlight, bigger tilt); (b) per-image channel standardization baked into the model (colour-cast invariance, same for refs and queries); (c) fine-tune with real photos as the validation metric; (d) UI hint: fill the box, avoid backlight.
+
 ### onnxruntime-web 1.30.0 (installed package, 2026-09-26)
 - Exports: `.` (wasm+cpu), `./webgpu`, `./wasm`, `./all`, `./jspi`, `./webgl`. Each has a default **bundle** build (`ort.webgpu.bundle.min.mjs`) that locates `ort-wasm-simd-threaded.jsep.wasm` via `import.meta.url`, and an `onnxruntime-web-use-extern-wasm` condition for manual `wasmPaths`.
 - Plan: `import * as ort from "onnxruntime-web/webgpu"`; exclude it from Vite `optimizeDeps` so `import.meta.url` asset resolution survives dev pre-bundling.

@@ -7,7 +7,7 @@ import { CFG } from "../config";
 import type { Card, EmbeddingMeta, PackMode, Price, RecognitionResult } from "../types";
 import { decide, indexCards } from "./decide";
 import { LAYOUT, layoutScore, layoutSignature } from "./layout";
-import { type SearchIndex, bestPerPrinting, buildIndex } from "./search";
+import { bestFromScores, rowIndex } from "./search";
 
 export type Backend = "webgpu" | "wasm";
 
@@ -25,7 +25,7 @@ export interface InitInfo {
 
 interface State {
   session: ort.InferenceSession;
-  index: SearchIndex;
+  index: ReturnType<typeof rowIndex>;
   layoutData: Float32Array;
   layoutRow: Map<string, number>;
   cards: ReturnType<typeof indexCards>;
@@ -87,28 +87,33 @@ function serialized<T>(fn: () => Promise<T>): Promise<T> {
   return next;
 }
 
-async function embed(rgba: Uint8ClampedArray): Promise<Float32Array> {
+/** Embedding + per-row cosine scores. The search (embedding @ E^T) is baked into recognizer.onnx
+ *  so it runs in ONNX Runtime (WebGPU): the JS loop took ~70-80 ms/query in the browser. */
+async function run(rgba: Uint8ClampedArray): Promise<{ embedding: Float32Array; scores: Float32Array }> {
   const out = await serialized(() => state!.session.run({ input: toTensor(rgba) }));
-  // Copy: the output may be a view into ORT's (Shared)ArrayBuffer wasm memory, which is reused
+  // Copy: outputs may be views into ORT's (Shared)ArrayBuffer wasm memory, which is reused
   // between runs and can't be transferred to the main thread.
-  return new Float32Array(out.embedding.data as Float32Array);
+  return {
+    embedding: new Float32Array(out.embedding.data as Float32Array),
+    scores: new Float32Array(out.scores.data as Float32Array),
+  };
 }
 
 async function doInit(): Promise<InitInfo> {
     const t0 = performance.now();
-    const [meta, emb, ids, layoutData, layoutIds, cards, prices] = await Promise.all([
+    const [meta, ids, layoutData, layoutIds, cards, prices] = await Promise.all([
       json<EmbeddingMeta>("/data/meta.json"),
-      f32("/data/embeddings.bin"),
       json<string[]>("/data/embedding_ids.json"),
       f32("/data/layout.bin"),
       json<string[]>("/data/layout_ids.json"),
       json<Card[]>("/data/cards.json"),
       json<Price[]>("/data/prices.json"),
     ]);
-    const { session, backend } = await createSession(meta.modelFile);
+    if (!meta.recognizerFile) throw new Error("meta.json has no recognizerFile - run pipeline/export_search.py");
+    const { session, backend } = await createSession(meta.recognizerFile);
     state = {
       session,
-      index: buildIndex(emb, ids, meta.dim),
+      index: rowIndex(ids),
       layoutData,
       layoutRow: new Map(layoutIds.map((id, i) => [id, i])),
       cards: indexCards(cards),
@@ -116,7 +121,7 @@ async function doInit(): Promise<InitInfo> {
     };
     const loadMs = performance.now() - t0;
     const t1 = performance.now();
-    await embed(new Uint8ClampedArray(CFG.MODEL_W * CFG.MODEL_H * 4)); // warm-up on zeros
+    await run(new Uint8ClampedArray(CFG.MODEL_W * CFG.MODEL_H * 4)); // warm-up on zeros
     return {
       backend,
       loadMs,
@@ -145,9 +150,9 @@ const api = {
     const t0 = performance.now();
     const rgba = pixels(img);
     const t1 = performance.now();
-    const query = await embed(rgba);
+    const { scores: rowScores } = await run(rgba);
     const t2 = performance.now();
-    const best = bestPerPrinting(s.index, query);
+    const best = bestFromScores(rowScores, s.index.rowPrinting, s.index.printingIds.length);
     const scores = new Map(s.index.printingIds.map((id, p) => [id, best[p]]));
     const t3 = performance.now();
 
@@ -175,7 +180,7 @@ const api = {
   async signatures(img: ImageBitmap): Promise<{ embedding: Float32Array; layout: Float32Array }> {
     if (!state) throw new Error("vision worker not initialized");
     const rgba = pixels(img);
-    const embedding = await embed(rgba);
+    const { embedding } = await run(rgba);
     return Comlink.transfer({ embedding, layout: layoutSignature(rgba) }, [embedding.buffer]);
   },
 };

@@ -24,7 +24,8 @@ export interface Price {
 }
 
 export interface EmbeddingMeta {
-  modelFile: string;
+  modelFile: string; // embedder only
+  recognizerFile?: string; // embedder + baked search (scores output), used by the worker
   inputWidth: 224;
   inputHeight: 320;
   dim: number;

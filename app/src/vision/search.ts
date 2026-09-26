@@ -72,3 +72,31 @@ export function search(data: Float32Array, ids: readonly string[], dim: number, 
   const index = buildIndex(data, ids, dim);
   return topK(index, bestPerPrinting(index, query), k);
 }
+
+/** Row → printing mapping only (for scores computed inside the model). */
+export function rowIndex(ids: readonly string[]): { rowPrinting: Int32Array; printingIds: string[] } {
+  const printingIds: string[] = [];
+  const pos = new Map<string, number>();
+  const rowPrinting = new Int32Array(ids.length);
+  ids.forEach((id, r) => {
+    let p = pos.get(id);
+    if (p === undefined) {
+      p = printingIds.length;
+      pos.set(id, p);
+      printingIds.push(id);
+    }
+    rowPrinting[r] = p;
+  });
+  return { rowPrinting, printingIds };
+}
+
+/** Best score per printing from per-row scores (the recognizer model's `scores` output). */
+export function bestFromScores(scores: ArrayLike<number>, rowPrinting: Int32Array, nPrintings: number): Float32Array {
+  if (scores.length !== rowPrinting.length) throw new Error(`scores ${scores.length} != rows ${rowPrinting.length}`);
+  const best = new Float32Array(nPrintings).fill(-Infinity);
+  for (let r = 0; r < rowPrinting.length; r++) {
+    const p = rowPrinting[r];
+    if (scores[r] > best[p]) best[p] = scores[r];
+  }
+  return best;
+}

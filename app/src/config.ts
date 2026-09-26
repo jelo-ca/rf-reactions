@@ -28,7 +28,7 @@ export const CFG = {
   // Camera (§5.1)
   CAMERA_IDEAL_W: 1920,
   CAMERA_IDEAL_H: 1080,
-  BACKGROUND_WARMUP_FRAMES: 15, // auto-capture the empty background after this many frames
+  BACKGROUND_WARMUP_FRAMES: 60, // auto-capture the empty background after ~2s (lets auto-exposure settle)
 
   // Phase 2 recognition stub
   STUB_RECOGNIZE_MS: 250,

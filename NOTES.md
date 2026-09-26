@@ -125,6 +125,7 @@ The app never uses layout alone; §6.4 combines them. Human approved the new bar
 - Browser check (Chrome, "720p HD Camera" 1280×720, element 1920×808, object-fit cover): 30–31 fps; overlay centred ±1px, aspect 0.699 vs 0.700; empty-box presence ~1.0 (threshold 18); IDLE→CANDIDATE→RECOGNIZING→COOLDOWN observed with the stub.
 - Fix: background auto-capture after 15 frames (0.5s) grabbed the frame mid auto-exposure → presence stuck at 57–86. Now 60 frames (~2s). `B` recaptures any time.
 - `RecognitionResult` gains `packMode` (logged per result, §6.4b).
+- Human live check 2026-09-26: real card held in the box runs the full flow. Still→recognize latency not reported; Phase 3 metrics will record it. **Phase 2 accepted.**
 
 ## Pack mode (human request, 2026-09-25) — PLAN §6.4b added
 - Setting `booster` (default) | `nexus_night`. Booster: Nexus Night printings excluded from candidates. Nexus Night: inside a same-picture group, Nexus Night printings win (cheapest of them); others still match normally.

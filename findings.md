@@ -71,6 +71,11 @@
   2. **Same art, tiny overlay** (e.g. Lee Sin OGN-304 vs OGN-304S signature = gold autograph scrawl): near-identical everywhere; hard for any method.
 - Running `scratchpad/diag_layout.py`: per group layout-only vs embed-only vs combined 0.5/0.5, pHash min distance.
 
+### onnxruntime-web 1.30.0 (installed package, 2026-09-26)
+- Exports: `.` (wasm+cpu), `./webgpu`, `./wasm`, `./all`, `./jspi`, `./webgl`. Each has a default **bundle** build (`ort.webgpu.bundle.min.mjs`) that locates `ort-wasm-simd-threaded.jsep.wasm` via `import.meta.url`, and an `onnxruntime-web-use-extern-wasm` condition for manual `wasmPaths`.
+- Plan: `import * as ort from "onnxruntime-web/webgpu"`; exclude it from Vite `optimizeDeps` so `import.meta.url` asset resolution survives dev pre-bundling.
+- Multi-threaded wasm needs `crossOriginIsolated` → dev server headers COOP `same-origin` + COEP `require-corp`. Without them ORT falls back to 1 thread.
+
 ## Technical Decisions
 | Decision | Rationale |
 |----------|-----------|

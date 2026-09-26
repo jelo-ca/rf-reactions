@@ -53,6 +53,14 @@
 - Final sanity: LOO 98.7%, combined 98.8% (161/180 groups), 19 weak groups → Phase 3
 - Phase 1 COMPLETE → merged to main
 
+## Session: 2026-09-26
+- Pack mode data+logic merged (PLAN §6.4b); Phase 2 app shell built, browser-checked, human-confirmed, merged
+- Phase 3 branch: capture mode + sort_eval.py done; browser-checked picker (no Space pressed — would download)
+- Note: git autocrlf=true → worktree CRLF; normalize \r\n in node/python patch scripts
+- search.ts/layout.ts/decide.ts + tests (54 app tests); layout TS matches Python fixtures
+- Search in node: 17–39 ms/query (noisy, memory-bound) → measure in browser
+- Worker + parity page: **PARITY PASS** webgpu, embed/layout cos 1.000000 ×5, load ~0.8s, warm-up ~85ms, 24–92 ms/image
+
 ## Test Results
 | Test | Input | Expected | Actual | Status |
 |------|-------|----------|--------|--------|
@@ -69,6 +77,12 @@
 | 2026-09-25 | torch.onnx emoji → cp1252 UnicodeEncodeError | 1 | config.py reconfigures stdout UTF-8 |
 | 2026-09-25 | diag json.dump numpy int64 | 1 | int() cast |
 | 2026-09-25 | `EMBED_W, LAYOUT_W = 0.5, 0.5` overwrote LAYOUT_W (map width) | 1 | renamed to *_WEIGHT |
+| 2026-09-26 | node patch script "missing" match | 1 | worktree CRLF (autocrlf) → normalize \r\n |
+| 2026-09-26 | vite restart failed: port 5173 in use | 1 | TaskStop killed npx wrapper only; stopped node PID by port; run `node node_modules/vite/bin/vite.js` directly |
+| 2026-09-26 | parity page: `RuntimeError: memory access out of bounds` | 1 | StrictMode double init → concurrent InferenceSession.create; init() memoized |
+| 2026-09-26 | parity page hung on signatures() | 1 | copy ORT output (SAB view not transferable) — not enough |
+| 2026-09-26 | same | 2 | serialize session.run (overlapping runs hang on WebGPU) — fixed |
+| 2026-09-26 | parity rows doubled, no verdict | 1 | cancelled flag for StrictMode's discarded effect |
 
 ## 5-Question Reboot Check
 | Question | Answer |
@@ -78,3 +92,6 @@
 | What's the goal? | Card-recognition reaction demo, <300ms, ≥90% acc |
 | What have I learned? | See findings.md |
 | What have I done? | Planning files created |
+- Browser fixture run found JS search 82/91 ms (p50/p95) → baked search into recognizer.onnx → 0.5/1.4 ms; recognize call p95 49 ms
+- "OGN-007 → VEN-R01" investigated: identical-art reprint in same picture group, correct per rule (documented)
+- Live recognition wired into App (chooser, result chip, debug timings); 58 app tests

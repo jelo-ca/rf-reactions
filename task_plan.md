@@ -48,7 +48,15 @@ Full specs + acceptance criteria live in `PLAN.md`. Do not start next phase unti
 - [x] HUMAN (2026-09-26): holding a real card triggers the flow ("it recognizes it"); still→recognize ms not reported — measure in Phase 3 metrics
 - **Status:** complete
 
-### Phase 3: Vision worker, recognition, eval (§6)
+### Phase 3: Vision worker, recognition, eval (§6) — branch `feat/phase-3-vision`
+- [x] Capture mode (C) + pipeline/sort_eval.py (committed aaf7ee5) → human can start H4
+- [x] search.ts, layout.ts (float64, MIN_MEAN floor, empty-tile rule!), decide.ts + packMode, tests
+- [x] worker.ts (Comlink, ORT webgpu→wasm, warm-up), crop→tensor
+- [x] Parity page #parity → PASS (webgpu, cos 1.000000)
+- [x] VariantChooser; wire into App (replace stub); debug panel top-5 + timings; metrics p50/p95
+- [x] Search baked into recognizer.onnx (export_search.py): search p95 1.4 ms (was 91 ms JS)
+- [ ] HUMAN: live test real cards; H4 eval photos via capture mode (C) + sort_eval.py
+- [ ] eval.py (+ packmode), calibration → config.ts
 - [ ] Worker + ORT, crop/tensor, search, decide, chooser, capture mode, parity page
 - [ ] H4: human eval photos
 - [ ] eval.py calibration: top-1 ≥90%, 0 wrong accepts, 0 wrong-printing, ask ≤20%
@@ -87,6 +95,7 @@ Full specs + acceptance criteria live in `PLAN.md`. Do not start next phase unti
 | UI images = 372×520 JPEG q85 in app/public/data/images (not PNG copies) | 1.1GB PNG → ~50MB |
 | Embed only non-foil printings | Foil = same image; decide finds foil siblings via cards.json + imageHash |
 | layout.bin only for printings in look-alike names | decide only calls layoutScore across different-picture siblings; keeps file small |
+| Search baked into ONNX (recognizer.onnx) instead of PCA first | JS search 70–80 ms in browser; PCA would still be ~15 ms and cost accuracy; matmul on WebGPU = 1.4 ms p95 |
 | E2E fetch tests with fake HTTP server + temp `config` paths | User asked to close gap: scripts' main() were untested. Caught real bug (OPP not fetched on fresh run) |
 
 ## Errors Encountered

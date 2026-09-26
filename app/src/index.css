@@ -113,3 +113,38 @@ body { background: var(--bg); color: var(--text); }
 .parity .bad { color: var(--bad); }
 .parity .verdict { font-size: 28px; font-weight: 800; }
 .parity a { color: var(--busy); }
+
+.debug { max-height: calc(100% - 24px); overflow: auto; }
+.debug h2 + dl, .debug ol + h2, .debug dl + h2 { margin-top: 8px; }
+.debug .bad dd { color: var(--bad); }
+.debug .top { margin: 6px 0 0; padding-left: 18px; }
+.debug .top li span { display: inline-block; }
+.debug .top li { display: list-item; }
+.debug .top li span:last-child { float: right; color: var(--muted); }
+.guide.failed { border-color: var(--bad); }
+.loading { position: absolute; top: 12px; left: 12px; margin: 0; padding: 6px 10px; background: var(--panel); border-radius: 6px; }
+
+.result-chip {
+  position: absolute; left: 16px; bottom: 16px; display: flex; gap: 12px; align-items: center;
+  background: var(--panel); border: 1px solid #2c2f39; border-radius: 10px; padding: 10px 14px; max-width: 420px;
+}
+.result-chip img { width: 64px; border-radius: 4px; }
+.result-chip .price { font-size: 22px; font-weight: 800; }
+.result-chip .muted { color: var(--muted); font-size: 13px; }
+
+.chooser {
+  position: absolute; inset: 0; display: grid; place-content: center; gap: 12px;
+  background: rgba(0, 0, 0, 0.7); text-align: center;
+}
+.chooser h2 { margin: 0; }
+.chooser-options { display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; }
+.chooser-options button {
+  position: relative; display: grid; gap: 6px; justify-items: center; width: 200px; padding: 12px;
+  background: #1b1d24; color: var(--text); border: 1px solid #2c2f39; border-radius: 10px; font: inherit; cursor: pointer;
+}
+.chooser-options button:hover { border-color: var(--busy); }
+.chooser-options img { width: 160px; border-radius: 6px; }
+.chooser-key {
+  position: absolute; top: 8px; left: 8px; background: var(--busy); color: #081222;
+  border-radius: 999px; width: 24px; height: 24px; display: grid; place-items: center; font-weight: 800;
+}

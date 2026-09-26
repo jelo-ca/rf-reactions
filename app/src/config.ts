@@ -30,8 +30,6 @@ export const CFG = {
   CAMERA_IDEAL_H: 1080,
   BACKGROUND_WARMUP_FRAMES: 60, // auto-capture the empty background after ~2s (lets auto-exposure settle)
 
-  // Phase 2 recognition stub
-  STUB_RECOGNIZE_MS: 250,
 } as const;
 
 export type Config = typeof CFG;

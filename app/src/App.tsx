@@ -3,6 +3,9 @@ import { guideBoxVideoRect, type ObjectFit, videoRectToElement } from "./camera/
 import { useCamera } from "./camera/useCamera";
 import { CFG } from "./config";
 import { type RecognizeFn, useStability } from "./stability/useStability";
+import { loadCards } from "./data/loaders";
+import type { Card } from "./types";
+import { CaptureMode } from "./ui/CaptureMode";
 import { DebugPanel } from "./ui/DebugPanel";
 import { usePackMode } from "./ui/usePackMode";
 
@@ -19,12 +22,19 @@ export default function App() {
   const [mirror, setMirror] = useState(false);
   const [showDebug, setShowDebug] = useState(true);
   const [flash, setFlash] = useState(false);
+  const [capture, setCapture] = useState(false);
+  const [cards, setCards] = useState<Card[]>([]);
+  const [dataError, setDataError] = useState<string | null>(null);
   const { packMode, togglePackMode } = usePackMode();
   const { stream, devices, error } = useCamera(deviceId);
 
   useEffect(() => {
     if (videoRef.current && stream) videoRef.current.srcObject = stream;
   }, [stream]);
+
+  useEffect(() => {
+    loadCards().then(setCards, (e: unknown) => setDataError(String(e)));
+  }, []);
 
   const onReact = useCallback(() => {
     setFlash(true);
@@ -40,6 +50,7 @@ export default function App() {
       else if (k === "n") togglePackMode();
       else if (k === "b") captureBackground();
       else if (k === "m") setMirror((v) => !v);
+      else if (k === "c") setCapture((v) => !v);
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
@@ -76,7 +87,7 @@ export default function App() {
       </header>
 
       <main className="stage">
-        {error && <p className="error" role="alert">{error}</p>}
+        {(error || dataError) && <p className="error" role="alert">{error ?? dataError}</p>}
         <video ref={videoRef} autoPlay playsInline muted className={mirror ? "mirrored" : ""} style={{ objectFit: FIT }} />
         {overlay && (
           <div
@@ -92,9 +103,10 @@ export default function App() {
             {packMode === "nexus_night" && <span className="guide-badge">Nexus Night</span>}
           </div>
         )}
-        {showDebug && <DebugPanel stats={stats} packMode={packMode} videoSize={videoSize} />}
+        {showDebug && !capture && <DebugPanel stats={stats} packMode={packMode} videoSize={videoSize} />}
+        {capture && <CaptureMode cards={cards} videoRef={videoRef} />}
       </main>
-      <footer className="keys">D debug · N pack mode · B background · M mirror</footer>
+      <footer className="keys">D debug · N pack mode · B background · M mirror · C capture mode</footer>
     </div>
   );
 }

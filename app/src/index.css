@@ -105,3 +105,11 @@ body { background: var(--bg); color: var(--text); }
 .capture .muted, .capture code { color: var(--muted); }
 .capture kbd { border: 1px solid #444a58; border-radius: 3px; padding: 0 4px; }
 .error-inline { color: var(--bad); }
+
+.parity { padding: 24px; max-width: 900px; font-size: 14px; }
+.parity table { border-collapse: collapse; width: 100%; margin: 12px 0; font-family: ui-monospace, Consolas, monospace; }
+.parity th, .parity td { text-align: left; padding: 4px 10px; border-bottom: 1px solid #22242c; }
+.parity .ok { color: var(--ok); }
+.parity .bad { color: var(--bad); }
+.parity .verdict { font-size: 28px; font-weight: 800; }
+.parity a { color: var(--busy); }

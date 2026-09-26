@@ -14,6 +14,7 @@ export interface StabilityStats {
   fps: number;
   hasBackground: boolean;
   lastStableToRecognizeMs: number | null; // first still frame of the run → RECOGNIZING
+  lastStillToResultMs: number | null; // first still frame → recognition result (end to end)
   lastEffect: string | null;
   reactions: number;
 }
@@ -32,6 +33,7 @@ export function useStability(
     fps: 0,
     hasBackground: false,
     lastStableToRecognizeMs: null,
+    lastStillToResultMs: null,
     lastEffect: null,
     reactions: 0,
   });
@@ -43,6 +45,8 @@ export function useStability(
     frames: 0,
     stableStartAt: 0,
     lastStableToRecognizeMs: null as number | null,
+    lastStillToResultMs: null as number | null,
+    dispatch: null as ((e: MachineEvent) => void) | null,
     lastEffect: null as string | null,
     reactions: 0,
     fpsWindow: [] as number[],
@@ -59,6 +63,11 @@ export function useStability(
 
   const captureBackground = useCallback(() => {
     r.current.wantBackground = true;
+  }, []);
+
+  /** The user chose a printing in the ASKING chooser. */
+  const pick = useCallback(() => {
+    r.current.dispatch?.({ type: "picked" });
   }, []);
 
   useEffect(() => {
@@ -78,12 +87,22 @@ export function useStability(
       if (effect) s.lastEffect = effect;
       if (effect === "recognize") {
         s.lastStableToRecognizeMs = performance.now() - s.stableStartAt;
-        s.recognize().then((status) => dispatch({ type: "result", status }));
+        const started = s.stableStartAt;
+        const onResult = (status: "accepted" | "rejected" | "ask") => {
+          s.lastStillToResultMs = performance.now() - started;
+          dispatch({ type: "result", status });
+        };
+        s.recognize().then(onResult, (err: unknown) => {
+          console.error("[vision] recognize failed:", err);
+          onResult("rejected"); // never leave the machine stuck in RECOGNIZING
+        });
       } else if (effect === "react") {
         s.reactions++;
         s.onReact();
       }
     };
+
+    s.dispatch = dispatch;
 
     const onFrame = () => {
       if (stopped) return;
@@ -115,6 +134,7 @@ export function useStability(
             fps: s.fpsWindow.length,
             hasBackground: !!s.background,
             lastStableToRecognizeMs: s.lastStableToRecognizeMs,
+            lastStillToResultMs: s.lastStillToResultMs,
             lastEffect: s.lastEffect,
             reactions: s.reactions,
           });
@@ -138,7 +158,7 @@ export function useStability(
     };
   }, [active, videoRef]);
 
-  return { stats, captureBackground };
+  return { stats, captureBackground, pick };
 }
 
 function makeCtx(w: number, h: number): CanvasRenderingContext2D {

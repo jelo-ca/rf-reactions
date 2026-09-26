@@ -1,20 +1,19 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { guideBoxVideoRect, type ObjectFit, videoRectToElement } from "./camera/guideBox";
 import { useCamera } from "./camera/useCamera";
 import { CFG } from "./config";
-import { type RecognizeFn, useStability } from "./stability/useStability";
-import { loadCards } from "./data/loaders";
+import { useStability } from "./stability/useStability";
+import { loadCards, loadPrices } from "./data/loaders";
 import type { Card } from "./types";
 import { CaptureMode } from "./ui/CaptureMode";
 import { DebugPanel } from "./ui/DebugPanel";
+import { ResultChip } from "./ui/ResultChip";
 import { usePackMode } from "./ui/usePackMode";
+import { VariantChooser } from "./ui/VariantChooser";
+import { useRecognizer } from "./vision/useRecognizer";
 
 const FIT: ObjectFit = "cover";
 const FLASH_MS = 600;
-
-// Phase 2 stub: pretend recognition succeeds. Replaced by the vision worker in Phase 3.
-const stubRecognize: RecognizeFn = () =>
-  new Promise((resolve) => setTimeout(() => resolve("accepted"), CFG.STUB_RECOGNIZE_MS));
 
 export default function App() {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -24,6 +23,7 @@ export default function App() {
   const [flash, setFlash] = useState(false);
   const [capture, setCapture] = useState(false);
   const [cards, setCards] = useState<Card[]>([]);
+  const [prices, setPrices] = useState<Map<string, number>>(new Map());
   const [dataError, setDataError] = useState<string | null>(null);
   const { packMode, togglePackMode } = usePackMode();
   const { stream, devices, error } = useCamera(deviceId);
@@ -34,13 +34,26 @@ export default function App() {
 
   useEffect(() => {
     loadCards().then(setCards, (e: unknown) => setDataError(String(e)));
+    loadPrices().then(
+      (ps) => setPrices(new Map(ps.map((p) => [p.printingId, p.priceUsd]))),
+      (e: unknown) => setDataError(String(e)),
+    );
   }, []);
+  const cardById = useMemo(() => new Map(cards.map((c) => [c.printingId, c])), [cards]);
 
   const onReact = useCallback(() => {
     setFlash(true);
     setTimeout(() => setFlash(false), FLASH_MS);
   }, []);
-  const { stats, captureBackground } = useStability(videoRef, !!stream, stubRecognize, onReact);
+  const rec = useRecognizer(videoRef, packMode);
+  const { stats, captureBackground, pick } = useStability(videoRef, !!stream && rec.ready, rec.recognize, onReact);
+  const onPick = useCallback(
+    (printingId: string) => {
+      rec.choose(printingId);
+      pick();
+    },
+    [rec, pick],
+  );
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -58,7 +71,13 @@ export default function App() {
 
   const { overlay, videoSize } = useGuideOverlay(videoRef, !!stream);
   const phase = stats.state.phase;
-  const boxClass = flash ? "recognized" : phase === "CANDIDATE" ? "hold" : phase === "RECOGNIZING" ? "busy" : "idle";
+  const boxClass = flash
+    ? "recognized"
+    : phase === "CANDIDATE" ? "hold"
+    : phase === "RECOGNIZING" || phase === "ASKING" ? "busy"
+    : phase === "COOLDOWN" && stats.state.retries > CFG.RETRIES ? "failed"
+    : "idle";
+  const shown = rec.shownId && phase === "COOLDOWN" ? cardById.get(rec.shownId) : undefined;
 
   return (
     <div className="app">
@@ -87,7 +106,10 @@ export default function App() {
       </header>
 
       <main className="stage">
-        {(error || dataError) && <p className="error" role="alert">{error ?? dataError}</p>}
+        {(error || dataError || rec.initError) && (
+          <p className="error" role="alert">{error ?? dataError ?? rec.initError}</p>
+        )}
+        {!rec.ready && !rec.initError && <p className="loading">Loading recognizer…</p>}
         <video ref={videoRef} autoPlay playsInline muted className={mirror ? "mirrored" : ""} style={{ objectFit: FIT }} />
         {overlay && (
           <div
@@ -98,12 +120,23 @@ export default function App() {
               {phase === "IDLE" && "Place card here"}
               {phase === "CANDIDATE" && "Hold still…"}
               {phase === "RECOGNIZING" && "Recognizing…"}
-              {phase === "COOLDOWN" && (flash ? "Got it!" : "Remove card")}
+              {phase === "ASKING" && "Which one?"}
+              {phase === "COOLDOWN" && (boxClass === "failed" ? "Not sure - try again" : flash ? "Got it!" : "Remove card")}
             </span>
             {packMode === "nexus_night" && <span className="guide-badge">Nexus Night</span>}
           </div>
         )}
-        {showDebug && !capture && <DebugPanel stats={stats} packMode={packMode} videoSize={videoSize} />}
+        {shown && <ResultChip card={shown} price={prices.get(shown.printingId)} reason={rec.last?.reason} cardsByName={cards} prices={prices} />}
+        {phase === "ASKING" && rec.askOptions && (
+          <VariantChooser
+            options={rec.askOptions.map((id) => cardById.get(id)).filter((c): c is Card => !!c)}
+            prices={prices}
+            onPick={onPick}
+          />
+        )}
+        {showDebug && !capture && (
+          <DebugPanel stats={stats} packMode={packMode} videoSize={videoSize} rec={rec} cardById={cardById} prices={prices} />
+        )}
         {capture && <CaptureMode cards={cards} videoRef={videoRef} />}
       </main>
       <footer className="keys">D debug · N pack mode · B background · M mirror · C capture mode</footer>

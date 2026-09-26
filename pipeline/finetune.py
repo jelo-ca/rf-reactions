@@ -168,7 +168,14 @@ def evaluate(model: Embedder, ds: Views, eval_classes: list[int], real: list, n_
         total += n_aug
         margins += (own - other).tolist()
     return {"real_top1": real_top1, "real_median_rank": real_rank, "top1": hits / total,
-            "margin_mean": float(np.mean(margins)), "margin_p10": float(np.percentile(margins, 10))}
+            "margin_mean": float(np.mean(margins)), "margin_p10": float(np.percentile(margins, 10)), "_refs": refs}
+
+
+def mine_neighbours(refs: torch.Tensor, k: int) -> list[list[int]]:
+    """Online hard negatives: the k nearest other classes under the *current* model."""
+    sims = refs @ refs.T
+    sims.fill_diagonal_(-float("inf"))
+    return sims.topk(k, dim=1).indices.tolist()
 
 
 def score_key(r: dict) -> tuple:
@@ -182,6 +189,7 @@ def main() -> None:
     ap.add_argument("--p", type=int, default=24, help="classes per batch")
     ap.add_argument("--k", type=int, default=2, help="views per class")
     ap.add_argument("--lr", type=float, default=1e-4)
+    ap.add_argument("--resume", action="store_true", help="start from FINETUNED_WEIGHTS (backed up first)")
     ap.add_argument("--workers", type=int, default=4)
     ap.add_argument("--eval-every", type=int, default=250)
     ap.add_argument("--eval-classes", type=int, default=300)
@@ -199,6 +207,13 @@ def main() -> None:
     eval_classes = random.Random(config.SEED + 1).sample(range(len(classes)), min(args.eval_classes, len(classes)))
 
     model = Embedder()
+    if args.resume:
+        if not config.FINETUNED_WEIGHTS.exists():
+            raise SystemExit(f"--resume: {config.FINETUNED_WEIGHTS} not found")
+        backup = config.FINETUNED_WEIGHTS.with_name(f"best_before_resume_{time.strftime('%Y%m%dT%H%M%S')}.pt")
+        backup.write_bytes(config.FINETUNED_WEIGHTS.read_bytes())
+        model.load_state_dict(torch.load(config.FINETUNED_WEIGHTS, map_location="cpu"))
+        print(f"resumed from {config.FINETUNED_WEIGHTS.name} (backup: {backup.name})")
     freeze_bn(model)
     opt = torch.optim.AdamW([p for p in model.parameters() if p.requires_grad], lr=args.lr, weight_decay=1e-4)
     sched = torch.optim.lr_scheduler.LambdaLR(opt, lambda s: 0.5 * (1 + math.cos(math.pi * min(s, steps) / steps)))
@@ -209,6 +224,7 @@ def main() -> None:
     print(f"real validation photos: {len(real)}")
     if not args.time:
         base = evaluate(model, ds, eval_classes, real)
+        sampler.nb = mine_neighbours(base.pop("_refs"), k=10)
         print(f"step 0 (pretrained): {base}", flush=True)
         best = score_key(base)
         log = [{"step": 0, **base}]
@@ -230,6 +246,7 @@ def main() -> None:
             print(f"step {step}/{steps} loss {loss.item():.3f}  {rate:.2f}s/step  ~{(steps - step) * rate / 60:.0f} min left", flush=True)
         if step % args.eval_every == 0 or step == steps:
             r = evaluate(model, ds, eval_classes, real)
+            sampler.nb = mine_neighbours(r.pop("_refs"), k=10)  # keep batches hard as the model improves
             log.append({"step": step, "loss": loss.item(), **r})
             print(f"eval step {step}: {r}", flush=True)
             if score_key(r) >= best:

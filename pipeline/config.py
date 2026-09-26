@@ -27,6 +27,7 @@ APP_IMAGES = APP_DATA / "images"
 APP_MODEL = APP_PUBLIC / "models" / "embedder.onnx"
 APP_PARITY = APP_PUBLIC / "fixtures" / "parity"
 OUT_DIR = ROOT / "pipeline" / "out"
+FINETUNED_WEIGHTS = OUT_DIR / "finetune" / "best.pt"  # used by model.load_embedder when present
 
 # --- Sources -------------------------------------------------------------
 CARD_SOURCE = "riftcodex"          # riftcodex (default) | riot | gallery
@@ -63,12 +64,19 @@ PHASH_SAME_MAX_DIST = 4            # pHash Hamming distance ≤ this → "same p
 # --- Model / embeddings (Phase 1) ----------------------------------------
 INPUT_W, INPUT_H = 224, 320        # portrait, close to card ratio, both divisible by 32
 BACKBONE = "mobilenetv3_large_100" # timm name; pretrained, num_classes=0
+STANDARDIZE_INPUT = True           # per-image channel standardization inside the model (colour-cast invariance)
 AUG_PER_IMAGE = 8
-AUG_PERSPECTIVE = (0.02, 0.06)     # perspective warp scale
-AUG_ROTATE_DEG = 5
-AUG_FRAME_JITTER = 0.04            # each edge moves in/out up to 4%
-AUG_TEMP_SHIFT = 0.08              # ± R/B gain for white balance
-AUG_GLARE_P = 0.6
+# v2 (2026-09-26), matched to real eval photos: card ~65–100% of the box, backlit, colour cast, hand.
+AUG_CARD_SCALE = (0.65, 1.0)       # card height as a fraction of the guide box
+AUG_PERSPECTIVE = (0.0, 0.035)     # max corner jitter as a fraction of width/height
+AUG_ROTATE_DEG = 12
+AUG_HAND_P = 0.6
+AUG_GAMMA = (0.8, 2.2)             # >1 darkens: backlit card
+AUG_EXPOSURE = (0.5, 1.3)
+AUG_CAST = (0.65, 1.3)             # per-channel gain
+AUG_VEIL_P = 0.6
+AUG_VEIL = (0.05, 0.4)             # haze strength
+AUG_GLARE_P = 0.5
 AUG_GLARE_OPACITY = (0.15, 0.5)
 AUG_JPEG_QUALITY = (50, 91)        # [low, high)
 SEED = 1234

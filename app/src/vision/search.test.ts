@@ -54,3 +54,19 @@ describe("search", () => {
     expect(ms).toBeLessThan(100); // generous in CI; the real budget (p95 <= 20ms) is measured in the browser
   });
 });
+
+describe("bestFromScores (search baked into the model)", () => {
+  it("matches bestPerPrinting on the same data", async () => {
+    const { bestFromScores, rowIndex } = await import("./search");
+    const q = new Float32Array(unit([0.3, 0.6, 0.1]));
+    const idx = buildIndex(DATA, IDS, 3);
+    const rowScores = Array.from({ length: IDS.length }, (_, r) =>
+      DATA.slice(r * 3, r * 3 + 3).reduce((s, v, d) => s + v * q[d], 0));
+    const { rowPrinting, printingIds } = rowIndex(IDS);
+    expect(printingIds).toEqual(idx.printingIds);
+    const a = bestFromScores(rowScores, rowPrinting, printingIds.length);
+    const b = bestPerPrinting(idx, q);
+    a.forEach((v, i) => expect(v).toBeCloseTo(b[i], 5));
+    expect(() => bestFromScores([1], rowPrinting, 3)).toThrow(/scores/);
+  });
+});

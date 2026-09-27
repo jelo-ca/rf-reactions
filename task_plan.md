@@ -66,7 +66,7 @@ Full specs + acceptance criteria live in `PLAN.md`. Do not start next phase unti
 
 **How to run things** (the low-memory guard stops long jobs started from Claude Code's background shells)
 - Dev server: `cd app && node node_modules/vite/bin/vite.js --port 5173`
-- Training: in your own PowerShell, `cd pipeline; $env:PYTHONUTF8="1"; .\.venv\Scripts\python -u finetune.py --resume --steps 1000 --lr 5e-5 --workers 2 --log outinetune_resumeN.log`
+- Training: in your own PowerShell, `cd pipeline; $env:PYTHONUTF8="1"; .\.venv\Scripts\python -u finetune.py --resume --steps 1000 --lr 5e-5 --workers 2 --log out\finetune_resumeN.log`
 - Rebuild app data after training: `export_onnx.py` → `embed.py` → `export_search.py` → `parity.py` (≈ 3 min with clean refs), then `eval.py --calibrate`
 
 ### Phase 4: Prices + result card (§7)

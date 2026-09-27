@@ -4,7 +4,8 @@
 Build local web app that identifies a held-up Riftbound card (exact printing) in <300ms p95, shows its price, and fires a value-scaled reaction — per `PLAN.md` (source of truth).
 
 ## Current Phase
-**Phase 4 — Prices + result card** (next; branch `feat/phase-4-price-card` off `main`). Handoff prompt: `docs/handoff-phase-4.md`.
+**Phase 5 — Reactions** (next; branch `feat/phase-5-reactions` off `main`). First: H5 rarity → tier mapping.
+Phase 4 (price card) merged to `main` (2026-09-27, `--no-ff`) after the owner's live check. Nexus Night pack mode is OFF (backlog).
 Phase 3 accepted as-is by the owner (2026-09-26): 77.8% top-1 / 0 wrong accepts on 18 in-sample photos is "acceptable right now"; accuracy items moved to the Phase 3 backlog below.
 Retrospective: `docs/retrospective.md` · Learning doc: "Rift Pulls — How We Taught the Model to Recognize Cards" (Claude Doc).
 
@@ -68,12 +69,20 @@ Full specs + acceptance criteria live in `PLAN.md`. Do not start next phase unti
 - Training: in your own PowerShell, `cd pipeline; $env:PYTHONUTF8="1"; .\.venv\Scripts\python -u finetune.py --resume --steps 1000 --lr 5e-5 --workers 2 --log out\finetune_resumeN.log`
 - Rebuild app data after training: `export_onnx.py` → `embed.py` → `export_search.py` → `parity.py` (≈ 3 min with clean refs), then `eval.py --calibrate`
 
-### Phase 4: Prices + result card (§7) — branch `feat/phase-4-price-card`
+### Phase 4: Prices + result card (§7) — merged to main (2026-09-27)
 - [x] `pipeline/prices.py` → `prices.json` (built in Phase 1; fails loudly on a missing/duplicate/bad price)
-- [ ] `ui/PriceCard.tsx` replaces the Phase 3 `ResultChip`: image, name, set, variant badge, USD price, "as of <date>", "could be foil: $X" hint on `same_image_cheapest`
-- [ ] Appears when the reaction starts (accepted / chooser pick), stays until the next card is shown
-- [ ] Acceptance: every printing in the pool shows a price; a missing price fails the build, not the demo (+ app-side test)
-- **Status:** pending — handoff prompt in `docs/handoff-phase-4.md`
+- [x] `ui/PriceCard.tsx` replaces the Phase 3 `ResultChip`: image, name, set name + number, variant badge, USD price, "as of <date>", "could be foil: $X" hint (any same-picture foil sibling — see NOTES), Nexus Night marker
+- [x] Appears when the reaction starts (accepted / chooser pick), stays until the next card is shown
+- [x] Pure logic in `prices/priceCard.ts` + 14 tests; chooser reuses it
+- [x] `setName` in `cards.json` (ingest + test)
+- [x] Acceptance: every printing in the pool shows a price (1797/1797); `prices/pricesData.test.ts` runs in `npm run build`, so a missing price fails the build; UI shows "No price" instead of crashing
+- [x] Live check found a Nexus Night pool gap (Lee Sin - Centered 151b missing) → owner: Nexus Night pack mode OFF for now (`CFG.NEXUS_NIGHT_ENABLED`), moved to backlog
+- [x] Owner live check done; merged to `main` (`--no-ff`)
+- **Status:** complete — 80 pipeline + 74 app tests pass, `tsc` / `oxlint` clean, `npm run build` green
+
+### Backlog: Nexus Night pack mode (switched off 2026-09-27, owner)
+- [ ] Find a source that says which printings come out of Nexus Night packs (Riftcodex misses some; TCGCSV doesn't mark them Promo) — 39 TCGCSV-only OPP candidates listed in NOTES.md
+- [ ] Add missing printings (manual printings CSV or new source) + real images (H7), then set `NEXUS_NIGHT_ENABLED: true`
 
 ### Phase 5: Reactions (§8)
 - [ ] H5: confirm rarity → tier mapping (rarities: Common, Uncommon, Rare, Epic, Showcase, Promo)
@@ -102,6 +111,7 @@ Full specs + acceptance criteria live in `PLAN.md`. Do not start next phase unti
 | Keep `data/` inside OneDrive | Human choice |
 | Look-alike acceptance = combined embed+layout ≥ 95% overall | Human; layout-only fails by design on different-art/same-frame groups |
 | Pack mode setting (booster / Nexus Night) | Human; NN promos reuse base art, price differs up to $316 |
+| Nexus Night pack mode OFF for now | Owner (2026-09-27): pool misses NN printings Riftcodex doesn't list (Lee Sin Centered 151b); data can't identify them → backlog |
 | Search baked into ONNX (recognizer.onnx) instead of PCA first | JS search 70–90 ms in browser; matmul on WebGPU 1.4 ms p95 |
 | Fine-tune the embedder (was "no training needed") | Real photos 0% top-1 with ImageNet features |
 | augment v2 + per-image standardization in model | Match real framing/lighting; cancel colour casts identically for refs and queries |
@@ -132,7 +142,7 @@ Full log with attempts: `progress.md` → Error Log. Recurring themes:
 - Pushes run from the human's own terminal (Claude Code's shell has no access to the SSH key: `Permission denied (publickey)`).
 - [x] `feat/finetune-embedder` pushed by the human (origin at `b23742f`)
 - [x] `main` force-pushed by the human (cleaned history `30f5a6e`), then the squash commit `234037d` pushed
-- [ ] HUMAN: `git push` for planning-file commits made after `234037d`
+- [ ] HUMAN: `git push` main (planning commits after `234037d` + the Phase 4 merge)
 - Optional: `feat/phase-3-vision` / `feat/finetune-embedder` are now fully in `main`; delete them locally/remotely when you like
 - [ ] After a successful push: delete the local `backup/pre-trailer-cleanup/*` branches (`git branch -D ...`) once you're happy
 

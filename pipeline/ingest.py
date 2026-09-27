@@ -12,6 +12,7 @@ from pathlib import Path
 from PIL import Image
 
 import config
+import rawcache
 from cardsio import FOIL_SUFFIX, read_csv
 from packmode import pool_of
 from sources.base import VARIANTS
@@ -44,9 +45,20 @@ def ui_image_name(image_file: str) -> str:
     return Path(image_file).with_suffix(".jpg").name
 
 
-def to_card_json(c: dict) -> dict:
+def set_names() -> dict[str, str]:
+    """set_id -> display name ("OGN" -> "Origins") from the cached Riftcodex /sets response."""
+    raw = rawcache.newest_dir("riftcodex")
+    if raw is None:
+        return {}
+    sets = json.loads((raw / "sets.json").read_text(encoding="utf-8"))["items"]
+    return {s["set_id"]: s["name"] for s in sets if s.get("name")}
+
+
+def to_card_json(c: dict, names: dict[str, str] | None = None) -> dict:
     return {
         "printingId": c["printing_id"], "name": c["name"], "setCode": c["set_code"],
+        # Falls back to the code: the set name is cosmetic (price card), never worth failing the build.
+        "setName": (names or {}).get(c["set_code"], c["set_code"]),
         "collectorNumber": c["collector_number"], "rarity": c["rarity"], "variant": c["variant"],
         "imageHash": c["image_hash"], "imageUrl": f"/data/images/{ui_image_name(c['image_file'])}",
         # cards.csv only holds pool printings, so any Nexus Night-set row is a Nexus Night promo.
@@ -75,7 +87,11 @@ def main() -> None:
         with Image.open(config.IMAGES_DIR / f) as img:
             img.verify()  # opens and is not truncated
         written += write_ui_image(config.IMAGES_DIR / f, config.APP_IMAGES / ui_image_name(f))
-    (config.APP_DATA / "cards.json").write_text(json.dumps([to_card_json(c) for c in cards]), encoding="utf-8")
+    names = set_names()
+    unnamed = sorted({c["set_code"] for c in cards} - names.keys())
+    if unnamed:
+        print(f"WARN no set name for {unnamed} - showing the code instead")
+    (config.APP_DATA / "cards.json").write_text(json.dumps([to_card_json(c, names) for c in cards]), encoding="utf-8")
 
     size = sum(p.stat().st_size for p in config.APP_IMAGES.glob("*.jpg")) / 1e6
     print(f"cards.json: {len(cards)} printings, {len({c['name'] for c in cards})} names")

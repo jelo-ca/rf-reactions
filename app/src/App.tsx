@@ -28,7 +28,7 @@ export default function App() {
   const [cards, setCards] = useState<Card[]>([]);
   const [priceById, setPriceById] = useState<Map<string, Price>>(new Map());
   const [dataError, setDataError] = useState<string | null>(null);
-  const { packMode, togglePackMode } = usePackMode();
+  const { packMode, togglePackMode, packModeEnabled } = usePackMode();
   const { stream, devices, error } = useCamera(deviceId);
 
   useEffect(() => {
@@ -105,9 +105,11 @@ export default function App() {
         <button type="button" onClick={rescan} title="B: check the current view again">
           Rescan
         </button>
-        <button type="button" onClick={togglePackMode} className={`pack pack-${packMode}`} title="N">
-          {packMode === "booster" ? "Booster pack" : "Nexus Night pack"}
-        </button>
+        {packModeEnabled && (
+          <button type="button" onClick={togglePackMode} className={`pack pack-${packMode}`} title="N">
+            {packMode === "booster" ? "Booster pack" : "Nexus Night pack"}
+          </button>
+        )}
         <label>
           <input type="checkbox" checked={mirror} onChange={(e) => setMirror(e.target.checked)} /> Mirror
         </label>
@@ -153,7 +155,7 @@ export default function App() {
         )}
         {capture && <CaptureMode cards={cards} videoRef={videoRef} />}
       </main>
-      <footer className="keys">D debug · N pack mode · B rescan · M mirror · C capture mode · L ring light</footer>
+      <footer className="keys">D debug{packModeEnabled ? " · N pack mode" : ""} · B rescan · M mirror · C capture mode · L ring light</footer>
     </div>
   );
 }

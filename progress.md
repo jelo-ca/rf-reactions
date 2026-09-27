@@ -127,6 +127,8 @@
 - `prices/priceCard.ts` + tests; `pricesData.test.ts` (import.meta.glob; skips if public/data absent) wired into `npm run build`; verified it fails on a dropped/null price
 - `ui/PriceCard.tsx` replaces ResultChip, persists until next accept/pick; chooser reuses formatting; app 74 tests, tsc/oxlint clean, build green
 - Error: `tsc -b` "Cannot find name 'node:fs'" in the data test (app tsconfig has only vite/client types) → switched to `import.meta.glob`
+- Owner: keep ResultChip as a debug-only view (D) → done
+- Live check: NN mode showed Lee Sin - Centered at $0.20 → Riftcodex lacks OPP 151b (TCGCSV has it, $57.45); 39 TCGCSV-only OPP candidates; owner chose to switch Nexus Night off (`CFG.NEXUS_NIGHT_ENABLED = false`) and backlog it
 
 ## 5-Question Reboot Check (updated 2026-09-26, evening)
 | Question | Answer |

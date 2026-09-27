@@ -75,8 +75,13 @@ Full specs + acceptance criteria live in `PLAN.md`. Do not start next phase unti
 - [x] Pure logic in `prices/priceCard.ts` + 14 tests; chooser reuses it
 - [x] `setName` in `cards.json` (ingest + test)
 - [x] Acceptance: every printing in the pool shows a price (1797/1797); `prices/pricesData.test.ts` runs in `npm run build`, so a missing price fails the build; UI shows "No price" instead of crashing
-- [ ] HUMAN: live check of the price card (dev server), then merge to `main`
+- [x] Live check found a Nexus Night pool gap (Lee Sin - Centered 151b missing) → owner: Nexus Night pack mode OFF for now (`CFG.NEXUS_NIGHT_ENABLED`), moved to backlog
+- [ ] HUMAN: finish the live check of the price card, then merge to `main`
 - **Status:** built — 80 pipeline + 74 app tests pass, `tsc` / `oxlint` clean, `npm run build` green
+
+### Backlog: Nexus Night pack mode (switched off 2026-09-27, owner)
+- [ ] Find a source that says which printings come out of Nexus Night packs (Riftcodex misses some; TCGCSV doesn't mark them Promo) — 39 TCGCSV-only OPP candidates listed in NOTES.md
+- [ ] Add missing printings (manual printings CSV or new source) + real images (H7), then set `NEXUS_NIGHT_ENABLED: true`
 
 ### Phase 5: Reactions (§8)
 - [ ] H5: confirm rarity → tier mapping (rarities: Common, Uncommon, Rare, Epic, Showcase, Promo)
@@ -105,6 +110,7 @@ Full specs + acceptance criteria live in `PLAN.md`. Do not start next phase unti
 | Keep `data/` inside OneDrive | Human choice |
 | Look-alike acceptance = combined embed+layout ≥ 95% overall | Human; layout-only fails by design on different-art/same-frame groups |
 | Pack mode setting (booster / Nexus Night) | Human; NN promos reuse base art, price differs up to $316 |
+| Nexus Night pack mode OFF for now | Owner (2026-09-27): pool misses NN printings Riftcodex doesn't list (Lee Sin Centered 151b); data can't identify them → backlog |
 | Search baked into ONNX (recognizer.onnx) instead of PCA first | JS search 70–90 ms in browser; matmul on WebGPU 1.4 ms p95 |
 | Fine-tune the embedder (was "no training needed") | Real photos 0% top-1 with ImageNet features |
 | augment v2 + per-image standardization in model | Match real framing/lighting; cancel colour casts identically for refs and queries |

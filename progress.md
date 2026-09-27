@@ -120,12 +120,13 @@
 - /planning-with-files:plan → files already existed; refreshed push status
 - Squash-merged `feat/finetune-embedder` (30 commits, incl. phase-3-vision) into `main` as `234037d` (owner's request, before acceptance); tree identical; 79 + 58 tests pass on main
 - origin/main reflog: human force-pushed cleaned main (30f5a6e) and pushed the squash (234037d) from own terminal
+- Owner: Phase 3 accuracy acceptable for now → Phase 3 accepted as-is, accuracy items to backlog; Phase 4 handoff prompt written (docs/handoff-phase-4.md)
 
 ## 5-Question Reboot Check (updated 2026-09-26, evening)
 | Question | Answer |
 |----------|--------|
-| Where am I? | Phase 3 working system squash-merged to `main` (`234037d`); `main` pushed by the human; next work on a new branch off main. Dev server off |
-| Where am I going? | New branch off main → live check of auto-detect → fresh eval set → calibrate → Phase 3 acceptance → merge → Phases 4–7 |
+| Where am I? | Phase 3 accepted as-is and on `main`; Phase 4 (price card) is next — handoff prompt in `docs/handoff-phase-4.md`. Dev server off |
+| Where am I going? | Phase 4 price card → Phase 5 reactions → (Phase 6 OCR if needed) → Phase 7 polish; Phase 3 accuracy backlog before the demo |
 | What's the goal? | Identify held-up card printing in < 300 ms p95 with ≥ 90% top-1 and 0 wrong accepts; show price; react |
 | What have I learned? | Test on real inputs early; fine-tuning + realistic augmentation fixed a 0% start; after fine-tuning, clean refs beat augmented refs; triggers must not depend on a static background with a user-facing webcam |
 | What have I done? | Phases 0–2 + pack mode merged; Phase 3 app complete; 77.8% real top-1 (in-sample); auto-detect without B |

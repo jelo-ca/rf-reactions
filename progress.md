@@ -116,12 +116,14 @@
 - Backups `backup/pre-trailer-cleanup/*` → filter-branch on 8 branches (68 commits): 0 trailers left, every branch tree identical to its backup
 - Push failed: `Permission denied (publickey)` (SSH alias key not available to Claude Code's shell) → nothing changed on GitHub; human to push from own terminal
 - Memory saved: never add commit trailers
+- Human pushed `feat/finetune-embedder` from own terminal (origin = b23742f). `main` (force-push) and `feat/phase-3-vision` still pending
+- /planning-with-files:plan → files already existed; refreshed push status
 
 ## 5-Question Reboot Check (updated 2026-09-26, evening)
 | Question | Answer |
 |----------|--------|
-| Where am I? | Phase 3, branch `feat/finetune-embedder`, history cleaned of trailers, **push pending (human, SSH key)**. App: fine-tuned model, change-based detection, ring light toggle. Dev server off |
-| Where am I going? | Human pushes → live check of auto-detect → fresh eval set → calibrate → Phase 3 acceptance → merge → Phases 4–7 |
+| Where am I? | Phase 3, branch `feat/finetune-embedder`, history cleaned of trailers; branch pushed, **`main` force-push + `feat/phase-3-vision` pending (human)**. App: fine-tuned model, change-based detection, ring light toggle. Dev server off |
+| Where am I going? | Human pushes main + phase-3 → live check of auto-detect → fresh eval set → calibrate → Phase 3 acceptance → merge → Phases 4–7 |
 | What's the goal? | Identify held-up card printing in < 300 ms p95 with ≥ 90% top-1 and 0 wrong accepts; show price; react |
 | What have I learned? | Test on real inputs early; fine-tuning + realistic augmentation fixed a 0% start; after fine-tuning, clean refs beat augmented refs; triggers must not depend on a static background with a user-facing webcam |
 | What have I done? | Phases 0–2 + pack mode merged; Phase 3 app complete; 77.8% real top-1 (in-sample); auto-detect without B |

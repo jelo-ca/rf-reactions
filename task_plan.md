@@ -4,7 +4,7 @@
 Build local web app that identifies a held-up Riftbound card (exact printing) in <300ms p95, shows its price, and fires a value-scaled reaction — per `PLAN.md` (source of truth).
 
 ## Current Phase
-**Phase 3 — recognition accuracy on real photos** (branch `feat/finetune-embedder`, off `feat/phase-3-vision`; this branch is **pushed**, `main` + `feat/phase-3-vision` still pending — see Git below).
+**Phase 3 — recognition accuracy on real photos.** The working system is **squash-merged to `main`** (`234037d`, before acceptance, at the owner's request). Remaining Phase 3 work continues on a new branch off `main`; `main` still needs pushing — see Git below.
 App runs the step-1000 fine-tuned model (77.8% top-1 on 18 in-sample photos) with change-based detection and a ring light toggle.
 Waiting on the human: live check of auto-detect, then a fresh eval set. Dev server is off.
 Retrospective: `docs/retrospective.md` · Learning doc: "Rift Pulls — How We Taught the Model to Recognize Cards" (Claude Doc).
@@ -35,7 +35,7 @@ Full specs + acceptance criteria live in `PLAN.md`. Do not start next phase unti
 - [x] Camera + picker, guide box mapping, signals, state machine, debug panel, 33 tests, human live check
 - **Status:** complete
 
-### Phase 3: Vision worker, recognition, eval (§6) — branches `feat/phase-3-vision` → `feat/finetune-embedder`
+### Phase 3: Vision worker, recognition, eval (§6) — working system squash-merged to main (`234037d`); acceptance still open
 **Built**
 - [x] Capture mode (C) + `sort_eval.py`
 - [x] search.ts, layout.ts (matches Python fixtures), decide.ts, worker (ORT WebGPU→wasm), parity page PASS (cos 1.000000)
@@ -61,7 +61,8 @@ Full specs + acceptance criteria live in `PLAN.md`. Do not start next phase unti
 - [ ] If fresh top-1 < 90%: more fine-tuning (run in own terminal), stronger backbone, or real photos in training
 - [ ] If empty-box false answers appear: add a card-present guard (border/edge check)
 - [ ] Acceptance: top-1 ≥ 90%, 0 wrong accepts, 0 wrong-printing on hard pairs, ask ≤ 20%, searchMs p95 ≤ 20, layoutMs p95 ≤ 5
-- [ ] Merge `feat/finetune-embedder` → `feat/phase-3-vision` → main
+- [x] Squash-merged `feat/finetune-embedder` (incl. `feat/phase-3-vision`, 30 commits) into `main` as `234037d` — owner's request, before acceptance; tree identical, 79 + 58 tests pass
+- [ ] Remaining Phase 3 items on a new branch off `main` (e.g. `feat/phase-3-accuracy`), merged when acceptance passes
 - **Status:** in_progress
 
 **How to run things** (the low-memory guard stops long jobs started from Claude Code's background shells)
@@ -106,6 +107,7 @@ Full specs + acceptance criteria live in `PLAN.md`. Do not start next phase unti
 | Use step-250 checkpoint after memory kill | Human choice; 61% real top-1 already |
 | Long jobs run in the human's own terminal | Claude Code's low-memory guard stopped training twice |
 | Clean reference rows only (`REFERENCE_AUG_ROWS = 0`) | After fine-tuning, augmented refs of other cards became false neighbours (77.8% vs 66.7%) |
+| Squash-merge Phase 3 to main before acceptance | Owner's request: keep a working snapshot on main before continuing |
 | Change-based detection, no background snapshot | Human choice; the empty box behind a user-facing webcam is their face/room, so the snapshot went stale after every card |
 | Ring light = on/off toggle, thin frame | Human request |
 
@@ -125,10 +127,9 @@ Full log with attempts: `progress.md` → Error Log. Recurring themes:
 - **No `Co-Authored-By` / `Claude-Session` trailers** (human request 2026-09-26). All existing ones were stripped from every branch with `git filter-branch --msg-filter` (file trees verified identical); originals kept locally in `backup/pre-trailer-cleanup/*`.
 - Remote `origin` = `git@github.com-personal:jelo-ca/rf-reactions.git` (SSH host alias). GitHub has `main` only up to the old Phase 0 merge.
 - Pushes run from the human's own terminal (Claude Code's shell has no access to the SSH key: `Permission denied (publickey)`).
-- [x] `feat/finetune-embedder` pushed by the human (origin at `b23742f`, cleaned history)
-- [ ] HUMAN: force-push cleaned `main` (origin still at old Phase 0 merge `21e6c52`): `git push --force-with-lease=main:21e6c525dfbf266ce02d2ea1db393cdb049e44cc origin main`
-- [ ] HUMAN: push `feat/phase-3-vision`: `git push -u origin feat/phase-3-vision`
-- [ ] HUMAN: push this planning-file commit on `feat/finetune-embedder`: `git push`
+- [x] `feat/finetune-embedder` pushed by the human (origin at `b23742f`)
+- [ ] HUMAN: push `main` (squash commit on top of the cleaned history; origin still at old Phase 0 merge `21e6c52`, so this is a force-push): `git push --force-with-lease=main:21e6c525dfbf266ce02d2ea1db393cdb049e44cc origin main`
+- Optional: `feat/phase-3-vision` / `feat/finetune-embedder` are now fully in `main`; delete them locally/remotely when you like
 - [ ] After a successful push: delete the local `backup/pre-trailer-cleanup/*` branches (`git branch -D ...`) once you're happy
 
 ## Notes

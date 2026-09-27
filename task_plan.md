@@ -5,7 +5,7 @@ Build local web app that identifies a held-up Riftbound card (exact printing) in
 
 ## Current Phase
 **Phase 3 — recognition accuracy on real photos** (branch `feat/finetune-embedder`, off `feat/phase-3-vision`).
-Rebuilding app data with the fine-tuned step-250 checkpoint → eval → human live retest.
+Step-1000 fine-tuned model built into the app (77.8% top-1 on 18 in-sample photos) → human live retest → fresh eval set.
 Retrospective of everything so far: `docs/retrospective.md`.
 
 ## Phases
@@ -52,7 +52,10 @@ Full specs + acceptance criteria live in `PLAN.md`. Do not start next phase unti
 - [~] Resume fine-tune (--resume, 1000 steps, lr 5e-5, 2 workers, online hard-negative mining every 250 steps) → `pipeline/out/finetune_resume.log`; backup of step-250 weights kept in `out/finetune/`
     - Killed by low-memory guard at step 325 (with dev server). Step-250 check: real 55.6% (10/18 vs 11/18), synth 97.7%, margin 0.33→0.38 → not saved; best.pt unchanged
     - Human ran it in own terminal (`--log out/finetune_resume2.log`): **step 500 → real top-1 77.8% (14/18)**, flat at 750/1000; margin 0.33 → 0.41; best.pt = step 1000
-- [ ] Rebuild with step-1000 weights → `pipeline/out/rebuild2.log` → eval + calibrate → dev server (restart when human asks)
+- [x] Rebuild with step-1000 weights: with 8 augmented reference rows/card real top-1 only 66.7% → **clean references only: 77.8% top-1, 88.9% top-5**; recognizer 76.5 → 23.7 MB
+- [x] Thresholds ACCEPT_T 0.42 / MARGIN_T 0.03 (7/18 accepted, 0 wrong; in-sample, provisional)
+- [ ] Restart dev server when human asks → live retest
+- [ ] HUMAN: fresh eval set (not used for training/selection)
 - [ ] If improved: rebuild (export → embed → export_search → parity), re-eval, recalibrate
 - [ ] HUMAN: live retest (Discipline first); re-approve aug preview v2
 - [ ] HUMAN (H4): fresh eval set — ≥ 20 printings × 3, hard pairs × 5, varied lighting, **not** used for checkpoint selection

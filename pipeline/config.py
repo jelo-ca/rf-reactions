@@ -85,7 +85,7 @@ LAYOUT_GRID = (4, 5)               # cols, rows → 20 tiles of 14×16 pixels
 LAYOUT_MIN_MEAN = 1e-3             # edge-map mean floor (near-blank image guard)
 LAYOUT_TILE_EPS = 1e-3             # tile norm below this = no edges (normalized units; real edges ~1+)
 EMBED_WEIGHT, LAYOUT_WEIGHT = 0.5, 0.5  # §6.4 combined score (PLAN EMBED_W/LAYOUT_W; renamed: LAYOUT_W is the map width) (initial; calibrated in Phase 3, mirror in app config.ts)
-ONNX_OPSET = 17
+ONNX_OPSET = 18                     # torch 2.14 exporter minimum; asking for 17 logs a failed down-conversion traceback
 ONNX_PARITY_MIN_COS = 0.999
 EMBED_WARN_MB = 25
 UI_IMAGE_W, UI_IMAGE_H = 372, 520  # price-card UI images (JPEG), half the 744×1039 source

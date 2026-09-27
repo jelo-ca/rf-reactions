@@ -8,6 +8,7 @@ import type { Card, Price } from "./types";
 import { CaptureMode } from "./ui/CaptureMode";
 import { DebugPanel } from "./ui/DebugPanel";
 import { PriceCard } from "./ui/PriceCard";
+import { ResultChip } from "./ui/ResultChip";
 import { usePackMode } from "./ui/usePackMode";
 import { useRingLight } from "./ui/useRingLight";
 import { VariantChooser } from "./ui/VariantChooser";
@@ -83,6 +84,8 @@ export default function App() {
     : "idle";
   // Set on accept or chooser pick (when the reaction fires); kept until the next card replaces it.
   const shown = rec.shownId ? cardById.get(rec.shownId) : undefined;
+  // Debug chip keeps the Phase 3 behaviour: only right after an accept, with that result's reason.
+  const accepted = phase === "COOLDOWN" && stats.state.outcome === "accepted" ? shown : undefined;
 
   return (
     <div className={ring ? "app ring-on" : "app"}>
@@ -141,6 +144,9 @@ export default function App() {
             prices={prices}
             onPick={onPick}
           />
+        )}
+        {showDebug && !capture && accepted && (
+          <ResultChip card={accepted} price={prices.get(accepted.printingId)} reason={rec.last?.reason} cardsByName={cards} prices={prices} />
         )}
         {showDebug && !capture && (
           <DebugPanel stats={stats} packMode={packMode} videoSize={videoSize} rec={rec} cardById={cardById} prices={prices} />

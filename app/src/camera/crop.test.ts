@@ -13,7 +13,7 @@ describe("captureFileName", () => {
 
 describe("searchCards", () => {
   const c = (printingId: string, name: string): Card => ({
-    printingId, name, setCode: printingId.split("-")[0], collectorNumber: "001", rarity: "Rare",
+    printingId, name, setCode: printingId.split("-")[0], setName: "Set", collectorNumber: "001", rarity: "Rare",
     variant: "normal", imageHash: "h", imageUrl: "", pool: "booster",
   });
   const cards = [c("OGN-066", "Ahri - Alluring"), c("OGN-255", "Ahri - Nine-Tailed Fox"), c("SFD-099", "Veteran Poro")];

@@ -4,7 +4,7 @@
 Build local web app that identifies a held-up Riftbound card (exact printing) in <300ms p95, shows its price, and fires a value-scaled reaction — per `PLAN.md` (source of truth).
 
 ## Current Phase
-**Phase 3 — recognition accuracy on real photos.** The working system is **squash-merged to `main`** (`234037d`, before acceptance, at the owner's request). Remaining Phase 3 work continues on a new branch off `main`; `main` still needs pushing — see Git below.
+**Phase 3 — recognition accuracy on real photos.** The working system is **squash-merged to `main`** (`234037d`, before acceptance, at the owner's request). `main` is pushed (cleaned history + squash). Remaining Phase 3 work continues on a new branch off `main`.
 App runs the step-1000 fine-tuned model (77.8% top-1 on 18 in-sample photos) with change-based detection and a ring light toggle.
 Waiting on the human: live check of auto-detect, then a fresh eval set. Dev server is off.
 Retrospective: `docs/retrospective.md` · Learning doc: "Rift Pulls — How We Taught the Model to Recognize Cards" (Claude Doc).
@@ -128,7 +128,8 @@ Full log with attempts: `progress.md` → Error Log. Recurring themes:
 - Remote `origin` = `git@github.com-personal:jelo-ca/rf-reactions.git` (SSH host alias). GitHub has `main` only up to the old Phase 0 merge.
 - Pushes run from the human's own terminal (Claude Code's shell has no access to the SSH key: `Permission denied (publickey)`).
 - [x] `feat/finetune-embedder` pushed by the human (origin at `b23742f`)
-- [ ] HUMAN: push `main` (squash commit on top of the cleaned history; origin still at old Phase 0 merge `21e6c52`, so this is a force-push): `git push --force-with-lease=main:21e6c525dfbf266ce02d2ea1db393cdb049e44cc origin main`
+- [x] `main` force-pushed by the human (cleaned history `30f5a6e`), then the squash commit `234037d` pushed
+- [ ] HUMAN: `git push` for planning-file commits made after `234037d`
 - Optional: `feat/phase-3-vision` / `feat/finetune-embedder` are now fully in `main`; delete them locally/remotely when you like
 - [ ] After a successful push: delete the local `backup/pre-trailer-cleanup/*` branches (`git branch -D ...`) once you're happy
 

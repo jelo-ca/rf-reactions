@@ -99,6 +99,7 @@
 - Rebuild done (fine-tuned): eval 18 photos top-1 61.1%, top-5 83.3%, median rank 1; provisional ACCEPT_T 0.44 / MARGIN_T 0.04 (8/18 accepted, 0 wrong); dev server restarted
 - Resumed fine-tune killed by low-memory guard at step 325 (+ dev server again); step-250 check real 55.6% (not saved), synth 97.7%, margin 0.38. Learning doc written (Claude Doc)
 - Human ran resumed fine-tune in own terminal: real top-1 61.1% → 55.6% (250) → **77.8% (500, 750, 1000)**, margin 0.33 → 0.41; rebuild #2 running
+- Rebuild #2: all 9 rows/card → 66.7%; clean-only → 77.8% (augmented refs = false neighbours after fine-tune); REFERENCE_AUG_ROWS=0; recognizer 23.7 MB; thresholds 0.42/0.03 (7/18 accepted, 0 wrong)
 
 ## 5-Question Reboot Check (updated 2026-09-26)
 | Question | Answer |
@@ -107,5 +108,5 @@
 | Where am I going? | eval → human live retest → fresh eval set → calibrate → Phase 3 acceptance → Phases 4–7 |
 | What's the goal? | Identify held-up card printing in < 300 ms p95 with ≥ 90% top-1 and 0 wrong accepts; show price; react |
 | What have I learned? | Synthetic metrics (98.7%) didn't predict real photos (0%); fix the data/domain first; see `docs/retrospective.md` |
-| What have I done? | Phases 0–2 + pack mode merged; Phase 3 app pipeline complete; fine-tune step 250 = 61% real top-1 |
+| What have I done? | Phases 0–2 + pack mode merged; Phase 3 app pipeline complete; fine-tuned (1,250 steps) = 77.8% real top-1, clean refs only |
 

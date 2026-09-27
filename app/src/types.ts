@@ -8,6 +8,7 @@ export interface Card {
   printingId: string;
   name: string;
   setCode: string;
+  setName: string; // display name ("Origins"); falls back to setCode in ingest.py
   collectorNumber: string;
   rarity: string;
   variant: Variant;

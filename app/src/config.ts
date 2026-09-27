@@ -18,6 +18,11 @@ export const CFG = {
   LAYOUT_WEIGHT: 0.5,
   LAYOUT_MARGIN_T: 0.03,
 
+  // Pack mode (§6.4b). OFF (owner, 2026-09-27): the pool misses Nexus Night printings that
+  // Riftcodex doesn't list (e.g. Lee Sin - Centered 151b), so the mode would show wrong prices.
+  // Off = always booster mode, N toggle hidden. Code + data kept; see task_plan.md backlog.
+  NEXUS_NIGHT_ENABLED: false,
+
   // Geometry (§5.2–5.3)
   MODEL_W: 224,
   MODEL_H: 320,

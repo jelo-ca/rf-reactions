@@ -4,9 +4,10 @@ import { useCamera } from "./camera/useCamera";
 import { CFG } from "./config";
 import { useStability } from "./stability/useStability";
 import { loadCards, loadPrices } from "./data/loaders";
-import type { Card } from "./types";
+import type { Card, Price } from "./types";
 import { CaptureMode } from "./ui/CaptureMode";
 import { DebugPanel } from "./ui/DebugPanel";
+import { PriceCard } from "./ui/PriceCard";
 import { ResultChip } from "./ui/ResultChip";
 import { usePackMode } from "./ui/usePackMode";
 import { useRingLight } from "./ui/useRingLight";
@@ -25,9 +26,9 @@ export default function App() {
   const [flash, setFlash] = useState(false);
   const [capture, setCapture] = useState(false);
   const [cards, setCards] = useState<Card[]>([]);
-  const [prices, setPrices] = useState<Map<string, number>>(new Map());
+  const [priceById, setPriceById] = useState<Map<string, Price>>(new Map());
   const [dataError, setDataError] = useState<string | null>(null);
-  const { packMode, togglePackMode } = usePackMode();
+  const { packMode, togglePackMode, packModeEnabled } = usePackMode();
   const { stream, devices, error } = useCamera(deviceId);
 
   useEffect(() => {
@@ -37,11 +38,12 @@ export default function App() {
   useEffect(() => {
     loadCards().then(setCards, (e: unknown) => setDataError(String(e)));
     loadPrices().then(
-      (ps) => setPrices(new Map(ps.map((p) => [p.printingId, p.priceUsd]))),
+      (ps) => setPriceById(new Map(ps.map((p) => [p.printingId, p]))),
       (e: unknown) => setDataError(String(e)),
     );
   }, []);
   const cardById = useMemo(() => new Map(cards.map((c) => [c.printingId, c])), [cards]);
+  const prices = useMemo(() => new Map([...priceById].map(([id, p]) => [id, p.priceUsd])), [priceById]);
 
   const onReact = useCallback(() => {
     setFlash(true);
@@ -80,8 +82,10 @@ export default function App() {
     : phase === "RECOGNIZING" || phase === "ASKING" ? "busy"
     : phase === "COOLDOWN" && stats.state.outcome === "unsure" ? "failed"
     : "idle";
-  const shown =
-    rec.shownId && phase === "COOLDOWN" && stats.state.outcome === "accepted" ? cardById.get(rec.shownId) : undefined;
+  // Set on accept or chooser pick (when the reaction fires); kept until the next card replaces it.
+  const shown = rec.shownId ? cardById.get(rec.shownId) : undefined;
+  // Debug chip keeps the Phase 3 behaviour: only right after an accept, with that result's reason.
+  const accepted = phase === "COOLDOWN" && stats.state.outcome === "accepted" ? shown : undefined;
 
   return (
     <div className={ring ? "app ring-on" : "app"}>
@@ -101,9 +105,11 @@ export default function App() {
         <button type="button" onClick={rescan} title="B: check the current view again">
           Rescan
         </button>
-        <button type="button" onClick={togglePackMode} className={`pack pack-${packMode}`} title="N">
-          {packMode === "booster" ? "Booster pack" : "Nexus Night pack"}
-        </button>
+        {packModeEnabled && (
+          <button type="button" onClick={togglePackMode} className={`pack pack-${packMode}`} title="N">
+            {packMode === "booster" ? "Booster pack" : "Nexus Night pack"}
+          </button>
+        )}
         <label>
           <input type="checkbox" checked={mirror} onChange={(e) => setMirror(e.target.checked)} /> Mirror
         </label>
@@ -133,7 +139,7 @@ export default function App() {
             {packMode === "nexus_night" && <span className="guide-badge">Nexus Night</span>}
           </div>
         )}
-        {shown && <ResultChip card={shown} price={prices.get(shown.printingId)} reason={rec.last?.reason} cardsByName={cards} prices={prices} />}
+        {shown && <PriceCard key={shown.printingId} card={shown} cards={cards} prices={priceById} />}
         {phase === "ASKING" && rec.askOptions && (
           <VariantChooser
             options={rec.askOptions.map((id) => cardById.get(id)).filter((c): c is Card => !!c)}
@@ -141,12 +147,15 @@ export default function App() {
             onPick={onPick}
           />
         )}
+        {showDebug && !capture && accepted && (
+          <ResultChip card={accepted} price={prices.get(accepted.printingId)} reason={rec.last?.reason} cardsByName={cards} prices={prices} />
+        )}
         {showDebug && !capture && (
           <DebugPanel stats={stats} packMode={packMode} videoSize={videoSize} rec={rec} cardById={cardById} prices={prices} />
         )}
         {capture && <CaptureMode cards={cards} videoRef={videoRef} />}
       </main>
-      <footer className="keys">D debug · N pack mode · B rescan · M mirror · C capture mode · L ring light</footer>
+      <footer className="keys">D debug{packModeEnabled ? " · N pack mode" : ""} · B rescan · M mirror · C capture mode · L ring light</footer>
     </div>
   );
 }

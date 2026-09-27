@@ -5,7 +5,7 @@ import { type DecideConfig, decide, indexCards } from "./decide";
 const cfg: DecideConfig = { ACCEPT_T: 0.75, MARGIN_T: 0.05, EMBED_WEIGHT: 0.5, LAYOUT_WEIGHT: 0.5, LAYOUT_MARGIN_T: 0.03 };
 
 const card = (printingId: string, name: string, imageHash: string, extra: Partial<Card> = {}): Card => ({
-  printingId, name, imageHash, setCode: printingId.split("-")[0], collectorNumber: "001", rarity: "Rare",
+  printingId, name, imageHash, setCode: printingId.split("-")[0], setName: "Set", collectorNumber: "001", rarity: "Rare",
   variant: "normal", imageUrl: "", pool: "booster", ...extra,
 });
 

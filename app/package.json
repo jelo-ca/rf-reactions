@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "tsc -b && vitest run src/prices/pricesData.test.ts && vite build",
     "lint": "oxlint",
     "preview": "vite preview",
     "test": "vitest run",

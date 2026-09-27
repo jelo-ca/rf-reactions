@@ -131,10 +131,17 @@
 - Live check: NN mode showed Lee Sin - Centered at $0.20 → Riftcodex lacks OPP 151b (TCGCSV has it, $57.45); 39 TCGCSV-only OPP candidates; owner chose to switch Nexus Night off (`CFG.NEXUS_NIGHT_ENABLED = false`) and backlog it
 - Owner: merge → `feat/phase-4-price-card` merged to `main` with `--no-ff`, then owner asked for squash → main reset to `edb88ba` + squash commit (tree identical; backup `backup/pre-squash-phase-4`); owner to force-push main
 
+## Session: 2026-09-27 — Phase 5 (reactions)
+- Owner: comedic tiers (golf clap → over-edited epic), separate branch `feat/phase-5-reactions`; H5 = "Spread" mapping
+- tiers.json + resolver (19 tests), synth sounds, count-up / sample-card helpers (6 tests), overlay + fx + dev panel + hype mode + start screen; 99 app tests
+- Chrome check: all tiers render; fixed dev panel covering the tier 5 banner (moved top-left) and a page scrollbar from stage transforms (`.app { overflow: hidden }`)
+- Error: bash heredocs containing apostrophes failed to parse ("unexpected EOF while looking for matching") → wrote those files with Write/Edit instead
+- Quirk: automation tab is hidden → rAF paused, timers throttled (count-up $0.00 in screenshots); verified via computed styles
+
 ## 5-Question Reboot Check (updated 2026-09-26, evening)
 | Question | Answer |
 |----------|--------|
-| Where am I? | Phase 4 merged to `main` (Nexus Night mode off, backlog); Phase 5 reactions next |
+| Where am I? | Phase 5 reactions (comedic tiers) built on `feat/phase-5-reactions`, waiting for the owner live check; Phase 4 on main |
 | Where am I going? | Phase 4 price card → Phase 5 reactions → (Phase 6 OCR if needed) → Phase 7 polish; Phase 3 accuracy backlog before the demo |
 | What's the goal? | Identify held-up card printing in < 300 ms p95 with ≥ 90% top-1 and 0 wrong accepts; show price; react |
 | What have I learned? | Test on real inputs early; fine-tuning + realistic augmentation fixed a 0% start; after fine-tuning, clean refs beat augmented refs; triggers must not depend on a static background with a user-facing webcam |

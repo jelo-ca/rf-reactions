@@ -662,6 +662,8 @@ Try in order, re-running eval after each, and log results:
 ### 8.2 Tier effects (`reactions/`)
 Each tier is one React component plus one sound. Effects render in an overlay layer above the video.
 
+> **Revised (owner, 2026-09-27): comedic tiers.** Same six tiers, durations and rules, new theme — 0 golf clap · 1 participation trophy (kazoo) · 2 sitcom studio audience "OHHH" · 3 instant replay (whistle + stadium) · 4 air horn / MLG · 5 over-edited epic (riser → bass-boosted impact, deep-fried, stays as a gold banner until the next card). H5 mapping: Common 0, Uncommon 1, Rare 2, Epic 3, Promo 4, Showcase 5, foil +1. Details in NOTES.md. The table below is the original spec.
+
 | Tier | Visual | Sound (synthesized) | Duration |
 |---|---|---|---|
 | 0 | Small grey "meh." text drifts up and fades | Short descending "wah" | ~1s |

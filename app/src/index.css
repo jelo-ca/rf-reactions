@@ -124,13 +124,35 @@ body { background: var(--bg); color: var(--text); }
 .guide.failed { border-color: var(--bad); }
 .loading { position: absolute; top: 12px; left: 12px; margin: 0; padding: 6px 10px; background: var(--panel); border-radius: 6px; }
 
-.result-chip {
-  position: absolute; left: 16px; bottom: 16px; display: flex; gap: 12px; align-items: center;
-  background: var(--panel); border: 1px solid #2c2f39; border-radius: 10px; padding: 10px 14px; max-width: 420px;
+.price-card {
+  position: absolute; left: 16px; bottom: 16px; display: flex; gap: 14px; align-items: flex-start;
+  background: var(--panel); color: var(--text); border: 1px solid #2c2f39; border-radius: 12px;
+  padding: 12px 16px 12px 12px; max-width: min(460px, calc(100% - 32px));
+  animation: price-card-in 220ms ease-out;
 }
-.result-chip img { width: 64px; border-radius: 4px; }
-.result-chip .price { font-size: 22px; font-weight: 800; }
-.result-chip .muted { color: var(--muted); font-size: 13px; }
+.price-card img { width: 140px; height: auto; border-radius: 6px; flex: none; }
+.price-card-body { display: grid; gap: 4px; min-width: 0; }
+.price-card h2 { margin: 0; font-size: 20px; line-height: 1.2; }
+.price-card-set { color: var(--muted); font-size: 13px; }
+.price-card-badges { display: flex; flex-wrap: wrap; gap: 6px; margin: 2px 0; }
+.badge {
+  font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 999px;
+  background: #2a2d37; color: var(--text); border: 1px solid #3a3e4a;
+}
+.badge-foil { background: linear-gradient(135deg, #5aa9ff, #b27cff 50%, #f5c542); color: #0e0f13; border-color: transparent; }
+.badge-alt_art { border-color: var(--hold); color: var(--hold); }
+.badge-promo { border-color: var(--ok); color: var(--ok); }
+.badge-nexus { background: var(--nexus); color: #0e0f13; border-color: transparent; }
+.price-card-price { font-size: 32px; font-weight: 800; letter-spacing: -0.01em; }
+.price-card-price.missing { font-size: 18px; color: var(--muted); }
+.price-card-asof { color: var(--muted); font-size: 12px; }
+.price-card-hint { color: var(--hold); font-size: 14px; font-weight: 600; }
+@keyframes price-card-in { from { opacity: 0; transform: translateY(12px); } }
+@media (prefers-reduced-motion: reduce) { .price-card { animation: none; } }
+@media (max-width: 520px) {
+  .price-card img { width: 88px; }
+  .price-card-price { font-size: 24px; }
+}
 
 .chooser {
   position: absolute; inset: 0; display: grid; place-content: center; gap: 12px;

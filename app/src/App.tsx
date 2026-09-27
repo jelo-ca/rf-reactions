@@ -4,10 +4,10 @@ import { useCamera } from "./camera/useCamera";
 import { CFG } from "./config";
 import { useStability } from "./stability/useStability";
 import { loadCards, loadPrices } from "./data/loaders";
-import type { Card } from "./types";
+import type { Card, Price } from "./types";
 import { CaptureMode } from "./ui/CaptureMode";
 import { DebugPanel } from "./ui/DebugPanel";
-import { ResultChip } from "./ui/ResultChip";
+import { PriceCard } from "./ui/PriceCard";
 import { usePackMode } from "./ui/usePackMode";
 import { useRingLight } from "./ui/useRingLight";
 import { VariantChooser } from "./ui/VariantChooser";
@@ -25,7 +25,7 @@ export default function App() {
   const [flash, setFlash] = useState(false);
   const [capture, setCapture] = useState(false);
   const [cards, setCards] = useState<Card[]>([]);
-  const [prices, setPrices] = useState<Map<string, number>>(new Map());
+  const [priceById, setPriceById] = useState<Map<string, Price>>(new Map());
   const [dataError, setDataError] = useState<string | null>(null);
   const { packMode, togglePackMode } = usePackMode();
   const { stream, devices, error } = useCamera(deviceId);
@@ -37,11 +37,12 @@ export default function App() {
   useEffect(() => {
     loadCards().then(setCards, (e: unknown) => setDataError(String(e)));
     loadPrices().then(
-      (ps) => setPrices(new Map(ps.map((p) => [p.printingId, p.priceUsd]))),
+      (ps) => setPriceById(new Map(ps.map((p) => [p.printingId, p]))),
       (e: unknown) => setDataError(String(e)),
     );
   }, []);
   const cardById = useMemo(() => new Map(cards.map((c) => [c.printingId, c])), [cards]);
+  const prices = useMemo(() => new Map([...priceById].map(([id, p]) => [id, p.priceUsd])), [priceById]);
 
   const onReact = useCallback(() => {
     setFlash(true);
@@ -80,8 +81,8 @@ export default function App() {
     : phase === "RECOGNIZING" || phase === "ASKING" ? "busy"
     : phase === "COOLDOWN" && stats.state.outcome === "unsure" ? "failed"
     : "idle";
-  const shown =
-    rec.shownId && phase === "COOLDOWN" && stats.state.outcome === "accepted" ? cardById.get(rec.shownId) : undefined;
+  // Set on accept or chooser pick (when the reaction fires); kept until the next card replaces it.
+  const shown = rec.shownId ? cardById.get(rec.shownId) : undefined;
 
   return (
     <div className={ring ? "app ring-on" : "app"}>
@@ -133,7 +134,7 @@ export default function App() {
             {packMode === "nexus_night" && <span className="guide-badge">Nexus Night</span>}
           </div>
         )}
-        {shown && <ResultChip card={shown} price={prices.get(shown.printingId)} reason={rec.last?.reason} cardsByName={cards} prices={prices} />}
+        {shown && <PriceCard key={shown.printingId} card={shown} cards={cards} prices={priceById} />}
         {phase === "ASKING" && rec.askOptions && (
           <VariantChooser
             options={rec.askOptions.map((id) => cardById.get(id)).filter((c): c is Card => !!c)}

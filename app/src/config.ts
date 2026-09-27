@@ -23,6 +23,13 @@ export const CFG = {
   // Off = always booster mode, N toggle hidden. Code + data kept; see task_plan.md backlog.
   NEXUS_NIGHT_ENABLED: false,
 
+  // Reactions (§8.2): how long each tier's effect stays up; index = tier. Tier 5 = the cinematic
+  // intro, after which it settles into a small persistent state until the next card.
+  REACTION_MS: [1700, 1500, 2000, 2800, 3600, 5200],
+  EPIC_IMPACT_MS: 2000, // tier 5: riser ends → bass drop, zoom punch, confetti storm
+  EPIC_COUNT_MS: 1400, // tier 5: price counts up from $0 after the impact
+  REACTION_VOLUME: 0.8, // master gain for the synthesized sounds (0–1)
+
   // Geometry (§5.2–5.3)
   MODEL_W: 224,
   MODEL_H: 320,

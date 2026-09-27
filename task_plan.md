@@ -54,7 +54,9 @@ Full specs + acceptance criteria live in `PLAN.md`. Do not start next phase unti
     - Human ran it in own terminal (`--log out/finetune_resume2.log`): **step 500 → real top-1 77.8% (14/18)**, flat at 750/1000; margin 0.33 → 0.41; best.pt = step 1000
 - [x] Rebuild with step-1000 weights: with 8 augmented reference rows/card real top-1 only 66.7% → **clean references only: 77.8% top-1, 88.9% top-5**; recognizer 76.5 → 23.7 MB
 - [x] Thresholds ACCEPT_T 0.42 / MARGIN_T 0.03 (7/18 accepted, 0 wrong; in-sample, provisional)
-- [x] Dev server restarted (human asked) → [ ] live retest
+- [x] Dev server restarted (human asked); human: "it works" but B needed per card
+- [x] Change-based detection (human chose) replaces background snapshot; B = rescan; 58 app tests
+- [ ] HUMAN: live check of auto-detect across several cards; watch for false answers on an empty box
 - [ ] HUMAN: fresh eval set (not used for training/selection)
 - [ ] If improved: rebuild (export → embed → export_search → parity), re-eval, recalibrate
 - [ ] HUMAN: live retest (Discipline first); re-approve aug preview v2

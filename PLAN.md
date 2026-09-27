@@ -471,6 +471,14 @@ Runs ingest → export → embed → layout → prices → parity, stopping on t
 - **Motion:** mean absolute difference between consecutive tiny frames.
 - **Sharpness:** variance of a 3×3 Laplacian applied to a larger **112 × 160** grayscale crop, computed only when motion is already low.
 
+> **Revised 2026-09-26 (human decision): change-based detection replaces the background snapshot.**
+> Live testing showed the machine stuck in COOLDOWN after every card: with a webcam facing the user, the
+> "empty" box is their face and room, which moves and re-exposes, so presence vs the snapshot never dropped
+> below `PRESENT_T` and the user had to press B per card. Now `change` = mean abs diff vs the view last sent
+> to recognition (`CHANGE_T` 12); no background, no `PRESENT_T` / `EMPTY_FRAMES`. B = rescan (forget the last
+> checked view). See `app/src/stability/machine.ts` for the current transitions. The original design follows
+> for reference.
+
 ### 5.5 State machine (`stability/machine.ts`) — pure, unit tested
 ```
 IDLE ──presence > PRESENT_T──▶ CANDIDATE

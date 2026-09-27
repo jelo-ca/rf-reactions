@@ -22,14 +22,14 @@ export function DebugPanel({ stats, packMode, videoSize, rec, cardById, prices }
   const last = rec.last;
   const rows: [string, string, boolean?][] = [
     ["state", state.phase],
-    ["presence", `${fmt(signals.presence)} / ${CFG.PRESENT_T}`, signals.presence > CFG.PRESENT_T],
+    ["change", `${fmt(signals.change)} / ${CFG.CHANGE_T}`, signals.change > CFG.CHANGE_T],
     ["motion", `${fmt(signals.motion)} / ${CFG.MOTION_T}`, signals.motion < CFG.MOTION_T],
     ["sharpness", `${fmt(signals.sharpness, 0)} / ${CFG.SHARP_T}`, (signals.sharpness ?? 0) > CFG.SHARP_T],
-    ["stable / empty", `${state.stableFrames}/${CFG.STABLE_FRAMES} · ${state.emptyFrames}/${CFG.EMPTY_FRAMES}`],
+    ["stable frames", `${state.stableFrames}/${CFG.STABLE_FRAMES}`],
     ["retries", `${state.retries} / ${CFG.RETRIES}`],
     ["still → recognize", ms(stats.lastStableToRecognizeMs)],
     ["still → result", ms(stats.lastStillToResultMs), (stats.lastStillToResultMs ?? Infinity) < 300],
-    ["background", stats.hasBackground ? "captured" : "waiting…"],
+    ["camera", stats.ready ? `ready · last: ${state.outcome}` : "warming up…"],
     ["pack mode", packMode],
     ["backend", rec.info ? `${rec.info.backend} · ${rec.info.threads}t` : "loading…"],
     ["load / warm-up", rec.info ? `${ms(rec.info.loadMs)} / ${ms(rec.info.warmupMs)}` : "—"],

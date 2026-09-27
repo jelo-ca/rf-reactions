@@ -24,6 +24,7 @@ step "ingest"  ingest.py
 step "export"  export_onnx.py
 step "embed"   embed.py
 step "layout"  layout.py
+step "search"  export_search.py
 step "prices"  prices.py
 step "parity"  parity.py
 echo; echo "Done. App data in app/public/{data,models,fixtures}."

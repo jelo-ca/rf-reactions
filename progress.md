@@ -53,6 +53,14 @@
 - Final sanity: LOO 98.7%, combined 98.8% (161/180 groups), 19 weak groups → Phase 3
 - Phase 1 COMPLETE → merged to main
 
+## Session: 2026-09-26
+- Pack mode data+logic merged (PLAN §6.4b); Phase 2 app shell built, browser-checked, human-confirmed, merged
+- Phase 3 branch: capture mode + sort_eval.py done; browser-checked picker (no Space pressed — would download)
+- Note: git autocrlf=true → worktree CRLF; normalize \r\n in node/python patch scripts
+- search.ts/layout.ts/decide.ts + tests (54 app tests); layout TS matches Python fixtures
+- Search in node: 17–39 ms/query (noisy, memory-bound) → measure in browser
+- Worker + parity page: **PARITY PASS** webgpu, embed/layout cos 1.000000 ×5, load ~0.8s, warm-up ~85ms, 24–92 ms/image
+
 ## Test Results
 | Test | Input | Expected | Actual | Status |
 |------|-------|----------|--------|--------|
@@ -69,12 +77,53 @@
 | 2026-09-25 | torch.onnx emoji → cp1252 UnicodeEncodeError | 1 | config.py reconfigures stdout UTF-8 |
 | 2026-09-25 | diag json.dump numpy int64 | 1 | int() cast |
 | 2026-09-25 | `EMBED_W, LAYOUT_W = 0.5, 0.5` overwrote LAYOUT_W (map width) | 1 | renamed to *_WEIGHT |
+| 2026-09-26 | node patch script "missing" match | 1 | worktree CRLF (autocrlf) → normalize \r\n |
+| 2026-09-26 | vite restart failed: port 5173 in use | 1 | TaskStop killed npx wrapper only; stopped node PID by port; run `node node_modules/vite/bin/vite.js` directly |
+| 2026-09-26 | parity page: `RuntimeError: memory access out of bounds` | 1 | StrictMode double init → concurrent InferenceSession.create; init() memoized |
+| 2026-09-26 | parity page hung on signatures() | 1 | copy ORT output (SAB view not transferable) — not enough |
+| 2026-09-26 | same | 2 | serialize session.run (overlapping runs hang on WebGPU) — fixed |
+| 2026-09-26 | parity rows doubled, no verdict | 1 | cancelled flag for StrictMode's discarded effect |
+| 2026-09-26 | fine-tune #2 + dev server killed by low-memory guard at step 275 | 1 | kept step-250 best.pt; if resuming: 2 workers, close Chrome tabs |
+| 2026-09-26 | resumed fine-tune + dev server killed again at step 325 (2 workers) | 2 | guard reaps idle-session background shells; next: run in user's own terminal |
+| 2026-09-26 | Python heredoc turned `outinetune` into form-feed (``) in task_plan | 1 | raw string fix; check backslashes in generated Windows paths |
+| 2026-09-26 | trailer count 81 after rewrite (false alarm) | 1 | `--exclude` must precede `--branches`; recount per branch = 0 |
+| 2026-09-26 | `git push` → Permission denied (publickey) | 1 | SSH key for `github.com-personal` not in this shell; human pushes from own terminal |
 
-## 5-Question Reboot Check
+- Browser fixture run found JS search 82/91 ms (p50/p95) → baked search into recognizer.onnx → 0.5/1.4 ms; recognize call p95 49 ms
+- "OGN-007 → VEN-R01" investigated: identical-art reprint in same picture group, correct per rule (documented)
+- Live recognition wired into App (chooser, result chip, debug timings); 58 app tests
+- Human: OGN-058 Discipline ranks 3–5 live; asked for ring light → added (L)
+- Diagnosis: pretrained embeds frame > art; real eval photos (18) top-1 0%, median rank 16 → big domain gap (framing, backlight/cast/haze, hand)
+- Fine-tune #1 (weak augments) stopped; augment v2 + per-image standardization + real-photo validation; fine-tune #2 running (out/finetune_run.log)
+- decide.py (Python mirror, 10 tests) + eval.py (report + calibrate); pipeline tests 79
+- Fine-tune #2: step 0 real top-1 0% (median rank 101, standardization w/o training), synth 39%; **step 250: real top-1 61% (median rank 1), synth 97.5%, margin +0.33**; loss 0.004 (batches getting easy)
+- Low-memory guard killed training at step 275 + dev server (free RAM 6.8/15.7 GB after). best.pt = step 250 kept.
+- Human chose: use step-250 checkpoint now → rebuild (export, embed, export_search, parity) running → out/rebuild.log; then restart dev server for live test
+- Rebuild done (fine-tuned): eval 18 photos top-1 61.1%, top-5 83.3%, median rank 1; provisional ACCEPT_T 0.44 / MARGIN_T 0.04 (8/18 accepted, 0 wrong); dev server restarted
+- Resumed fine-tune killed by low-memory guard at step 325 (+ dev server again); step-250 check real 55.6% (not saved), synth 97.7%, margin 0.38. Learning doc written (Claude Doc)
+- Human ran resumed fine-tune in own terminal: real top-1 61.1% → 55.6% (250) → **77.8% (500, 750, 1000)**, margin 0.33 → 0.41; rebuild #2 running
+- Rebuild #2: all 9 rows/card → 66.7%; clean-only → 77.8% (augmented refs = false neighbours after fine-tune); REFERENCE_AUG_ROWS=0; recognizer 23.7 MB; thresholds 0.42/0.03 (7/18 accepted, 0 wrong)
+
+## Session: 2026-09-26 (evening)
+- Resumed fine-tune run by the human in their own terminal → 77.8% real top-1 (step 500–1000)
+- Rebuild #2 + clean-reference finding (77.8% vs 66.7%); recognizer 23.7 MB; thresholds 0.42 / 0.03
+- Opset set to 18 (silences a harmless down-conversion traceback)
+- Ring light: on/off toggle, whole page white, then made thinner (human)
+- Human: "it works" but B needed per card → cause: stale background snapshot behind a user-facing webcam → change-based detection (human choice); 58 app tests
+- Learning doc kept current (timeline rows, headline 78%)
+- Dev server stopped (human request); planning files refreshed
+- Human: remove Co-Authored-By lines → found 14 of them already on GitHub (origin/main = Phase 0 merge); human chose rewrite all + force-push main
+- Backups `backup/pre-trailer-cleanup/*` → filter-branch on 8 branches (68 commits): 0 trailers left, every branch tree identical to its backup
+- Push failed: `Permission denied (publickey)` (SSH alias key not available to Claude Code's shell) → nothing changed on GitHub; human to push from own terminal
+- Memory saved: never add commit trailers
+- Human pushed `feat/finetune-embedder` from own terminal (origin = b23742f). `main` (force-push) and `feat/phase-3-vision` still pending
+- /planning-with-files:plan → files already existed; refreshed push status
+
+## 5-Question Reboot Check (updated 2026-09-26, evening)
 | Question | Answer |
 |----------|--------|
-| Where am I? | Phase 0, not started |
-| Where am I going? | Phases 0–7 per PLAN.md |
-| What's the goal? | Card-recognition reaction demo, <300ms, ≥90% acc |
-| What have I learned? | See findings.md |
-| What have I done? | Planning files created |
+| Where am I? | Phase 3, branch `feat/finetune-embedder`, history cleaned of trailers; branch pushed, **`main` force-push + `feat/phase-3-vision` pending (human)**. App: fine-tuned model, change-based detection, ring light toggle. Dev server off |
+| Where am I going? | Human pushes main + phase-3 → live check of auto-detect → fresh eval set → calibrate → Phase 3 acceptance → merge → Phases 4–7 |
+| What's the goal? | Identify held-up card printing in < 300 ms p95 with ≥ 90% top-1 and 0 wrong accepts; show price; react |
+| What have I learned? | Test on real inputs early; fine-tuning + realistic augmentation fixed a 0% start; after fine-tuning, clean refs beat augmented refs; triggers must not depend on a static background with a user-facing webcam |
+| What have I done? | Phases 0–2 + pack mode merged; Phase 3 app complete; 77.8% real top-1 (in-sample); auto-detect without B |

@@ -80,3 +80,93 @@ body { background: var(--bg); color: var(--text); }
 @media (prefers-reduced-motion: reduce) {
   .guide { transition: none; }
 }
+
+.capture {
+  position: absolute; top: 12px; right: 12px; width: 320px; max-height: calc(100% - 24px); overflow: auto;
+  background: var(--panel); border: 1px solid #2c2f39; border-radius: 8px; padding: 10px 12px; font-size: 13px;
+}
+.capture h2 { font-size: 12px; margin: 0 0 8px; color: var(--muted); text-transform: uppercase; }
+.capture input {
+  width: 100%; background: #1b1d24; color: var(--text); border: 1px solid #2c2f39;
+  border-radius: 6px; padding: 6px 8px; font: inherit;
+}
+.capture .results { list-style: none; margin: 6px 0; padding: 0; }
+.capture .results button {
+  width: 100%; text-align: left; background: none; color: var(--text); border: 0;
+  padding: 4px 6px; border-radius: 4px; font: inherit; cursor: pointer;
+}
+.capture .results button:hover { background: #22252e; }
+.capture .results i { color: var(--muted); font-style: normal; }
+.capture .selected { display: flex; gap: 10px; margin: 8px 0; }
+.capture .selected img { width: 72px; border-radius: 4px; }
+.capture .hint { margin-top: 6px; color: var(--hold); }
+.capture .last { display: flex; align-items: center; gap: 8px; margin: 8px 0; font-size: 11px; color: var(--muted); }
+.capture .last img { width: 45px; border: 1px solid #2c2f39; }
+.capture .muted, .capture code { color: var(--muted); }
+.capture kbd { border: 1px solid #444a58; border-radius: 3px; padding: 0 4px; }
+.error-inline { color: var(--bad); }
+
+.parity { padding: 24px; max-width: 900px; font-size: 14px; }
+.parity table { border-collapse: collapse; width: 100%; margin: 12px 0; font-family: ui-monospace, Consolas, monospace; }
+.parity th, .parity td { text-align: left; padding: 4px 10px; border-bottom: 1px solid #22242c; }
+.parity .ok { color: var(--ok); }
+.parity .bad { color: var(--bad); }
+.parity .verdict { font-size: 28px; font-weight: 800; }
+.parity a { color: var(--busy); }
+
+.debug { max-height: calc(100% - 24px); overflow: auto; }
+.debug h2 + dl, .debug ol + h2, .debug dl + h2 { margin-top: 8px; }
+.debug .bad dd { color: var(--bad); }
+.debug .top { margin: 6px 0 0; padding-left: 18px; }
+.debug .top li span { display: inline-block; }
+.debug .top li { display: list-item; }
+.debug .top li span:last-child { float: right; color: var(--muted); }
+.guide.failed { border-color: var(--bad); }
+.loading { position: absolute; top: 12px; left: 12px; margin: 0; padding: 6px 10px; background: var(--panel); border-radius: 6px; }
+
+.result-chip {
+  position: absolute; left: 16px; bottom: 16px; display: flex; gap: 12px; align-items: center;
+  background: var(--panel); border: 1px solid #2c2f39; border-radius: 10px; padding: 10px 14px; max-width: 420px;
+}
+.result-chip img { width: 64px; border-radius: 4px; }
+.result-chip .price { font-size: 22px; font-weight: 800; }
+.result-chip .muted { color: var(--muted); font-size: 13px; }
+
+.chooser {
+  position: absolute; inset: 0; display: grid; place-content: center; gap: 12px;
+  background: rgba(0, 0, 0, 0.7); text-align: center;
+}
+.chooser h2 { margin: 0; }
+.chooser-options { display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; }
+.chooser-options button {
+  position: relative; display: grid; gap: 6px; justify-items: center; width: 200px; padding: 12px;
+  background: #1b1d24; color: var(--text); border: 1px solid #2c2f39; border-radius: 10px; font: inherit; cursor: pointer;
+}
+.chooser-options button:hover { border-color: var(--busy); }
+.chooser-options img { width: 160px; border-radius: 6px; }
+.chooser-key {
+  position: absolute; top: 8px; left: 8px; background: var(--busy); color: #081222;
+  border-radius: 999px; width: 24px; height: 24px; display: grid; place-items: center; font-weight: 800;
+}
+
+/* Screen ring light (L / toolbar switch): the page becomes a bright white frame around the inset
+   video so the display lights the card. The toolbar and footer go white too for the most light. */
+.stage { --ring: clamp(32px, 7vmin, 80px); }
+.app.ring-on { background: #ffffff; color: #111; }
+.app.ring-on .stage { padding: var(--ring); background: #ffffff; }
+.app.ring-on .stage video { border-radius: 18px; }
+.app.ring-on .bar, .app.ring-on .keys { background: #ffffff; color: #333; border-color: #e5e5e5; }
+.app.ring-on .bar select, .app.ring-on .bar button { background: #f4f4f4; color: #111; border-color: #d6d6d6; }
+
+.ring-toggle { display: inline-flex; align-items: center; gap: 8px; }
+.ring-toggle .switch {
+  position: relative; width: 30px; height: 16px; border-radius: 999px;
+  background: #444a58; transition: background 120ms ease;
+}
+.ring-toggle .switch::after {
+  content: ""; position: absolute; top: 2px; left: 2px; width: 12px; height: 12px;
+  border-radius: 50%; background: #fff; transition: transform 120ms ease;
+}
+.ring-toggle[aria-checked="true"] .switch { background: #f5c542; }
+.ring-toggle[aria-checked="true"] .switch::after { transform: translateX(14px); }
+@media (prefers-reduced-motion: reduce) { .ring-toggle .switch, .ring-toggle .switch::after { transition: none; } }

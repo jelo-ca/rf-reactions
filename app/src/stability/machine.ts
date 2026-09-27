@@ -1,37 +1,41 @@
-// Recognition state machine (PLAN.md §5.5). Pure reducer; unit tested.
+// Recognition state machine — change-based (human decision 2026-09-26; PLAN.md §5.5 revised).
+// Pure reducer; unit tested.
 //
-// IDLE ──presence > PRESENT_T──▶ CANDIDATE
-// CANDIDATE ──motion < MOTION_T for STABLE_FRAMES AND sharpness > SHARP_T──▶ RECOGNIZING
-// CANDIDATE ──presence < PRESENT_T for EMPTY_FRAMES──▶ IDLE
-// RECOGNIZING ──accepted──▶ RESOLVED (fire reaction) ──▶ COOLDOWN
-// RECOGNIZING ──ask──▶ ASKING ──user picks──▶ RESOLVED (fire reaction) ──▶ COOLDOWN
-// RECOGNIZING ──rejected──▶ CANDIDATE (retry, max RETRIES, then COOLDOWN)
-// COOLDOWN ──presence < PRESENT_T for EMPTY_FRAMES──▶ IDLE
+// "Something new is in the box" = the view differs from the LAST CHECKED view (`change`), not from
+// a background snapshot: with a webcam facing the user, the "empty" box is their face and room, which
+// moves and re-exposes, so a background snapshot went stale after every card.
 //
-// RESOLVED is transient: the step that resolves emits a "react" effect and lands in COOLDOWN,
-// so a reaction can fire at most once per card hold.
+// IDLE        ──change > CHANGE_T──▶ CANDIDATE
+// CANDIDATE   ──still for STABLE_FRAMES + sharp, and still changed (or retrying)──▶ RECOGNIZING
+// CANDIDATE   ──still, but back to the already-checked view──▶ IDLE
+// RECOGNIZING ──accepted──▶ COOLDOWN (fire reaction)
+// RECOGNIZING ──ask──▶ ASKING ──user picks──▶ COOLDOWN (fire reaction)
+// RECOGNIZING ──rejected──▶ CANDIDATE (retry, max RETRIES) then COOLDOWN
+// COOLDOWN    ──change > CHANGE_T (card removed or swapped)──▶ CANDIDATE
+//
+// The frame loop takes the "last checked" snapshot when it acts on a "recognize" effect, so the
+// same card held still never re-triggers: one reaction per card hold.
 
 export type Phase = "IDLE" | "CANDIDATE" | "RECOGNIZING" | "ASKING" | "COOLDOWN";
 
 export interface MachineConfig {
-  PRESENT_T: number;
+  CHANGE_T: number;
   MOTION_T: number;
   STABLE_FRAMES: number;
   SHARP_T: number;
-  EMPTY_FRAMES: number;
   RETRIES: number;
 }
 
 export interface MachineState {
   phase: Phase;
   stableFrames: number; // consecutive low-motion frames while CANDIDATE
-  emptyFrames: number; // consecutive no-presence frames while CANDIDATE / COOLDOWN
-  retries: number; // rejected recognitions in this hold
+  retries: number; // rejected recognitions of the current view
+  outcome: "none" | "accepted" | "unsure"; // how the last recognition of this view ended (for the UI)
 }
 
 export interface FrameSignals {
-  presence: number;
-  motion: number;
+  change: number; // mean abs diff vs the last checked view (0–255); 255 when nothing was checked yet
+  motion: number; // mean abs diff vs the previous frame
   sharpness: number | null; // null when not computed (motion too high)
 }
 
@@ -43,7 +47,7 @@ export type MachineEvent =
 
 export type Effect = "recognize" | "react" | "ask" | null;
 
-export const initialState: MachineState = { phase: "IDLE", stableFrames: 0, emptyFrames: 0, retries: 0 };
+export const initialState: MachineState = { phase: "IDLE", stableFrames: 0, retries: 0, outcome: "none" };
 
 /** Does this phase need the (costlier) sharpness signal this frame? */
 export function wantsSharpness(state: MachineState, motion: number, cfg: MachineConfig): boolean {
@@ -59,55 +63,48 @@ export function step(
 
   if (e.type === "result") {
     if (s.phase !== "RECOGNIZING") return { state: s, effect: null }; // stale result
-    if (e.status === "accepted") return { state: cooldown(s), effect: "react" };
+    if (e.status === "accepted") return { state: cooldown(s, "accepted"), effect: "react" };
     if (e.status === "ask") return { state: { ...s, phase: "ASKING" }, effect: "ask" };
     const retries = s.retries + 1;
-    if (retries > cfg.RETRIES) return { state: { ...cooldown(s), retries }, effect: null };
-    return { state: { ...s, phase: "CANDIDATE", stableFrames: 0, emptyFrames: 0, retries }, effect: null };
+    if (retries > cfg.RETRIES) return { state: { ...cooldown(s, "unsure"), retries }, effect: null };
+    return { state: { ...s, phase: "CANDIDATE", stableFrames: 0, retries }, effect: null };
   }
 
   if (e.type === "picked") {
     if (s.phase !== "ASKING") return { state: s, effect: null };
-    return { state: cooldown(s), effect: "react" };
+    return { state: cooldown(s, "accepted"), effect: "react" };
   }
 
-  const { presence, motion, sharpness } = e.signals;
-  const present = presence > cfg.PRESENT_T;
+  const { change, motion, sharpness } = e.signals;
+  const changed = change > cfg.CHANGE_T;
 
   switch (s.phase) {
     case "IDLE":
-      return present
-        ? { state: { ...initialState, phase: "CANDIDATE" }, effect: null }
+      return changed
+        ? { state: { ...s, phase: "CANDIDATE", stableFrames: 0, retries: 0 }, effect: null }
         : { state: s, effect: null };
 
     case "CANDIDATE": {
-      if (!present) {
-        const emptyFrames = s.emptyFrames + 1;
-        if (emptyFrames >= cfg.EMPTY_FRAMES) return { state: initialState, effect: null };
-        return { state: { ...s, emptyFrames, stableFrames: 0 }, effect: null };
-      }
       const stableFrames = motion < cfg.MOTION_T ? s.stableFrames + 1 : 0;
+      if (stableFrames < cfg.STABLE_FRAMES) return { state: { ...s, stableFrames }, effect: null };
+      const retrying = s.retries > 0;
+      if (!changed && !retrying) return { state: { ...initialState, outcome: s.outcome }, effect: null };
       const sharp = sharpness !== null && sharpness > cfg.SHARP_T;
-      if (stableFrames >= cfg.STABLE_FRAMES && sharp) {
-        return { state: { ...s, phase: "RECOGNIZING", stableFrames, emptyFrames: 0 }, effect: "recognize" };
-      }
-      return { state: { ...s, stableFrames, emptyFrames: 0 }, effect: null };
+      if (!sharp) return { state: { ...s, stableFrames }, effect: null };
+      return { state: { ...s, phase: "RECOGNIZING", stableFrames }, effect: "recognize" };
     }
 
     case "RECOGNIZING":
     case "ASKING":
       return { state: s, effect: null }; // one recognition in flight; wait for result / choice
 
-    case "COOLDOWN": {
-      if (present) return { state: { ...s, emptyFrames: 0 }, effect: null };
-      const emptyFrames = s.emptyFrames + 1;
-      return emptyFrames >= cfg.EMPTY_FRAMES
-        ? { state: initialState, effect: null }
-        : { state: { ...s, emptyFrames }, effect: null };
-    }
+    case "COOLDOWN":
+      return changed
+        ? { state: { ...s, phase: "CANDIDATE", stableFrames: 0, retries: 0, outcome: "none" }, effect: null }
+        : { state: s, effect: null };
   }
 }
 
-function cooldown(s: MachineState): MachineState {
-  return { ...s, phase: "COOLDOWN", stableFrames: 0, emptyFrames: 0 };
+function cooldown(s: MachineState, outcome: MachineState["outcome"]): MachineState {
+  return { ...s, phase: "COOLDOWN", stableFrames: 0, outcome };
 }

@@ -144,6 +144,12 @@ The app never uses layout alone; §6.4 combines them. Human approved the new bar
 ### Behaviour notes
 - Reprints with identical art share a canonical hash, e.g. Fury Rune OGN-007 = VEN-R01 = OPP-007B (NN). They form one same-picture group; layout only separates them from the alt art OGN-007A. Booster mode → cheapest of the group (VEN-R01 here), Nexus Night mode → OPP-007B. Correct per §6.4/§6.4b; reason is reported as `layout_resolved` because the group was chosen by layout first.
 
+## Detection trigger: change-based (human decision, 2026-09-26)
+- Symptom (live): after each card the app stayed in COOLDOWN ("Remove card") until B was pressed.
+- Cause: presence = difference from an empty-box snapshot; with a user-facing webcam the "empty" box is the user's face/room, which moves and auto-exposure shifts, so presence stayed > 18 after the card left.
+- Fix: `change` = difference from the view last sent to recognition. Still + sharp + changed (or retrying) → recognize; the recognized view is snapshotted so the same card held still never re-triggers; a changed view (removed or swapped) leaves COOLDOWN. B = rescan. Warm-up 60 frames before the first check.
+- Risk: empty views (the user's face) now get checked too; the 0.42 threshold should reject them, unproven (no empty-box eval photos). Add an empty-box guard (card border / edge check) if false answers appear.
+
 ## Pack mode (human request, 2026-09-25) — PLAN §6.4b added
 - Setting `booster` (default) | `nexus_night`. Booster: Nexus Night printings excluded from candidates. Nexus Night: inside a same-picture group, Nexus Night printings win (cheapest of them); others still match normally.
 - `cards.json` gains `pool` (booster 1693, nexus_night 104). Reference logic `pipeline/packmode.py` (tested); `fetch_cards.is_nexus_night` now uses the same `pool_of` rule. TS port `vision/packMode.ts` must match; UI toggle `N` comes with Phase 2/3.

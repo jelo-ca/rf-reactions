@@ -1,5 +1,6 @@
 // Per-frame loop (PLAN.md §5.3): crop the guide box into tiny grayscale images on the main
-// thread, compute signals, drive the state machine. Recognition is injected (stubbed in Phase 2).
+// thread, compute signals, drive the state machine. Recognition is injected.
+// Change-based: `change` = difference from the view last sent to recognition (no background).
 import { type RefObject, useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { guideBoxVideoRect } from "../camera/guideBox";
 import { CFG } from "../config";
@@ -12,7 +13,7 @@ export interface StabilityStats {
   state: MachineState;
   signals: FrameSignals;
   fps: number;
-  hasBackground: boolean;
+  ready: boolean; // camera warm-up done (auto-exposure settled)
   lastStableToRecognizeMs: number | null; // first still frame of the run → RECOGNIZING
   lastStillToResultMs: number | null; // first still frame → recognition result (end to end)
   lastEffect: string | null;
@@ -29,9 +30,9 @@ export function useStability(
 ) {
   const [stats, setStats] = useState<StabilityStats>({
     state: initialState,
-    signals: { presence: 0, motion: 0, sharpness: null },
+    signals: { change: 0, motion: 0, sharpness: null },
     fps: 0,
-    hasBackground: false,
+    ready: false,
     lastStableToRecognizeMs: null,
     lastStillToResultMs: null,
     lastEffect: null,
@@ -41,7 +42,8 @@ export function useStability(
   const r = useRef({
     machine: initialState,
     prev: null as Float32Array | null,
-    background: null as Float32Array | null,
+    checked: null as Float32Array | null, // the view last sent to recognition
+    lastGray: null as Float32Array | null,
     frames: 0,
     stableStartAt: 0,
     lastStableToRecognizeMs: null as number | null,
@@ -52,7 +54,7 @@ export function useStability(
     fpsWindow: [] as number[],
     tiny: null as CanvasRenderingContext2D | null,
     sharp: null as CanvasRenderingContext2D | null,
-    wantBackground: false,
+    wantRescan: false,
     recognize,
     onReact,
   });
@@ -61,8 +63,9 @@ export function useStability(
     r.current.onReact = onReact;
   }, [recognize, onReact]);
 
-  const captureBackground = useCallback(() => {
-    r.current.wantBackground = true;
+  /** Forget the last checked view so the current one is checked again (B). */
+  const rescan = useCallback(() => {
+    r.current.wantRescan = true;
   }, []);
 
   /** The user chose a printing in the ASKING chooser. */
@@ -87,6 +90,7 @@ export function useStability(
       if (effect) s.lastEffect = effect;
       if (effect === "recognize") {
         s.lastStableToRecognizeMs = performance.now() - s.stableStartAt;
+        s.checked = s.lastGray; // this view is now "checked": holding it still won't re-trigger
         const started = s.stableStartAt;
         const onResult = (status: "accepted" | "rejected" | "ask") => {
           s.lastStillToResultMs = performance.now() - started;
@@ -110,19 +114,21 @@ export function useStability(
         const box = guideBoxVideoRect(video.videoWidth, video.videoHeight, CFG.GUIDE_HEIGHT_FRAC, CFG.MODEL_W, CFG.MODEL_H);
         const gray = grab(s.tiny!, video, box, CFG.TINY_W, CFG.TINY_H);
         s.frames++;
-        if (s.wantBackground || (!s.background && s.frames >= CFG.BACKGROUND_WARMUP_FRAMES)) {
-          s.background = gray;
-          s.wantBackground = false;
+        if (s.wantRescan) {
+          s.checked = null;
+          s.wantRescan = false;
           dispatch({ type: "reset" });
         }
-        const presence = s.background ? meanAbsDiff(gray, s.background) : 0;
+        const ready = s.frames >= CFG.WARMUP_FRAMES;
+        const change = s.checked ? meanAbsDiff(gray, s.checked) : 255;
         const motion = s.prev ? meanAbsDiff(gray, s.prev) : 255;
         s.prev = gray;
+        s.lastGray = gray;
         const sharpness = wantsSharpness(s.machine, motion, CFG)
           ? laplacianVariance(grab(s.sharp!, video, box, CFG.SHARP_W, CFG.SHARP_H), CFG.SHARP_W, CFG.SHARP_H)
           : null;
-        const signals = { presence, motion, sharpness };
-        if (s.background) dispatch({ type: "frame", signals });
+        const signals = { change, motion, sharpness };
+        if (ready) dispatch({ type: "frame", signals });
 
         const now = performance.now();
         s.fpsWindow.push(now);
@@ -132,7 +138,7 @@ export function useStability(
             state: s.machine,
             signals,
             fps: s.fpsWindow.length,
-            hasBackground: !!s.background,
+            ready,
             lastStableToRecognizeMs: s.lastStableToRecognizeMs,
             lastStillToResultMs: s.lastStillToResultMs,
             lastEffect: s.lastEffect,
@@ -158,7 +164,7 @@ export function useStability(
     };
   }, [active, videoRef]);
 
-  return { stats, captureBackground, pick };
+  return { stats, rescan, pick };
 }
 
 function makeCtx(w: number, h: number): CanvasRenderingContext2D {

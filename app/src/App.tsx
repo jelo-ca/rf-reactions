@@ -48,7 +48,7 @@ export default function App() {
     setTimeout(() => setFlash(false), FLASH_MS);
   }, []);
   const rec = useRecognizer(videoRef, packMode);
-  const { stats, captureBackground, pick } = useStability(videoRef, !!stream && rec.ready, rec.recognize, onReact);
+  const { stats, rescan, pick } = useStability(videoRef, !!stream && rec.ready, rec.recognize, onReact);
   const onPick = useCallback(
     (printingId: string) => {
       rec.choose(printingId);
@@ -63,25 +63,14 @@ export default function App() {
       const k = e.key.toLowerCase();
       if (k === "d") setShowDebug((v) => !v);
       else if (k === "n") togglePackMode();
-      else if (k === "b") captureBackground();
+      else if (k === "b") rescan();
       else if (k === "m") setMirror((v) => !v);
       else if (k === "c") setCapture((v) => !v);
       else if (k === "l") toggleRing();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [togglePackMode, captureBackground, toggleRing]);
-
-  // Lighting changed: re-capture the empty background once auto-exposure has settled.
-  const firstRing = useRef(true);
-  useEffect(() => {
-    if (firstRing.current) {
-      firstRing.current = false;
-      return;
-    }
-    const t = setTimeout(captureBackground, CFG.RING_BACKGROUND_DELAY_MS);
-    return () => clearTimeout(t);
-  }, [ring, captureBackground]);
+  }, [togglePackMode, rescan, toggleRing]);
 
   const { overlay, videoSize } = useGuideOverlay(videoRef, !!stream, ring ? "ring" : "plain");
   const phase = stats.state.phase;
@@ -89,9 +78,10 @@ export default function App() {
     ? "recognized"
     : phase === "CANDIDATE" ? "hold"
     : phase === "RECOGNIZING" || phase === "ASKING" ? "busy"
-    : phase === "COOLDOWN" && stats.state.retries > CFG.RETRIES ? "failed"
+    : phase === "COOLDOWN" && stats.state.outcome === "unsure" ? "failed"
     : "idle";
-  const shown = rec.shownId && phase === "COOLDOWN" ? cardById.get(rec.shownId) : undefined;
+  const shown =
+    rec.shownId && phase === "COOLDOWN" && stats.state.outcome === "accepted" ? cardById.get(rec.shownId) : undefined;
 
   return (
     <div className={ring ? "app ring-on" : "app"}>
@@ -108,8 +98,8 @@ export default function App() {
             ))}
           </select>
         </label>
-        <button type="button" onClick={captureBackground} title="B">
-          Capture empty background
+        <button type="button" onClick={rescan} title="B: check the current view again">
+          Rescan
         </button>
         <button type="button" onClick={togglePackMode} className={`pack pack-${packMode}`} title="N">
           {packMode === "booster" ? "Booster pack" : "Nexus Night pack"}
@@ -138,7 +128,7 @@ export default function App() {
               {phase === "CANDIDATE" && "Hold still…"}
               {phase === "RECOGNIZING" && "Recognizing…"}
               {phase === "ASKING" && "Which one?"}
-              {phase === "COOLDOWN" && (boxClass === "failed" ? "Not sure - try again" : flash ? "Got it!" : "Remove card")}
+              {phase === "COOLDOWN" && (boxClass === "failed" ? "Not sure - adjust the card" : flash ? "Got it!" : "Next card")}
             </span>
             {packMode === "nexus_night" && <span className="guide-badge">Nexus Night</span>}
           </div>
@@ -156,7 +146,7 @@ export default function App() {
         )}
         {capture && <CaptureMode cards={cards} videoRef={videoRef} />}
       </main>
-      <footer className="keys">D debug · N pack mode · B background · M mirror · C capture mode · L ring light</footer>
+      <footer className="keys">D debug · N pack mode · B rescan · M mirror · C capture mode · L ring light</footer>
     </div>
   );
 }

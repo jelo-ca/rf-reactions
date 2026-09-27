@@ -20,7 +20,7 @@ export default function App() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [deviceId, setDeviceId] = useState<string | null>(null);
   const [mirror, setMirror] = useState(false);
-  const { ring, cycleRing } = useRingLight();
+  const { ring, toggleRing } = useRingLight();
   const [showDebug, setShowDebug] = useState(true);
   const [flash, setFlash] = useState(false);
   const [capture, setCapture] = useState(false);
@@ -66,11 +66,11 @@ export default function App() {
       else if (k === "b") captureBackground();
       else if (k === "m") setMirror((v) => !v);
       else if (k === "c") setCapture((v) => !v);
-      else if (k === "l") cycleRing();
+      else if (k === "l") toggleRing();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [togglePackMode, captureBackground, cycleRing]);
+  }, [togglePackMode, captureBackground, toggleRing]);
 
   // Lighting changed: re-capture the empty background once auto-exposure has settled.
   const firstRing = useRef(true);
@@ -83,7 +83,7 @@ export default function App() {
     return () => clearTimeout(t);
   }, [ring, captureBackground]);
 
-  const { overlay, videoSize } = useGuideOverlay(videoRef, !!stream, ring);
+  const { overlay, videoSize } = useGuideOverlay(videoRef, !!stream, ring ? "ring" : "plain");
   const phase = stats.state.phase;
   const boxClass = flash
     ? "recognized"
@@ -94,7 +94,7 @@ export default function App() {
   const shown = rec.shownId && phase === "COOLDOWN" ? cardById.get(rec.shownId) : undefined;
 
   return (
-    <div className="app">
+    <div className={ring ? "app ring-on" : "app"}>
       <header className="bar">
         <h1>Rift Pulls</h1>
         <label>
@@ -117,12 +117,12 @@ export default function App() {
         <label>
           <input type="checkbox" checked={mirror} onChange={(e) => setMirror(e.target.checked)} /> Mirror
         </label>
-        <button type="button" onClick={cycleRing} title="L" className={ring === "off" ? "" : "ring-on"}>
-          Ring light: {ring}
+        <button type="button" role="switch" aria-checked={ring} onClick={toggleRing} title="L" className="ring-toggle">
+          <span className="switch" aria-hidden="true" /> Ring light {ring ? "on" : "off"}
         </button>
       </header>
 
-      <main className={`stage ring-${ring}`}>
+      <main className="stage">
         {(error || dataError || rec.initError) && (
           <p className="error" role="alert">{error ?? dataError ?? rec.initError}</p>
         )}

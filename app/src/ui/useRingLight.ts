@@ -1,32 +1,29 @@
 import { useCallback, useState } from "react";
 
-// Screen "ring light": a bright frame around the video that lights the card from the display.
-// Per-viewer convenience, remembered in localStorage (storage may be unavailable).
+// Screen "ring light": when on, the page turns into a bright white frame around the (inset) video,
+// lighting the card from the display. On/off, remembered per viewer (storage may be unavailable).
 const KEY = "riftpulls.ringLight";
-export type RingLight = "off" | "neutral" | "warm";
-const ORDER: RingLight[] = ["off", "neutral", "warm"];
 
-function load(): RingLight {
+function load(): boolean {
   try {
     const v = localStorage.getItem(KEY);
-    return ORDER.includes(v as RingLight) ? (v as RingLight) : "off";
+    return v === "on" || v === "neutral" || v === "warm"; // earlier versions stored a colour
   } catch {
-    return "off";
+    return false;
   }
 }
 
 export function useRingLight() {
-  const [ring, setRing] = useState<RingLight>(load);
-  const cycle = useCallback(() => {
-    setRing((r) => {
-      const next = ORDER[(ORDER.indexOf(r) + 1) % ORDER.length];
+  const [ring, setRing] = useState<boolean>(load);
+  const toggle = useCallback(() => {
+    setRing((on) => {
       try {
-        localStorage.setItem(KEY, next);
+        localStorage.setItem(KEY, on ? "off" : "on");
       } catch {
         /* not remembered */
       }
-      return next;
+      return !on;
     });
   }, []);
-  return { ring, cycleRing: cycle };
+  return { ring, toggleRing: toggle };
 }

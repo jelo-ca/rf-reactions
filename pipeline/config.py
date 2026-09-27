@@ -65,7 +65,11 @@ PHASH_SAME_MAX_DIST = 4            # pHash Hamming distance ≤ this → "same p
 INPUT_W, INPUT_H = 224, 320        # portrait, close to card ratio, both divisible by 32
 BACKBONE = "mobilenetv3_large_100" # timm name; pretrained, num_classes=0
 STANDARDIZE_INPUT = True           # per-image channel standardization inside the model (colour-cast invariance)
-AUG_PER_IMAGE = 8
+AUG_PER_IMAGE = 8                  # augmented views per image in previews / training
+# Reference rows in embeddings.bin per printing = 1 clean + REFERENCE_AUG_ROWS augmented.
+# 0 since fine-tuning: augmented refs of other cards became false neighbours
+# (18 real photos: clean-only 77.8% top-1 vs 66.7% with 8 augmented rows per card).
+REFERENCE_AUG_ROWS = 0
 # v2 (2026-09-26), matched to real eval photos: card ~65–100% of the box, backlit, colour cast, hand.
 AUG_CARD_SCALE = (0.65, 1.0)       # card height as a fraction of the guide box
 AUG_PERSPECTIVE = (0.0, 0.035)     # max corner jitter as a fraction of width/height
@@ -84,6 +88,9 @@ LAYOUT_W, LAYOUT_H = 56, 80        # edge-map size = 224×320 box-averaged 4×4 
 LAYOUT_GRID = (4, 5)               # cols, rows → 20 tiles of 14×16 pixels
 LAYOUT_MIN_MEAN = 1e-3             # edge-map mean floor (near-blank image guard)
 LAYOUT_TILE_EPS = 1e-3             # tile norm below this = no edges (normalized units; real edges ~1+)
+# Decision thresholds (mirror app/src/config.ts). PROVISIONAL: calibrated 2026-09-26 on 18 in-sample
+# photos / 3 cards with the step-1000 fine-tuned embedder: 7/18 accepted, 0 wrong. Recalibrate on a fresh set.
+ACCEPT_T, MARGIN_T = 0.42, 0.03
 EMBED_WEIGHT, LAYOUT_WEIGHT = 0.5, 0.5  # §6.4 combined score (PLAN EMBED_W/LAYOUT_W; renamed: LAYOUT_W is the map width) (initial; calibrated in Phase 3, mirror in app config.ts)
 ONNX_OPSET = 18                     # torch 2.14 exporter minimum; asking for 17 logs a failed down-conversion traceback
 ONNX_PARITY_MIN_COS = 0.999

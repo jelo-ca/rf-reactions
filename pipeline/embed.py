@@ -1,6 +1,6 @@
 """Reference embeddings from the exact ONNX artifact the browser runs (PLAN.md §4.7).
 
-One clean + AUG_PER_IMAGE augmented rows per non-foil printing (foil rows share
+One clean + REFERENCE_AUG_ROWS augmented rows per non-foil printing (foil rows share
 the base image; the decision rule reaches them through cards.json + imageHash).
 
 Writes app/public/data/embeddings.bin (<f4, [rows, dim], unit rows),
@@ -22,7 +22,7 @@ from export_onnx import session, to_tensor
 
 def reference_rows(card: dict) -> list[np.ndarray]:
     clean = load_rgb(config.IMAGES_DIR / card["image_file"])
-    return [to_model_size(clean)] + [augment(clean, card["printing_id"], k) for k in range(config.AUG_PER_IMAGE)]
+    return [to_model_size(clean)] + [augment(clean, card["printing_id"], k) for k in range(config.REFERENCE_AUG_ROWS)]
 
 
 def write_meta(**fields) -> None:
@@ -36,7 +36,7 @@ def main() -> None:
     cards = [c for c in read_csv(config.CARDS_CSV) if c["variant"] != "foil"]
     sess = session()
     dim = sess.get_outputs()[0].shape[1]
-    per = 1 + config.AUG_PER_IMAGE
+    per = 1 + config.REFERENCE_AUG_ROWS
     emb = np.empty((len(cards) * per, dim), dtype="<f4")
     ids: list[str] = []
     t0 = time.time()

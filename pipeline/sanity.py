@@ -98,11 +98,19 @@ def main() -> None:
     meta, emb, ids = load()
     per = meta["rowsPerPrinting"]
 
-    rate, misses = leave_one_out(emb, ids, per, hash_of)
-    print(f"Leave-one-out: {rate:.1%} ({'PASS' if rate >= TARGET else 'FAIL'}, target {TARGET:.0%})")
+    if per < 2:
+        print("Leave-one-out: skipped (clean reference rows only; real-photo eval.py is the check that matters)")
+        rate, misses = None, Counter()
+    else:
+        rate, misses = leave_one_out(emb, ids, per, hash_of)
+    if rate is not None:
+        print(f"Leave-one-out: {rate:.1%} ({'PASS' if rate >= TARGET else 'FAIL'}, target {TARGET:.0%})")
     for (a, b), n in misses.most_common(10):
         print(f"  {a} -> {b}  x{n}")
 
+    if per < 2:
+        print("Look-alike groups: skipped (needs augmented reference rows; use eval.py hard pairs)")
+        return
     res = score_groups(cards, emb, ids, per)
     total = sum(r["n"] for r in res)
     overall = {k: sum(r[k] * r["n"] for r in res) / total for k in ("layout", "embed", "combined")}

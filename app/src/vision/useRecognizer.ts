@@ -24,6 +24,9 @@ export function useRecognizer(videoRef: RefObject<HTMLVideoElement | null>, pack
     info: null, initError: null, last: null, shownId: null, askOptions: null, summary: {}, asks: 0,
   });
   const timings = useRef(new Timings());
+  // Same as shownId, but set synchronously: the state machine fires the reaction right after
+  // recognize()/choose() return, before React has committed the new state.
+  const shownRef = useRef<string | null>(null);
   const packModeRef = useRef(packMode);
   useLayoutEffect(() => {
     packModeRef.current = packMode;
@@ -53,6 +56,7 @@ export function useRecognizer(videoRef: RefObject<HTMLVideoElement | null>, pack
     t.add("search", r.timings.searchMs);
     if (r.timings.layoutMs > 0) t.add("layout", r.timings.layoutMs);
 
+    if (r.status === "accepted") shownRef.current = r.best!.printingId;
     setSt((s) => ({
       ...s,
       last: { ...r, cropMs, totalMs },
@@ -68,8 +72,9 @@ export function useRecognizer(videoRef: RefObject<HTMLVideoElement | null>, pack
   /** User picked a printing in the chooser. Logged so frequent asks can be investigated. */
   const choose = useCallback((printingId: string) => {
     console.log("[vision] ask resolved by user:", printingId);
+    shownRef.current = printingId;
     setSt((s) => ({ ...s, shownId: printingId, askOptions: null }));
   }, []);
 
-  return { ...st, ready, recognize, choose };
+  return { ...st, ready, recognize, choose, shownRef };
 }

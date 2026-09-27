@@ -61,7 +61,10 @@ export const nextTierMode = (m: TierMode): TierMode => (m === "price" ? "rarity"
 
 const STORAGE_KEY = "riftpulls.tierMode";
 
-export function loadTierMode(fallback: TierMode, storage: Pick<Storage, "getItem"> | undefined = safeStorage()): TierMode {
+export function loadTierMode<F extends TierMode | null>(
+  fallback: F,
+  storage: Pick<Storage, "getItem"> | undefined = safeStorage(),
+): TierMode | F {
   try {
     const v = storage?.getItem(STORAGE_KEY);
     return v && (TIER_MODES as readonly string[]).includes(v) ? (v as TierMode) : fallback;

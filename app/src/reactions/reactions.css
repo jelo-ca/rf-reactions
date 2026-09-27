@@ -1,0 +1,159 @@
+/* Reactions (PLAN §8.2, comedic tiers). Keyframes animate transform/opacity only, except the
+   tier 5 "deep fry" layer (backdrop-filter; logged in NOTES.md). */
+.reaction-layer { position: absolute; inset: 0; pointer-events: none; z-index: 50; overflow: hidden; }
+.reaction-layer .small { font-size: 14px; color: #c9ccd6; text-shadow: 0 1px 3px #000; }
+@keyframes fx-pop { 0% { opacity: 0; transform: scale(0.3); } 60% { opacity: 1; transform: scale(1.15); } 100% { opacity: 1; transform: scale(1); } }
+@keyframes fx-fade-out { to { opacity: 0; } }
+@keyframes fx-fade-in { from { opacity: 0; } }
+@keyframes fx-drift-up { from { opacity: 0; transform: translateY(10px); } 20% { opacity: 1; } to { opacity: 0; transform: translateY(-40px); } }
+@keyframes fx-slam { from { opacity: 0; scale: 4; } }
+
+/* 0 — golf clap: three slow claps, a muttered "nice." */
+.fx-golf { position: absolute; left: 50%; top: 18%; translate: -50% 0; text-align: center; }
+.fx-golf .claps { display: flex; gap: 18px; justify-content: center; font-size: 34px; }
+.fx-golf .claps span { opacity: 0; animation: fx-pop 180ms ease-out forwards, fx-fade-out 400ms 1200ms forwards; }
+.fx-golf .claps span:nth-child(2) { animation-delay: 620ms, 1300ms; }
+.fx-golf .claps span:nth-child(3) { animation-delay: 1240ms, 1400ms; }
+.fx-golf .meh { margin-top: 8px; color: #c9ccd6; font-size: 15px; font-style: italic; text-shadow: 0 1px 3px #000; animation: fx-drift-up 1700ms ease-out forwards; }
+
+/* 1 — participation trophy */
+.fx-trophy { position: absolute; left: 50%; top: 14%; translate: -50% 0; text-align: center; animation: fx-fade-out 300ms 1200ms forwards; }
+.fx-trophy .trophy { font-size: 64px; animation: fx-pop 300ms ease-out, fx-wobble 900ms 300ms ease-in-out; }
+.fx-trophy .ribbon {
+  display: inline-block; margin-top: 4px; padding: 4px 16px; background: #d64545; color: #fff; font-weight: 800;
+  font-size: 20px; rotate: -4deg; box-shadow: 0 3px 0 #8e2626; animation: fx-pop 250ms 150ms ease-out backwards;
+}
+@keyframes fx-wobble { 25% { transform: rotate(-12deg); } 50% { transform: rotate(10deg); } 75% { transform: rotate(-6deg); } }
+
+/* 2 — sitcom studio audience */
+.fx-sitcom {
+  position: absolute; left: 50%; bottom: 8%; translate: -50% 0; padding: 6px 14px; white-space: nowrap;
+  background: rgba(0, 0, 0, 0.85); color: #fff; font: 700 22px/1.2 "Courier New", monospace; letter-spacing: 0.04em;
+  animation: fx-caption 2000ms steps(1, end) forwards;
+}
+@keyframes fx-caption { 0% { opacity: 0; } 5% { opacity: 1; } 90% { opacity: 1; } 100% { opacity: 0; } }
+.fx-sitcom-price {
+  position: absolute; left: 50%; top: 28%; translate: -50% 0; font-size: 64px; font-weight: 900; color: #fff;
+  text-shadow: 0 4px 0 #000, 0 0 24px rgba(0, 0, 0, 0.8); animation: fx-zoom-in 600ms ease-out, fx-fade-out 300ms 1700ms forwards;
+}
+@keyframes fx-zoom-in { from { opacity: 0; transform: scale(2.2); } }
+
+/* 3 — instant replay (sports broadcast) */
+.fx-replay { position: absolute; inset: 0; animation: fx-fade-out 300ms 2500ms forwards; }
+.fx-replay::before { content: ""; position: absolute; inset: 0; box-shadow: inset 0 0 160px 40px rgba(0, 0, 0, 0.75); }
+.replay-tag { position: absolute; top: 16px; left: 20px; color: #ff3b3b; font: 800 20px/1 system-ui; animation: fx-blink 700ms steps(1, end) infinite; }
+@keyframes fx-blink { 50% { opacity: 0; } }
+.replay-banner {
+  position: absolute; left: -10%; right: -10%; top: 38%; padding: 10px 0; text-align: center; rotate: -6deg;
+  background: repeating-linear-gradient(90deg, #c8102e 0 40px, #fff 40px 44px);
+  animation: fx-swipe 500ms cubic-bezier(0.2, 0.9, 0.2, 1.2);
+}
+.replay-banner span { font: italic 900 52px/1 system-ui; color: #fff; text-shadow: 3px 3px 0 #0033a0; letter-spacing: 0.05em; }
+@keyframes fx-swipe { from { transform: translateX(-110%); } }
+.replay-lower {
+  position: absolute; left: 24px; bottom: 24px; padding: 6px 14px; background: #0033a0; color: #fff; font-size: 18px;
+  border-left: 6px solid #c8102e; animation: fx-slide-up 400ms 300ms ease-out backwards;
+}
+.replay-lower span { font-weight: 900; margin-left: 8px; }
+@keyframes fx-slide-up { from { opacity: 0; transform: translateY(30px); } }
+
+/* 4 — air horn (MLG) */
+.fx-airhorn { position: absolute; inset: 0; animation: fx-fade-out 400ms 3200ms forwards; }
+.fx-airhorn .flames {
+  position: absolute; inset: 0; box-shadow: inset 0 0 90px 30px #ff6a00, inset 0 0 200px 60px rgba(255, 30, 0, 0.55);
+  animation: fx-flicker 180ms ease-in-out infinite alternate;
+}
+@keyframes fx-flicker { from { opacity: 0.65; } to { opacity: 1; } }
+.hitmarker { position: absolute; color: #fff; font: 900 40px/1 system-ui; text-shadow: 0 0 4px #000; opacity: 0; animation: fx-hit 260ms ease-out forwards; }
+@keyframes fx-hit { 0% { opacity: 1; transform: scale(1.8); } 100% { opacity: 0; transform: scale(0.9); } }
+.mlg {
+  position: absolute; left: 50%; top: 22%; translate: -50% 0; rotate: -8deg; white-space: nowrap;
+  font: 900 72px/1 Impact, "Arial Black", sans-serif; color: #fff200; -webkit-text-stroke: 3px #000;
+  text-shadow: 5px 5px 0 #ff00d4; animation: fx-slam 350ms cubic-bezier(0.2, 1.6, 0.4, 1);
+}
+.mlg-price { position: absolute; left: 50%; top: 42%; translate: -50% 0; font: 900 60px/1 Impact, sans-serif; color: #fff; -webkit-text-stroke: 2px #000; animation: fx-pop 400ms 300ms backwards; }
+.mlg-plus { position: absolute; right: 12%; top: 16%; font: 900 30px/1 system-ui; color: #3ddc84; text-shadow: 0 2px 0 #000; animation: fx-drift-up 1400ms 200ms ease-out backwards; }
+
+/* 5 — over-edited epic: black + letterbox → spotlight + spinning card → impact at --hit → everything at once */
+.fx-epic { position: absolute; inset: 0; background: #000; animation: fx-fade-in 500ms ease-out, fx-fade-out 500ms 4700ms forwards; }
+.fx-epic .letterbox { position: absolute; left: 0; right: 0; height: 11%; background: #000; z-index: 3; animation: fx-letterbox 600ms ease-out backwards; }
+.fx-epic .letterbox.top { top: 0; transform-origin: top; }
+.fx-epic .letterbox.bottom { bottom: 0; transform-origin: bottom; }
+@keyframes fx-letterbox { from { transform: scaleY(0); } }
+.fx-epic .spotlight {
+  position: absolute; inset: 0; background: radial-gradient(circle at 50% 45%, rgba(255, 240, 200, 0.35) 0 18%, transparent 42%);
+  animation: fx-spot 1600ms 200ms ease-out backwards;
+}
+@keyframes fx-spot { from { opacity: 0; transform: scale(0.3); } }
+.fx-epic .teaser { position: absolute; left: 50%; top: 16%; translate: -50% 0; color: #aaa; font: italic 18px system-ui; animation: fx-fade-out 200ms calc(var(--hit) - 250ms) forwards; }
+.fx-epic .epic-card {
+  position: absolute; left: 50%; top: 45%; width: min(26vh, 220px); border-radius: 12px; translate: -50% -50%;
+  box-shadow: 0 0 60px rgba(255, 215, 0, 0.6);
+  animation: fx-card-spin var(--hit) cubic-bezier(0.3, 0, 0.2, 1) backwards, fx-card-pulse 500ms var(--hit) ease-in-out 6 alternate;
+}
+@keyframes fx-card-spin { from { opacity: 0; transform: perspective(800px) rotateY(540deg) scale(0.4); } }
+@keyframes fx-card-pulse { to { transform: scale(1.06); } }
+.fx-epic .flash { position: absolute; inset: 0; background: #fff; opacity: 0; z-index: 5; animation: fx-flash 450ms var(--hit) ease-out; }
+@keyframes fx-flash { 0% { opacity: 1; } 100% { opacity: 0; } }
+.fx-epic .flare {
+  position: absolute; top: 20%; left: -30%; width: 60%; height: 40%; opacity: 0; z-index: 4;
+  background: radial-gradient(ellipse at center, rgba(255, 255, 255, 0.9) 0 4%, rgba(120, 200, 255, 0.35) 12%, transparent 60%);
+  animation: fx-flare 1600ms var(--hit) ease-out;
+}
+@keyframes fx-flare { 0% { opacity: 0; transform: translateX(0); } 20% { opacity: 1; } 100% { opacity: 0; transform: translateX(200%); } }
+.fx-epic .fry {
+  position: absolute; inset: 0; opacity: 0; z-index: 2; backdrop-filter: saturate(3.2) contrast(1.7) hue-rotate(-12deg);
+  animation: fx-fry 2600ms var(--hit) steps(1, end) forwards;
+}
+@keyframes fx-fry { 0% { opacity: 1; } 12% { opacity: 0; } 22% { opacity: 1; } 34% { opacity: 0; } 46% { opacity: 1; } 100% { opacity: 1; } }
+.fx-epic .epic-title {
+  position: absolute; left: 50%; top: 13%; translate: -50% 0; white-space: nowrap; z-index: 4;
+  font: 900 clamp(34px, 7vw, 76px)/1 Impact, "Arial Black", sans-serif; color: #ffd400; -webkit-text-stroke: 2px #5a2d00;
+  text-shadow: -4px 0 #ff004c, 4px 0 #00e5ff, 0 0 40px #ff9d00;
+  animation: fx-slam 400ms var(--hit) cubic-bezier(0.2, 1.6, 0.4, 1) backwards, fx-glitch 120ms calc(var(--hit) + 400ms) steps(2, end) 12;
+}
+@keyframes fx-glitch { 50% { transform: translate(3px, -2px) skewX(-8deg); } }
+.fx-epic .epic-price {
+  position: absolute; left: 50%; bottom: 17%; translate: -50% 0; z-index: 4; font: 900 clamp(40px, 8vw, 88px)/1 Impact, sans-serif;
+  color: #fff; -webkit-text-stroke: 2px #000; text-shadow: 0 0 30px #3ddc84; animation: fx-pop 300ms var(--hit) backwards;
+}
+.fx-epic .epic-name { position: absolute; left: 50%; bottom: 12%; translate: -50% 0; z-index: 4; color: #ddd; font-size: 16px; white-space: nowrap; animation: fx-fade-in 400ms calc(var(--hit) + 300ms) backwards; }
+.fx-epic .watermark { position: absolute; right: 16px; bottom: calc(11% + 8px); z-index: 4; color: rgba(255, 255, 255, 0.55); font: 11px/1 system-ui; animation: fx-fade-in 400ms var(--hit) backwards; }
+
+/* tier 5 after the cinematic: gold frame + banner until the next card (click to dismiss) */
+.reaction-layer.settled { box-shadow: inset 0 0 0 4px #ffd400, inset 0 0 60px rgba(255, 212, 0, 0.35); }
+.epic-settled {
+  position: absolute; top: 12px; left: 50%; translate: -50% 0; pointer-events: auto; cursor: pointer;
+  background: linear-gradient(90deg, #ffb300, #ffe066, #ffb300); color: #3a2000; border: 0; border-radius: 999px;
+  padding: 6px 16px; font: 900 16px/1.2 system-ui; letter-spacing: 0.04em; box-shadow: 0 4px 18px rgba(255, 180, 0, 0.5);
+  animation: fx-pop 300ms ease-out;
+}
+.epic-settled span { margin-left: 6px; }
+
+/* Click to start (unlocks audio) */
+.start-screen {
+  position: absolute; inset: 0; z-index: 70; display: grid; place-content: center; gap: 12px; text-align: center;
+  background: rgba(8, 9, 12, 0.88); color: #e8e9ee;
+}
+.start-screen button {
+  font: 800 22px/1 system-ui; padding: 16px 32px; border-radius: 999px; border: 0; cursor: pointer;
+  background: linear-gradient(90deg, #ffb300, #ff5a5f); color: #1a0d00;
+}
+.start-screen p { margin: 0; color: #8b8f9c; font-size: 14px; }
+
+/* Dev panel (T): fire any tier on demand */
+.tier-dev {
+  position: absolute; left: 12px; top: 12px; z-index: 65; display: flex; flex-direction: column; gap: 4px;
+  background: rgba(14, 15, 19, 0.9); border: 1px solid #2c2f39; border-radius: 10px; padding: 8px 10px;
+  color: #e8e9ee; font-size: 13px;
+}
+.tier-dev button { background: #1b1d24; color: #e8e9ee; border: 1px solid #2c2f39; border-radius: 6px; padding: 4px 8px; font: inherit; cursor: pointer; text-align: left; }
+.tier-dev button:hover { border-color: #5aa9ff; }
+
+@media (prefers-reduced-motion: reduce) {
+  /* calmer versions: a still frame of each tier for its duration (the layer unmounts it) — no spins,
+     slams, shakes, flicker, glitches or strobing. fx.ts also skips stage shakes and confetti. */
+  .reaction-layer *, .reaction-layer *::before { animation: none !important; }
+  .fx-golf .claps span { opacity: 1; }
+  .fx-epic .fry, .fx-epic .flash, .fx-epic .flare, .fx-epic .teaser, .hitmarker, .fx-airhorn .flames, .replay-tag { display: none; }
+}

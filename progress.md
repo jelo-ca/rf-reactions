@@ -122,10 +122,16 @@
 - origin/main reflog: human force-pushed cleaned main (30f5a6e) and pushed the squash (234037d) from own terminal
 - Owner: Phase 3 accuracy acceptable for now → Phase 3 accepted as-is, accuracy items to backlog; Phase 4 handoff prompt written (docs/handoff-phase-4.md)
 
+## Session: 2026-09-26 (night) — Phase 4
+- Branch `feat/phase-4-price-card`; `setName` in cards.json (ingest re-run, 0 images rewritten); pipeline 80 tests
+- `prices/priceCard.ts` + tests; `pricesData.test.ts` (import.meta.glob; skips if public/data absent) wired into `npm run build`; verified it fails on a dropped/null price
+- `ui/PriceCard.tsx` replaces ResultChip, persists until next accept/pick; chooser reuses formatting; app 74 tests, tsc/oxlint clean, build green
+- Error: `tsc -b` "Cannot find name 'node:fs'" in the data test (app tsconfig has only vite/client types) → switched to `import.meta.glob`
+
 ## 5-Question Reboot Check (updated 2026-09-26, evening)
 | Question | Answer |
 |----------|--------|
-| Where am I? | Phase 3 accepted as-is and on `main`; Phase 4 (price card) is next — handoff prompt in `docs/handoff-phase-4.md`. Dev server off |
+| Where am I? | Phase 4 price card built on `feat/phase-4-price-card`, waiting for the owner's live check + merge. Dev server off |
 | Where am I going? | Phase 4 price card → Phase 5 reactions → (Phase 6 OCR if needed) → Phase 7 polish; Phase 3 accuracy backlog before the demo |
 | What's the goal? | Identify held-up card printing in < 300 ms p95 with ≥ 90% top-1 and 0 wrong accepts; show price; react |
 | What have I learned? | Test on real inputs early; fine-tuning + realistic augmentation fixed a 0% start; after fine-tuning, clean refs beat augmented refs; triggers must not depend on a static background with a user-facing webcam |

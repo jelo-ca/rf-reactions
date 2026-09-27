@@ -150,6 +150,15 @@ The app never uses layout alone; §6.4 combines them. Human approved the new bar
 - Fix: `change` = difference from the view last sent to recognition. Still + sharp + changed (or retrying) → recognize; the recognized view is snapshotted so the same card held still never re-triggers; a changed view (removed or swapped) leaves COOLDOWN. B = rescan. Warm-up 60 frames before the first check.
 - Risk: empty views (the user's face) now get checked too; the 0.42 threshold should reject them, unproven (no empty-box eval photos). Add an empty-box guard (card border / edge check) if false answers appear.
 
+## Phase 4 — Price card (2026-09-26)
+- `ui/PriceCard.tsx` replaces `ResultChip`; logic in `prices/priceCard.ts` (`formatUsd`, `formatAsOf`, `variantLabel`, `findFoilSibling`, `priceCardView`), 14 unit tests.
+- **Persistence:** App shows `rec.shownId` whenever it's set (was: only in COOLDOWN + accepted). `shownId` changes only on an accept or a chooser pick — the same moment the reaction fires — so the card stays through the next card's CANDIDATE/RECOGNIZING and through "not sure" results. Recognition/state-machine behaviour unchanged.
+- **Deviation — foil hint trigger:** shown whenever the displayed non-foil printing has a same-picture foil sibling, not only when `reason === "same_image_cheapest"`. `layout_resolved` and chooser picks also go through `pickSamePicture` (cheapest in the group), so the same ambiguity applies; with reason `ok` there is no sibling, so nothing changes there. The card therefore no longer depends on `rec.last` (which later rejected results overwrite).
+- **Missing price never crashes:** `formatUsd` returns "—" for undefined/NaN/Infinity/negative; the card shows "No price" and hides the as-of line. Foil sibling without a price → "could be foil" (no amount).
+- **Dates:** `asOf` shown in UTC ("Sep 25, 2026") so it can't shift a day with the viewer's time zone.
+- **Build gate:** `prices/pricesData.test.ts` loads `public/data/{cards,prices}.json` (via `import.meta.glob` — keeps node types out of the app tsconfig) and asserts one finite price ≥ 0 per printing, no extras/duplicates, parsable `asOf`. `npm run build` runs it before `vite build`. If `public/data` is absent (fresh clone) it skips with a warning. Verified it fails on a dropped row and on a null price.
+- **Set name (optional item, done):** `ingest.py` adds `setName` from the cached Riftcodex `sets.json` (falls back to the code, with a WARN). Nexus Night's set is "Riftbound Organized Play Promotional Cards" (long; the card wraps). The chooser now uses the same labels/price formatting.
+
 ## Pack mode (human request, 2026-09-25) — PLAN §6.4b added
 - Setting `booster` (default) | `nexus_night`. Booster: Nexus Night printings excluded from candidates. Nexus Night: inside a same-picture group, Nexus Night printings win (cheapest of them); others still match normally.
 - `cards.json` gains `pool` (booster 1693, nexus_night 104). Reference logic `pipeline/packmode.py` (tested); `fetch_cards.is_nexus_night` now uses the same `pool_of` rule. TS port `vision/packMode.ts` must match; UI toggle `N` comes with Phase 2/3.

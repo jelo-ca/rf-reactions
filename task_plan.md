@@ -4,7 +4,7 @@
 Build local web app that identifies a held-up Riftbound card (exact printing) in <300ms p95, shows its price, and fires a value-scaled reaction — per `PLAN.md` (source of truth).
 
 ## Current Phase
-**Phase 4 — Prices + result card** (next; branch `feat/phase-4-price-card` off `main`). Handoff prompt: `docs/handoff-phase-4.md`.
+**Phase 4 — Prices + result card** — built on `feat/phase-4-price-card`; waiting for the owner's live check, then merge to `main`. Handoff prompt: `docs/handoff-phase-4.md`.
 Phase 3 accepted as-is by the owner (2026-09-26): 77.8% top-1 / 0 wrong accepts on 18 in-sample photos is "acceptable right now"; accuracy items moved to the Phase 3 backlog below.
 Retrospective: `docs/retrospective.md` · Learning doc: "Rift Pulls — How We Taught the Model to Recognize Cards" (Claude Doc).
 
@@ -70,10 +70,13 @@ Full specs + acceptance criteria live in `PLAN.md`. Do not start next phase unti
 
 ### Phase 4: Prices + result card (§7) — branch `feat/phase-4-price-card`
 - [x] `pipeline/prices.py` → `prices.json` (built in Phase 1; fails loudly on a missing/duplicate/bad price)
-- [ ] `ui/PriceCard.tsx` replaces the Phase 3 `ResultChip`: image, name, set, variant badge, USD price, "as of <date>", "could be foil: $X" hint on `same_image_cheapest`
-- [ ] Appears when the reaction starts (accepted / chooser pick), stays until the next card is shown
-- [ ] Acceptance: every printing in the pool shows a price; a missing price fails the build, not the demo (+ app-side test)
-- **Status:** pending — handoff prompt in `docs/handoff-phase-4.md`
+- [x] `ui/PriceCard.tsx` replaces the Phase 3 `ResultChip`: image, name, set name + number, variant badge, USD price, "as of <date>", "could be foil: $X" hint (any same-picture foil sibling — see NOTES), Nexus Night marker
+- [x] Appears when the reaction starts (accepted / chooser pick), stays until the next card is shown
+- [x] Pure logic in `prices/priceCard.ts` + 14 tests; chooser reuses it
+- [x] `setName` in `cards.json` (ingest + test)
+- [x] Acceptance: every printing in the pool shows a price (1797/1797); `prices/pricesData.test.ts` runs in `npm run build`, so a missing price fails the build; UI shows "No price" instead of crashing
+- [ ] HUMAN: live check of the price card (dev server), then merge to `main`
+- **Status:** built — 80 pipeline + 74 app tests pass, `tsc` / `oxlint` clean, `npm run build` green
 
 ### Phase 5: Reactions (§8)
 - [ ] H5: confirm rarity → tier mapping (rarities: Common, Uncommon, Rare, Epic, Showcase, Promo)

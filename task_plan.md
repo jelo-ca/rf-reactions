@@ -56,7 +56,7 @@ Full specs + acceptance criteria live in `PLAN.md`. Do not start next phase unti
 - [x] Thresholds ACCEPT_T 0.42 / MARGIN_T 0.03 (7/18 accepted, 0 wrong; in-sample, provisional)
 - [x] Dev server restarted (human asked); human: "it works" but B needed per card
 - [x] Change-based detection (human chose) replaces background snapshot; B = rescan; 58 app tests
-- [ ] HUMAN: live check of auto-detect across several cards; watch for false answers on an empty box
+- [ ] HUMAN: live check of auto-detect across several cards; watch for false answers on an empty box (dev server stopped 2026-09-26 at human request; restart: `cd app && node node_modules/vite/bin/vite.js --port 5173`)
 - [ ] HUMAN: fresh eval set (not used for training/selection)
 - [ ] If improved: rebuild (export → embed → export_search → parity), re-eval, recalibrate
 - [ ] HUMAN: live retest (Discipline first); re-approve aug preview v2

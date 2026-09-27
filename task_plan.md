@@ -48,6 +48,11 @@ Full specs + acceptance criteria live in `PLAN.md`. Do not start next phase unti
 - [x] Rebuild with fine-tuned weights: export cos 1.000000, embed 26.8 min, recognizer 76.5 MB, parity fixtures
 - [x] `eval.py` (18 in-sample photos): **top-1 61.1%, top-5 83.3%, median rank 1**; scores now ~0.35–0.45 → provisional calibration ACCEPT_T 0.44 / MARGIN_T 0.04 (8/18 accepted, 0 wrong) applied to config.ts; weakest: SFD-042 Brutalizer
 - [x] Dev server restarted
+- [x] HUMAN live retest: "pretty accurate" → resume training
+- [~] Resume fine-tune (--resume, 1000 steps, lr 5e-5, 2 workers, online hard-negative mining every 250 steps) → `pipeline/out/finetune_resume.log`; backup of step-250 weights kept in `out/finetune/`
+    - Killed by low-memory guard at step 325 (with dev server). Step-250 check: real 55.6% (10/18 vs 11/18), synth 97.7%, margin 0.33→0.38 → not saved; best.pt unchanged
+    - Next: run training outside Claude Code's background shells (own terminal) or with fewer workers; human to decide
+- [ ] If improved: rebuild (export → embed → export_search → parity), re-eval, recalibrate
 - [ ] HUMAN: live retest (Discipline first); re-approve aug preview v2
 - [ ] HUMAN (H4): fresh eval set — ≥ 20 printings × 3, hard pairs × 5, varied lighting, **not** used for checkpoint selection
 - [ ] Optional: resume fine-tuning (2 workers, close Chrome) with online hard-negative mining if real top-1 plateaus

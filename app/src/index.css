@@ -149,11 +149,24 @@ body { background: var(--bg); color: var(--text); }
   border-radius: 999px; width: 24px; height: 24px; display: grid; place-items: center; font-weight: 800;
 }
 
-/* Screen ring light: bright frame around the (inset) video lights the card from the display. */
-.stage { --ring: clamp(48px, 12vmin, 160px); }
-.stage.ring-neutral, .stage.ring-warm { padding: var(--ring); }
-.stage.ring-neutral { background: #ffffff; }
-.stage.ring-warm { background: #fff1d6; }
-.stage.ring-neutral video, .stage.ring-warm video { border-radius: 16px; }
-.stage.ring-neutral .keys, .stage.ring-warm .keys { color: #333; }
-.bar .ring-on { border-color: #fff; color: #fff; box-shadow: 0 0 10px rgba(255, 255, 255, 0.6); }
+/* Screen ring light (L / toolbar switch): the page becomes a bright white frame around the inset
+   video so the display lights the card. The toolbar and footer go white too for the most light. */
+.stage { --ring: clamp(72px, 18vmin, 220px); }
+.app.ring-on { background: #ffffff; color: #111; }
+.app.ring-on .stage { padding: var(--ring); background: #ffffff; }
+.app.ring-on .stage video { border-radius: 18px; }
+.app.ring-on .bar, .app.ring-on .keys { background: #ffffff; color: #333; border-color: #e5e5e5; }
+.app.ring-on .bar select, .app.ring-on .bar button { background: #f4f4f4; color: #111; border-color: #d6d6d6; }
+
+.ring-toggle { display: inline-flex; align-items: center; gap: 8px; }
+.ring-toggle .switch {
+  position: relative; width: 30px; height: 16px; border-radius: 999px;
+  background: #444a58; transition: background 120ms ease;
+}
+.ring-toggle .switch::after {
+  content: ""; position: absolute; top: 2px; left: 2px; width: 12px; height: 12px;
+  border-radius: 50%; background: #fff; transition: transform 120ms ease;
+}
+.ring-toggle[aria-checked="true"] .switch { background: #f5c542; }
+.ring-toggle[aria-checked="true"] .switch::after { transform: translateX(14px); }
+@media (prefers-reduced-motion: reduce) { .ring-toggle .switch, .ring-toggle .switch::after { transition: none; } }

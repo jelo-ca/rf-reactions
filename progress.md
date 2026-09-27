@@ -84,6 +84,7 @@
 | 2026-09-26 | same | 2 | serialize session.run (overlapping runs hang on WebGPU) — fixed |
 | 2026-09-26 | parity rows doubled, no verdict | 1 | cancelled flag for StrictMode's discarded effect |
 | 2026-09-26 | fine-tune #2 + dev server killed by low-memory guard at step 275 | 1 | kept step-250 best.pt; if resuming: 2 workers, close Chrome tabs |
+| 2026-09-26 | resumed fine-tune + dev server killed again at step 325 (2 workers) | 2 | guard reaps idle-session background shells; next: run in user's own terminal |
 
 - Browser fixture run found JS search 82/91 ms (p50/p95) → baked search into recognizer.onnx → 0.5/1.4 ms; recognize call p95 49 ms
 - "OGN-007 → VEN-R01" investigated: identical-art reprint in same picture group, correct per rule (documented)
@@ -96,6 +97,7 @@
 - Low-memory guard killed training at step 275 + dev server (free RAM 6.8/15.7 GB after). best.pt = step 250 kept.
 - Human chose: use step-250 checkpoint now → rebuild (export, embed, export_search, parity) running → out/rebuild.log; then restart dev server for live test
 - Rebuild done (fine-tuned): eval 18 photos top-1 61.1%, top-5 83.3%, median rank 1; provisional ACCEPT_T 0.44 / MARGIN_T 0.04 (8/18 accepted, 0 wrong); dev server restarted
+- Resumed fine-tune killed by low-memory guard at step 325 (+ dev server again); step-250 check real 55.6% (not saved), synth 97.7%, margin 0.38. Learning doc written (Claude Doc)
 
 ## 5-Question Reboot Check (updated 2026-09-26)
 | Question | Answer |

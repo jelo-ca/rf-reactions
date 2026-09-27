@@ -20,11 +20,13 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import sys
 import json
 import math
 import random
 import time
 from collections import defaultdict
+from pathlib import Path
 
 import numpy as np
 import torch
@@ -40,6 +42,22 @@ from model import Embedder
 OUT = config.OUT_DIR / "finetune"
 TAU = 0.07
 EVAL_AUG_OFFSET = 10_000  # augmentation indices used only for evaluation (training uses < this)
+
+
+class Tee:
+    """Print to the console and append to a UTF-8 log file (PowerShell 5.1 redirects write UTF-16)."""
+
+    def __init__(self, stream, path: Path):
+        self.stream, self.file = stream, open(path, "a", encoding="utf-8")
+
+    def write(self, text: str) -> int:
+        self.file.write(text)
+        self.file.flush()
+        return self.stream.write(text)
+
+    def flush(self) -> None:
+        self.stream.flush()
+        self.file.flush()
 
 
 def picture_classes() -> list[dict]:
@@ -194,7 +212,10 @@ def main() -> None:
     ap.add_argument("--eval-every", type=int, default=250)
     ap.add_argument("--eval-classes", type=int, default=300)
     ap.add_argument("--time", action="store_true", help="time a few steps and exit")
+    ap.add_argument("--log", type=Path, default=None, help="also write output to this file (UTF-8)")
     args = ap.parse_args()
+    if args.log:
+        sys.stdout = Tee(sys.stdout, args.log)
 
     torch.manual_seed(config.SEED)
     torch.set_num_threads(max(1, torch.get_num_threads()))

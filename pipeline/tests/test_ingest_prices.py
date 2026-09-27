@@ -38,7 +38,7 @@ def test_validate_fails_loudly(images, cards, msg):
 
 def test_card_json_contract():
     j = to_card_json(card("OGN-001", image="OGN-001.png"))
-    assert j == {"printingId": "OGN-001", "name": "N", "setCode": "OGN", "collectorNumber": "001",
+    assert j == {"printingId": "OGN-001", "name": "N", "setCode": "OGN", "setName": "OGN", "collectorNumber": "001",
                  "rarity": "Common", "variant": "normal", "imageHash": "abcd",
                  "imageUrl": "/data/images/OGN-001.jpg", "pool": "booster"}
 
@@ -58,6 +58,12 @@ def test_prices_build_ok():
 def test_prices_fail_loudly(prices, msg):
     with pytest.raises(PriceError, match=msg):
         build([card("A")], prices)
+
+
+def test_card_json_set_name():
+    c = card("OGN-001", image="OGN-001.png")
+    assert to_card_json(c, {"OGN": "Origins"})["setName"] == "Origins"
+    assert to_card_json(c, {"SFD": "Spiritforged"})["setName"] == "OGN"  # unknown set: fall back to the code
 
 
 def test_card_json_marks_nexus_night_pool():

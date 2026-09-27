@@ -10,10 +10,11 @@ export const CFG = {
   RETRIES: 2,
 
   // Recognition (§6.4) — names mirror pipeline/config.py
-  // PROVISIONAL (2026-09-26): eval.py --calibrate on 18 in-sample photos / 3 cards with the
-  // fine-tuned embedder (scores are lower after fine-tuning). Recalibrate on a fresh eval set.
-  ACCEPT_T: 0.44, // cosine score
-  MARGIN_T: 0.04, // best minus runner-up (different card names)
+  // PROVISIONAL (2026-09-26): eval.py sweep on 18 in-sample photos / 3 cards, step-1000 fine-tuned
+  // embedder, clean references only: 7/18 accepted, 0 wrong. Mirrors pipeline/config.py. Recalibrate
+  // on a fresh eval set.
+  ACCEPT_T: 0.42, // cosine score
+  MARGIN_T: 0.03, // best minus runner-up (different card names)
   EMBED_WEIGHT: 0.5,
   LAYOUT_WEIGHT: 0.5,
   LAYOUT_MARGIN_T: 0.03,

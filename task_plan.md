@@ -4,9 +4,10 @@
 Build local web app that identifies a held-up Riftbound card (exact printing) in <300ms p95, shows its price, and fires a value-scaled reaction — per `PLAN.md` (source of truth).
 
 ## Current Phase
-**Phase 3 — recognition accuracy on real photos** (branch `feat/finetune-embedder`, off `feat/phase-3-vision`).
-Step-1000 fine-tuned model built into the app (77.8% top-1 on 18 in-sample photos) → human live retest → fresh eval set.
-Retrospective of everything so far: `docs/retrospective.md`.
+**Phase 3 — recognition accuracy on real photos** (branch `feat/finetune-embedder`, off `feat/phase-3-vision`; pushed to origin).
+App runs the step-1000 fine-tuned model (77.8% top-1 on 18 in-sample photos) with change-based detection and a ring light toggle.
+Waiting on the human: live check of auto-detect, then a fresh eval set. Dev server is off.
+Retrospective: `docs/retrospective.md` · Learning doc: "Rift Pulls — How We Taught the Model to Recognize Cards" (Claude Doc).
 
 ## Phases
 Full specs + acceptance criteria live in `PLAN.md`. Do not start next phase until acceptance passes.
@@ -35,37 +36,38 @@ Full specs + acceptance criteria live in `PLAN.md`. Do not start next phase unti
 - **Status:** complete
 
 ### Phase 3: Vision worker, recognition, eval (§6) — branches `feat/phase-3-vision` → `feat/finetune-embedder`
+**Built**
 - [x] Capture mode (C) + `sort_eval.py`
 - [x] search.ts, layout.ts (matches Python fixtures), decide.ts, worker (ORT WebGPU→wasm), parity page PASS (cos 1.000000)
-- [x] Search baked into `recognizer.onnx`: search p95 1.4 ms (JS loop was 91 ms)
-- [x] Live recognition in app: chooser, result chip, debug top-5 + timings + p50/p95
-- [x] Ring light: on/off switch (toolbar + L), 170px white frame + white page; DOM-checked, guide alignment with ring on not yet seen live
-- [x] `decide.py` (Python mirror, 10 tests) + `eval.py` (report + calibrate)
-- [x] Human eval photos v1: 18 photos / 3 printings → **pretrained model: top-1 0%, median rank 16**
-- [x] Diagnosis: domain gap (framing 65–85%, backlight/cast/haze, hand, tilt) + backbone embeds frame > art
-- [x] augment v2 (realistic webcam crops) + per-image channel standardization in the model
-- [x] Fine-tune (SupCon + hard negatives, real-photo validation): **step 250 → real top-1 61%, median rank 1**; killed at step 275 by low-memory guard; human chose to use step 250
-- [x] Rebuild with fine-tuned weights: export cos 1.000000, embed 26.8 min, recognizer 76.5 MB, parity fixtures
-- [x] `eval.py` (18 in-sample photos): **top-1 61.1%, top-5 83.3%, median rank 1**; scores now ~0.35–0.45 → provisional calibration ACCEPT_T 0.44 / MARGIN_T 0.04 (8/18 accepted, 0 wrong) applied to config.ts; weakest: SFD-042 Brutalizer
-- [x] Dev server restarted
-- [x] HUMAN live retest: "pretty accurate" → resume training
-- [~] Resume fine-tune (--resume, 1000 steps, lr 5e-5, 2 workers, online hard-negative mining every 250 steps) → `pipeline/out/finetune_resume.log`; backup of step-250 weights kept in `out/finetune/`
-    - Killed by low-memory guard at step 325 (with dev server). Step-250 check: real 55.6% (10/18 vs 11/18), synth 97.7%, margin 0.33→0.38 → not saved; best.pt unchanged
-    - Human ran it in own terminal (`--log out/finetune_resume2.log`): **step 500 → real top-1 77.8% (14/18)**, flat at 750/1000; margin 0.33 → 0.41; best.pt = step 1000
-- [x] Rebuild with step-1000 weights: with 8 augmented reference rows/card real top-1 only 66.7% → **clean references only: 77.8% top-1, 88.9% top-5**; recognizer 76.5 → 23.7 MB
-- [x] Thresholds ACCEPT_T 0.42 / MARGIN_T 0.03 (7/18 accepted, 0 wrong; in-sample, provisional)
-- [x] Dev server restarted (human asked); human: "it works" but B needed per card
-- [x] Change-based detection (human chose) replaces background snapshot; B = rescan; 58 app tests
-- [ ] HUMAN: live check of auto-detect across several cards; watch for false answers on an empty box (dev server stopped 2026-09-26 at human request; restart: `cd app && node node_modules/vite/bin/vite.js --port 5173`)
-- [ ] HUMAN: fresh eval set (not used for training/selection)
-- [ ] If improved: rebuild (export → embed → export_search → parity), re-eval, recalibrate
-- [ ] HUMAN: live retest (Discipline first); re-approve aug preview v2
-- [ ] HUMAN (H4): fresh eval set — ≥ 20 printings × 3, hard pairs × 5, varied lighting, **not** used for checkpoint selection
-- [ ] Optional: resume fine-tuning (2 workers, close Chrome) with online hard-negative mining if real top-1 plateaus
-- [ ] eval.py calibration → `app/src/config.ts` + `pipeline/config.py`
+- [x] Search baked into the model (`export_search.py` → `recognizer.onnx`): search p95 1.4 ms (JS loop was 91 ms)
+- [x] Live recognition: chooser, result chip, debug top-5 + timings + p50/p95
+- [x] `decide.py` (Python mirror, 10 tests) + `eval.py` (report + calibrate, thresholds from `pipeline/config.py`)
+- [x] Ring light: on/off switch (toolbar + L), thin white frame (clamp 32–80 px) + white page; human: "it works"
+- [x] Change-based detection (human choice) replaces the background snapshot; B = rescan; PLAN §5.5 marked revised
+
+**Accuracy work (real photos: 18 photos / 3 printings, in-sample)**
+- [x] Pretrained: top-1 0%, median rank 16 → diagnosis: domain gap (framing, backlight/cast/haze, hand, tilt) + frame > art
+- [x] augment v2 + per-image channel standardization in the model
+- [x] Fine-tune run 2 (SupCon + hard negatives): step 250 → 61%; killed by low-memory guard at 275
+- [x] Resumed run (online hard-negative mining, lr 5e-5), run by the human in their own terminal: **77.8% at step 500, held to 1,000**; margin 0.33 → 0.41
+- [x] Clean references only (`REFERENCE_AUG_ROWS = 0`): 77.8% vs 66.7% with augmented refs; recognizer 76.5 → 23.7 MB
+- [x] Thresholds ACCEPT_T 0.42 / MARGIN_T 0.03 (7/18 accepted, 0 wrong) — provisional
+
+**Open**
+- [ ] HUMAN: live check of auto-detect (several cards in a row, one card held 10 s, empty box — any false answer?)
+- [ ] HUMAN (H4): fresh eval set — ≥ 20 printings × 3, hard pairs × 5, varied lighting, never used for training or checkpoint selection
+- [ ] HUMAN: re-approve aug preview v2 (`pipeline/out/aug_preview.png`)
+- [ ] `eval.py --calibrate` on the fresh set → `app/src/config.ts` + `pipeline/config.py`
+- [ ] If fresh top-1 < 90%: more fine-tuning (run in own terminal), stronger backbone, or real photos in training
+- [ ] If empty-box false answers appear: add a card-present guard (border/edge check)
 - [ ] Acceptance: top-1 ≥ 90%, 0 wrong accepts, 0 wrong-printing on hard pairs, ask ≤ 20%, searchMs p95 ≤ 20, layoutMs p95 ≤ 5
 - [ ] Merge `feat/finetune-embedder` → `feat/phase-3-vision` → main
 - **Status:** in_progress
+
+**How to run things** (the low-memory guard stops long jobs started from Claude Code's background shells)
+- Dev server: `cd app && node node_modules/vite/bin/vite.js --port 5173`
+- Training: in your own PowerShell, `cd pipeline; $env:PYTHONUTF8="1"; .\.venv\Scripts\python -u finetune.py --resume --steps 1000 --lr 5e-5 --workers 2 --log outinetune_resumeN.log`
+- Rebuild app data after training: `export_onnx.py` → `embed.py` → `export_search.py` → `parity.py` (≈ 3 min with clean refs), then `eval.py --calibrate`
 
 ### Phase 4: Prices + result card (§7)
 - **Status:** pending (ResultChip is a Phase 3 stand-in)
@@ -102,6 +104,10 @@ Full specs + acceptance criteria live in `PLAN.md`. Do not start next phase unti
 | augment v2 + per-image standardization in model | Match real framing/lighting; cancel colour casts identically for refs and queries |
 | Checkpoint selected on real photos | Synthetic metrics weren't predictive; caveat: in-sample, needs fresh eval set |
 | Use step-250 checkpoint after memory kill | Human choice; 61% real top-1 already |
+| Long jobs run in the human's own terminal | Claude Code's low-memory guard stopped training twice |
+| Clean reference rows only (`REFERENCE_AUG_ROWS = 0`) | After fine-tuning, augmented refs of other cards became false neighbours (77.8% vs 66.7%) |
+| Change-based detection, no background snapshot | Human choice; the empty box behind a user-facing webcam is their face/room, so the snapshot went stale after every card |
+| Ring light = on/off toggle, thin frame | Human request |
 
 ## Errors Encountered
 Full log with attempts: `progress.md` → Error Log. Recurring themes:

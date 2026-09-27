@@ -85,6 +85,13 @@
 - Fine-tune run #1 (weak augments) stopped before step 1 eval; retraining on the same weak augments won't close this gap.
 - Plan: (a) realistic augment v2 (card scale 0.65–1.0 at random offset on photo-like backgrounds + hand occlusion, haze/veil, strong colour cast, gamma, backlight, bigger tilt); (b) per-image channel standardization baked into the model (colour-cast invariance, same for refs and queries); (c) fine-tune with real photos as the validation metric; (d) UI hint: fill the box, avoid backlight.
 
+### After fine-tuning: clean references beat augmented ones (2026-09-26)
+- 18 real photos, step-1000 model: clean rows only 77.8% top-1 · all 9 rows/card 66.7% · clean + 4 aug 61.1%.
+- Wrong winners with augmented refs: mostly UNL-205 Abandoned Hall — its simulated dark/noisy shots sit near real backlit photos.
+
+### Live: B needed per card (2026-09-26)
+- Presence vs an empty-box snapshot stayed > 18 after the card left: the "empty" box behind a user-facing webcam is the user's face/room (moves, auto-exposure shifts). Fixed by change-based detection.
+
 ### onnxruntime-web 1.30.0 (installed package, 2026-09-26)
 - Exports: `.` (wasm+cpu), `./webgpu`, `./wasm`, `./all`, `./jspi`, `./webgl`. Each has a default **bundle** build (`ort.webgpu.bundle.min.mjs`) that locates `ort-wasm-simd-threaded.jsep.wasm` via `import.meta.url`, and an `onnxruntime-web-use-extern-wasm` condition for manual `wasmPaths`.
 - Plan: `import * as ort from "onnxruntime-web/webgpu"`; exclude it from Vite `optimizeDeps` so `import.meta.url` asset resolution survives dev pre-bundling.

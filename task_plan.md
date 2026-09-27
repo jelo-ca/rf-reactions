@@ -4,9 +4,8 @@
 Build local web app that identifies a held-up Riftbound card (exact printing) in <300ms p95, shows its price, and fires a value-scaled reaction — per `PLAN.md` (source of truth).
 
 ## Current Phase
-**Phase 3 — recognition accuracy on real photos.** The working system is **squash-merged to `main`** (`234037d`, before acceptance, at the owner's request). `main` is pushed (cleaned history + squash). Remaining Phase 3 work continues on a new branch off `main`.
-App runs the step-1000 fine-tuned model (77.8% top-1 on 18 in-sample photos) with change-based detection and a ring light toggle.
-Waiting on the human: live check of auto-detect, then a fresh eval set. Dev server is off.
+**Phase 4 — Prices + result card** (next; branch `feat/phase-4-price-card` off `main`). Handoff prompt: `docs/handoff-phase-4.md`.
+Phase 3 accepted as-is by the owner (2026-09-26): 77.8% top-1 / 0 wrong accepts on 18 in-sample photos is "acceptable right now"; accuracy items moved to the Phase 3 backlog below.
 Retrospective: `docs/retrospective.md` · Learning doc: "Rift Pulls — How We Taught the Model to Recognize Cards" (Claude Doc).
 
 ## Phases
@@ -35,7 +34,7 @@ Full specs + acceptance criteria live in `PLAN.md`. Do not start next phase unti
 - [x] Camera + picker, guide box mapping, signals, state machine, debug panel, 33 tests, human live check
 - **Status:** complete
 
-### Phase 3: Vision worker, recognition, eval (§6) — working system squash-merged to main (`234037d`); acceptance still open
+### Phase 3: Vision worker, recognition, eval (§6) — squash-merged to main (`234037d`); **accepted as-is by the owner** (2026-09-26)
 **Built**
 - [x] Capture mode (C) + `sort_eval.py`
 - [x] search.ts, layout.ts (matches Python fixtures), decide.ts, worker (ORT WebGPU→wasm), parity page PASS (cos 1.000000)
@@ -53,7 +52,7 @@ Full specs + acceptance criteria live in `PLAN.md`. Do not start next phase unti
 - [x] Clean references only (`REFERENCE_AUG_ROWS = 0`): 77.8% vs 66.7% with augmented refs; recognizer 76.5 → 23.7 MB
 - [x] Thresholds ACCEPT_T 0.42 / MARGIN_T 0.03 (7/18 accepted, 0 wrong) — provisional
 
-**Open**
+**Backlog (deferred by the owner; revisit before the demo)**
 - [ ] HUMAN: live check of auto-detect (several cards in a row, one card held 10 s, empty box — any false answer?)
 - [ ] HUMAN (H4): fresh eval set — ≥ 20 printings × 3, hard pairs × 5, varied lighting, never used for training or checkpoint selection
 - [ ] HUMAN: re-approve aug preview v2 (`pipeline/out/aug_preview.png`)
@@ -62,16 +61,19 @@ Full specs + acceptance criteria live in `PLAN.md`. Do not start next phase unti
 - [ ] If empty-box false answers appear: add a card-present guard (border/edge check)
 - [ ] Acceptance: top-1 ≥ 90%, 0 wrong accepts, 0 wrong-printing on hard pairs, ask ≤ 20%, searchMs p95 ≤ 20, layoutMs p95 ≤ 5
 - [x] Squash-merged `feat/finetune-embedder` (incl. `feat/phase-3-vision`, 30 commits) into `main` as `234037d` — owner's request, before acceptance; tree identical, 79 + 58 tests pass
-- [ ] Remaining Phase 3 items on a new branch off `main` (e.g. `feat/phase-3-accuracy`), merged when acceptance passes
-- **Status:** in_progress
+- **Status:** complete (accepted as-is; backlog above)
 
 **How to run things** (the low-memory guard stops long jobs started from Claude Code's background shells)
 - Dev server: `cd app && node node_modules/vite/bin/vite.js --port 5173`
 - Training: in your own PowerShell, `cd pipeline; $env:PYTHONUTF8="1"; .\.venv\Scripts\python -u finetune.py --resume --steps 1000 --lr 5e-5 --workers 2 --log out\finetune_resumeN.log`
 - Rebuild app data after training: `export_onnx.py` → `embed.py` → `export_search.py` → `parity.py` (≈ 3 min with clean refs), then `eval.py --calibrate`
 
-### Phase 4: Prices + result card (§7)
-- **Status:** pending (ResultChip is a Phase 3 stand-in)
+### Phase 4: Prices + result card (§7) — branch `feat/phase-4-price-card`
+- [x] `pipeline/prices.py` → `prices.json` (built in Phase 1; fails loudly on a missing/duplicate/bad price)
+- [ ] `ui/PriceCard.tsx` replaces the Phase 3 `ResultChip`: image, name, set, variant badge, USD price, "as of <date>", "could be foil: $X" hint on `same_image_cheapest`
+- [ ] Appears when the reaction starts (accepted / chooser pick), stays until the next card is shown
+- [ ] Acceptance: every printing in the pool shows a price; a missing price fails the build, not the demo (+ app-side test)
+- **Status:** pending — handoff prompt in `docs/handoff-phase-4.md`
 
 ### Phase 5: Reactions (§8)
 - [ ] H5: confirm rarity → tier mapping (rarities: Common, Uncommon, Rare, Epic, Showcase, Promo)
@@ -107,6 +109,7 @@ Full specs + acceptance criteria live in `PLAN.md`. Do not start next phase unti
 | Use step-250 checkpoint after memory kill | Human choice; 61% real top-1 already |
 | Long jobs run in the human's own terminal | Claude Code's low-memory guard stopped training twice |
 | Clean reference rows only (`REFERENCE_AUG_ROWS = 0`) | After fine-tuning, augmented refs of other cards became false neighbours (77.8% vs 66.7%) |
+| Phase 3 accepted as-is, accuracy deferred | Owner: current accuracy acceptable for now; move on to Phase 4 |
 | Squash-merge Phase 3 to main before acceptance | Owner's request: keep a working snapshot on main before continuing |
 | Change-based detection, no background snapshot | Human choice; the empty box behind a user-facing webcam is their face/room, so the snapshot went stale after every card |
 | Ring light = on/off toggle, thin frame | Human request |

@@ -176,7 +176,8 @@ def main() -> None:
         raise SystemExit(f"No eval photos in {config.EVAL_DIR}. Capture with the app (C) and run sort_eval.py.")
     per = Counter(p.truth for p in photos)
     print(f"{len(photos)} photos, {len(per)} printings (target >= 60 photos, >= 20 printings x 3)")
-    cfg = DecideConfig(EMBED_WEIGHT=config.EMBED_WEIGHT, LAYOUT_WEIGHT=config.LAYOUT_WEIGHT)
+    cfg = DecideConfig(ACCEPT_T=config.ACCEPT_T, MARGIN_T=config.MARGIN_T,
+                       EMBED_WEIGHT=config.EMBED_WEIGHT, LAYOUT_WEIGHT=config.LAYOUT_WEIGHT)
     report(run_all(photos, by_id, by_name, prices, cfg), by_id, by_name, "current thresholds")
     if args.calibrate:
         calibrate(photos, by_id, by_name, prices)

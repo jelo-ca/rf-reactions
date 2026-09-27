@@ -127,6 +127,29 @@ The app never uses layout alone; §6.4 combines them. Human approved the new bar
 - `RecognitionResult` gains `packMode` (logged per result, §6.4b).
 - Human live check 2026-09-26: real card held in the box runs the full flow. Still→recognize latency not reported; Phase 3 metrics will record it. **Phase 2 accepted.**
 
+## Phase 3 — Vision worker (2026-09-26, in progress)
+### onnxruntime-web setup (1.30.0) — what worked
+- `import * as ort from "onnxruntime-web/webgpu"` (default bundle build finds its `.wasm` via `import.meta.url`); `optimizeDeps.exclude: ["onnxruntime-web"]` in vite.config.
+- Session: try `executionProviders: ["webgpu"]` when `navigator.gpu` exists, else `["wasm"]`. This laptop: **webgpu** (Iris Xe), 4 wasm threads (COOP/COEP headers set → `crossOriginIsolated`).
+- Pitfalls hit: (1) React StrictMode's double effect → two concurrent `InferenceSession.create` → `RuntimeError: memory access out of bounds` ⇒ `init()` memoized. (2) Overlapping `session.run` calls hang on WebGPU ⇒ runs serialized in the worker. (3) Output tensors may view ORT's SharedArrayBuffer memory ⇒ copied before returning/transferring.
+
+### Parity page ✅ PASS
+- webgpu: embedding cosine **1.000000** and layout cosine **1.000000** on all 5 fixtures. TS layout also matches Python fixtures in vitest (`layout_parity.json`, max err < 1e-4).
+
+### Search moved into the model (deviation, PLAN §6.3 fallback #2 done first)
+- JS brute-force in the browser worker: **70–80 ms/query** (p95 91 ms) vs budget p95 ≤ 20 ms. (Node: 17–39 ms; the page was a hidden automation tab, likely efficiency-throttled, but even 5× PCA savings would leave it borderline.)
+- Skipped PCA (fallback #1: accuracy cost + still ~15 ms) and went to fallback #2: `export_search.py` appends `scores = embedding @ E^T` → `recognizer.onnx` (76.5 MB; numpy max err 5.6e-8). App no longer downloads `embeddings.bin`; pipeline/eval still use it.
+- Result (webgpu, hidden tab, 40 runs): **search p50 0.5 / p95 1.4 ms**, infer+matmul p50 30 / p95 40 ms, whole recognize call p50 35 / p95 49 ms. Load 1.8 s + warm-up 0.45 s.
+
+### Behaviour notes
+- Reprints with identical art share a canonical hash, e.g. Fury Rune OGN-007 = VEN-R01 = OPP-007B (NN). They form one same-picture group; layout only separates them from the alt art OGN-007A. Booster mode → cheapest of the group (VEN-R01 here), Nexus Night mode → OPP-007B. Correct per §6.4/§6.4b; reason is reported as `layout_resolved` because the group was chosen by layout first.
+
+## Detection trigger: change-based (human decision, 2026-09-26)
+- Symptom (live): after each card the app stayed in COOLDOWN ("Remove card") until B was pressed.
+- Cause: presence = difference from an empty-box snapshot; with a user-facing webcam the "empty" box is the user's face/room, which moves and auto-exposure shifts, so presence stayed > 18 after the card left.
+- Fix: `change` = difference from the view last sent to recognition. Still + sharp + changed (or retrying) → recognize; the recognized view is snapshotted so the same card held still never re-triggers; a changed view (removed or swapped) leaves COOLDOWN. B = rescan. Warm-up 60 frames before the first check.
+- Risk: empty views (the user's face) now get checked too; the 0.42 threshold should reject them, unproven (no empty-box eval photos). Add an empty-box guard (card border / edge check) if false answers appear.
+
 ## Pack mode (human request, 2026-09-25) — PLAN §6.4b added
 - Setting `booster` (default) | `nexus_night`. Booster: Nexus Night printings excluded from candidates. Nexus Night: inside a same-picture group, Nexus Night printings win (cheapest of them); others still match normally.
 - `cards.json` gains `pool` (booster 1693, nexus_night 104). Reference logic `pipeline/packmode.py` (tested); `fetch_cards.is_nexus_night` now uses the same `pool_of` rule. TS port `vision/packMode.ts` must match; UI toggle `N` comes with Phase 2/3.

@@ -4,7 +4,7 @@
 Build local web app that identifies a held-up Riftbound card (exact printing) in <300ms p95, shows its price, and fires a value-scaled reaction — per `PLAN.md` (source of truth).
 
 ## Current Phase
-**Phase 3 — recognition accuracy on real photos** (branch `feat/finetune-embedder`, off `feat/phase-3-vision`; pushed to origin).
+**Phase 3 — recognition accuracy on real photos** (branch `feat/finetune-embedder`, off `feat/phase-3-vision`; **not yet pushed** — see Git below).
 App runs the step-1000 fine-tuned model (77.8% top-1 on 18 in-sample photos) with change-based detection and a ring light toggle.
 Waiting on the human: live check of auto-detect, then a fresh eval set. Dev server is off.
 Retrospective: `docs/retrospective.md` · Learning doc: "Rift Pulls — How We Taught the Model to Recognize Cards" (Claude Doc).
@@ -122,6 +122,11 @@ Full log with attempts: `progress.md` → Error Log. Recurring themes:
 
 ## Git Workflow (human request 2026-09-25)
 - One branch per phase/feature (`feat/...`, `fix/...`, `test/...`); small Conventional Commits; `--no-ff` merge to main when acceptance passes; never commit data/, .venv, .env.
+- **No `Co-Authored-By` / `Claude-Session` trailers** (human request 2026-09-26). All existing ones were stripped from every branch with `git filter-branch --msg-filter` (file trees verified identical); originals kept locally in `backup/pre-trailer-cleanup/*`.
+- Remote `origin` = `git@github.com-personal:jelo-ca/rf-reactions.git` (SSH host alias). GitHub has `main` only up to the old Phase 0 merge.
+- [ ] **HUMAN: push from your own terminal** (Claude Code's shell has no access to the SSH key: `Permission denied (publickey)`):
+  `git push --force-with-lease=main:21e6c525dfbf266ce02d2ea1db393cdb049e44cc origin main` then `git push -u origin feat/phase-3-vision feat/finetune-embedder`
+- [ ] After a successful push: delete the local `backup/pre-trailer-cleanup/*` branches (`git branch -D ...`) once you're happy
 
 ## Notes
 - Deviations, calibration results, library quirks → `NOTES.md`. Research/external content → `findings.md`. Session log + error log → `progress.md`.

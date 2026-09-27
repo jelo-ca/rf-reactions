@@ -85,6 +85,9 @@
 | 2026-09-26 | parity rows doubled, no verdict | 1 | cancelled flag for StrictMode's discarded effect |
 | 2026-09-26 | fine-tune #2 + dev server killed by low-memory guard at step 275 | 1 | kept step-250 best.pt; if resuming: 2 workers, close Chrome tabs |
 | 2026-09-26 | resumed fine-tune + dev server killed again at step 325 (2 workers) | 2 | guard reaps idle-session background shells; next: run in user's own terminal |
+| 2026-09-26 | Python heredoc turned `outinetune` into form-feed (``) in task_plan | 1 | raw string fix; check backslashes in generated Windows paths |
+| 2026-09-26 | trailer count 81 after rewrite (false alarm) | 1 | `--exclude` must precede `--branches`; recount per branch = 0 |
+| 2026-09-26 | `git push` → Permission denied (publickey) | 1 | SSH key for `github.com-personal` not in this shell; human pushes from own terminal |
 
 - Browser fixture run found JS search 82/91 ms (p50/p95) → baked search into recognizer.onnx → 0.5/1.4 ms; recognize call p95 49 ms
 - "OGN-007 → VEN-R01" investigated: identical-art reprint in same picture group, correct per rule (documented)
@@ -108,13 +111,17 @@
 - Ring light: on/off toggle, whole page white, then made thinner (human)
 - Human: "it works" but B needed per card → cause: stale background snapshot behind a user-facing webcam → change-based detection (human choice); 58 app tests
 - Learning doc kept current (timeline rows, headline 78%)
-- Dev server stopped (human request); planning files refreshed; pushed to origin
+- Dev server stopped (human request); planning files refreshed
+- Human: remove Co-Authored-By lines → found 14 of them already on GitHub (origin/main = Phase 0 merge); human chose rewrite all + force-push main
+- Backups `backup/pre-trailer-cleanup/*` → filter-branch on 8 branches (68 commits): 0 trailers left, every branch tree identical to its backup
+- Push failed: `Permission denied (publickey)` (SSH alias key not available to Claude Code's shell) → nothing changed on GitHub; human to push from own terminal
+- Memory saved: never add commit trailers
 
 ## 5-Question Reboot Check (updated 2026-09-26, evening)
 | Question | Answer |
 |----------|--------|
-| Where am I? | Phase 3, branch `feat/finetune-embedder` (pushed). App: fine-tuned model, change-based detection, ring light toggle. Dev server off |
-| Where am I going? | Human live check of auto-detect → fresh eval set → calibrate → Phase 3 acceptance → merge → Phases 4–7 |
+| Where am I? | Phase 3, branch `feat/finetune-embedder`, history cleaned of trailers, **push pending (human, SSH key)**. App: fine-tuned model, change-based detection, ring light toggle. Dev server off |
+| Where am I going? | Human pushes → live check of auto-detect → fresh eval set → calibrate → Phase 3 acceptance → merge → Phases 4–7 |
 | What's the goal? | Identify held-up card printing in < 300 ms p95 with ≥ 90% top-1 and 0 wrong accepts; show price; react |
 | What have I learned? | Test on real inputs early; fine-tuning + realistic augmentation fixed a 0% start; after fine-tuning, clean refs beat augmented refs; triggers must not depend on a static background with a user-facing webcam |
 | What have I done? | Phases 0–2 + pack mode merged; Phase 3 app complete; 77.8% real top-1 (in-sample); auto-detect without B |

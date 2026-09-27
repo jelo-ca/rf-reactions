@@ -39,7 +39,7 @@ Full specs + acceptance criteria live in `PLAN.md`. Do not start next phase unti
 - [x] search.ts, layout.ts (matches Python fixtures), decide.ts, worker (ORT WebGPU→wasm), parity page PASS (cos 1.000000)
 - [x] Search baked into `recognizer.onnx`: search p95 1.4 ms (JS loop was 91 ms)
 - [x] Live recognition in app: chooser, result chip, debug top-5 + timings + p50/p95
-- [x] Ring light (L) — human request; not yet verified live
+- [x] Ring light: on/off switch (toolbar + L), 170px white frame + white page; DOM-checked, guide alignment with ring on not yet seen live
 - [x] `decide.py` (Python mirror, 10 tests) + `eval.py` (report + calibrate)
 - [x] Human eval photos v1: 18 photos / 3 printings → **pretrained model: top-1 0%, median rank 16**
 - [x] Diagnosis: domain gap (framing 65–85%, backlight/cast/haze, hand, tilt) + backbone embeds frame > art
@@ -54,7 +54,7 @@ Full specs + acceptance criteria live in `PLAN.md`. Do not start next phase unti
     - Human ran it in own terminal (`--log out/finetune_resume2.log`): **step 500 → real top-1 77.8% (14/18)**, flat at 750/1000; margin 0.33 → 0.41; best.pt = step 1000
 - [x] Rebuild with step-1000 weights: with 8 augmented reference rows/card real top-1 only 66.7% → **clean references only: 77.8% top-1, 88.9% top-5**; recognizer 76.5 → 23.7 MB
 - [x] Thresholds ACCEPT_T 0.42 / MARGIN_T 0.03 (7/18 accepted, 0 wrong; in-sample, provisional)
-- [ ] Restart dev server when human asks → live retest
+- [x] Dev server restarted (human asked) → [ ] live retest
 - [ ] HUMAN: fresh eval set (not used for training/selection)
 - [ ] If improved: rebuild (export → embed → export_search → parity), re-eval, recalibrate
 - [ ] HUMAN: live retest (Discipline first); re-approve aug preview v2

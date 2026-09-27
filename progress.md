@@ -129,11 +129,12 @@
 - Error: `tsc -b` "Cannot find name 'node:fs'" in the data test (app tsconfig has only vite/client types) → switched to `import.meta.glob`
 - Owner: keep ResultChip as a debug-only view (D) → done
 - Live check: NN mode showed Lee Sin - Centered at $0.20 → Riftcodex lacks OPP 151b (TCGCSV has it, $57.45); 39 TCGCSV-only OPP candidates; owner chose to switch Nexus Night off (`CFG.NEXUS_NIGHT_ENABLED = false`) and backlog it
+- Owner: merge → `feat/phase-4-price-card` merged to `main` with `--no-ff`
 
 ## 5-Question Reboot Check (updated 2026-09-26, evening)
 | Question | Answer |
 |----------|--------|
-| Where am I? | Phase 4 price card built on `feat/phase-4-price-card`, waiting for the owner's live check + merge. Dev server off |
+| Where am I? | Phase 4 merged to `main` (Nexus Night mode off, backlog); Phase 5 reactions next |
 | Where am I going? | Phase 4 price card → Phase 5 reactions → (Phase 6 OCR if needed) → Phase 7 polish; Phase 3 accuracy backlog before the demo |
 | What's the goal? | Identify held-up card printing in < 300 ms p95 with ≥ 90% top-1 and 0 wrong accepts; show price; react |
 | What have I learned? | Test on real inputs early; fine-tuning + realistic augmentation fixed a 0% start; after fine-tuning, clean refs beat augmented refs; triggers must not depend on a static background with a user-facing webcam |

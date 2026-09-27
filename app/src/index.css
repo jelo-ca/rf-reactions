@@ -151,7 +151,7 @@ body { background: var(--bg); color: var(--text); }
 
 /* Screen ring light (L / toolbar switch): the page becomes a bright white frame around the inset
    video so the display lights the card. The toolbar and footer go white too for the most light. */
-.stage { --ring: clamp(72px, 18vmin, 220px); }
+.stage { --ring: clamp(32px, 7vmin, 80px); }
 .app.ring-on { background: #ffffff; color: #111; }
 .app.ring-on .stage { padding: var(--ring); background: #ffffff; }
 .app.ring-on .stage video { border-radius: 18px; }

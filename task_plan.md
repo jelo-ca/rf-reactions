@@ -51,7 +51,8 @@ Full specs + acceptance criteria live in `PLAN.md`. Do not start next phase unti
 - [x] HUMAN live retest: "pretty accurate" → resume training
 - [~] Resume fine-tune (--resume, 1000 steps, lr 5e-5, 2 workers, online hard-negative mining every 250 steps) → `pipeline/out/finetune_resume.log`; backup of step-250 weights kept in `out/finetune/`
     - Killed by low-memory guard at step 325 (with dev server). Step-250 check: real 55.6% (10/18 vs 11/18), synth 97.7%, margin 0.33→0.38 → not saved; best.pt unchanged
-    - Next: run training outside Claude Code's background shells (own terminal) or with fewer workers; human to decide
+    - Human ran it in own terminal (`--log out/finetune_resume2.log`): **step 500 → real top-1 77.8% (14/18)**, flat at 750/1000; margin 0.33 → 0.41; best.pt = step 1000
+- [ ] Rebuild with step-1000 weights → `pipeline/out/rebuild2.log` → eval + calibrate → dev server (restart when human asks)
 - [ ] If improved: rebuild (export → embed → export_search → parity), re-eval, recalibrate
 - [ ] HUMAN: live retest (Discipline first); re-approve aug preview v2
 - [ ] HUMAN (H4): fresh eval set — ≥ 20 printings × 3, hard pairs × 5, varied lighting, **not** used for checkpoint selection

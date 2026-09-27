@@ -98,6 +98,7 @@
 - Human chose: use step-250 checkpoint now → rebuild (export, embed, export_search, parity) running → out/rebuild.log; then restart dev server for live test
 - Rebuild done (fine-tuned): eval 18 photos top-1 61.1%, top-5 83.3%, median rank 1; provisional ACCEPT_T 0.44 / MARGIN_T 0.04 (8/18 accepted, 0 wrong); dev server restarted
 - Resumed fine-tune killed by low-memory guard at step 325 (+ dev server again); step-250 check real 55.6% (not saved), synth 97.7%, margin 0.38. Learning doc written (Claude Doc)
+- Human ran resumed fine-tune in own terminal: real top-1 61.1% → 55.6% (250) → **77.8% (500, 750, 1000)**, margin 0.33 → 0.41; rebuild #2 running
 
 ## 5-Question Reboot Check (updated 2026-09-26)
 | Question | Answer |

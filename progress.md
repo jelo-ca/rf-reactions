@@ -101,12 +101,20 @@
 - Human ran resumed fine-tune in own terminal: real top-1 61.1% → 55.6% (250) → **77.8% (500, 750, 1000)**, margin 0.33 → 0.41; rebuild #2 running
 - Rebuild #2: all 9 rows/card → 66.7%; clean-only → 77.8% (augmented refs = false neighbours after fine-tune); REFERENCE_AUG_ROWS=0; recognizer 23.7 MB; thresholds 0.42/0.03 (7/18 accepted, 0 wrong)
 
-## 5-Question Reboot Check (updated 2026-09-26)
+## Session: 2026-09-26 (evening)
+- Resumed fine-tune run by the human in their own terminal → 77.8% real top-1 (step 500–1000)
+- Rebuild #2 + clean-reference finding (77.8% vs 66.7%); recognizer 23.7 MB; thresholds 0.42 / 0.03
+- Opset set to 18 (silences a harmless down-conversion traceback)
+- Ring light: on/off toggle, whole page white, then made thinner (human)
+- Human: "it works" but B needed per card → cause: stale background snapshot behind a user-facing webcam → change-based detection (human choice); 58 app tests
+- Learning doc kept current (timeline rows, headline 78%)
+- Dev server stopped (human request); planning files refreshed; pushed to origin
+
+## 5-Question Reboot Check (updated 2026-09-26, evening)
 | Question | Answer |
 |----------|--------|
-| Where am I? | Phase 3, branch `feat/finetune-embedder`: fine-tuned app data built; waiting on human live retest + fresh eval set |
-| Where am I going? | eval → human live retest → fresh eval set → calibrate → Phase 3 acceptance → Phases 4–7 |
+| Where am I? | Phase 3, branch `feat/finetune-embedder` (pushed). App: fine-tuned model, change-based detection, ring light toggle. Dev server off |
+| Where am I going? | Human live check of auto-detect → fresh eval set → calibrate → Phase 3 acceptance → merge → Phases 4–7 |
 | What's the goal? | Identify held-up card printing in < 300 ms p95 with ≥ 90% top-1 and 0 wrong accepts; show price; react |
-| What have I learned? | Synthetic metrics (98.7%) didn't predict real photos (0%); fix the data/domain first; see `docs/retrospective.md` |
-| What have I done? | Phases 0–2 + pack mode merged; Phase 3 app pipeline complete; fine-tuned (1,250 steps) = 77.8% real top-1, clean refs only |
-
+| What have I learned? | Test on real inputs early; fine-tuning + realistic augmentation fixed a 0% start; after fine-tuning, clean refs beat augmented refs; triggers must not depend on a static background with a user-facing webcam |
+| What have I done? | Phases 0–2 + pack mode merged; Phase 3 app complete; 77.8% real top-1 (in-sample); auto-detect without B |

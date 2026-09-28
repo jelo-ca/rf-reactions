@@ -83,12 +83,15 @@ Full specs + acceptance criteria live in `PLAN.md`. Do not start next phase unti
 
 ### Card detection anywhere in the frame (PLAN §5.7, owner request 2026-09-27) — branch `feat/card-detection`
 Owner choices: trained ML detector (not a classical edge/quad finder); guide box kept as fallback.
-- [ ] M1 capture tool: F = freeze full frame, click 4 corners / 0 = no card → PNG + JSON; `sort_detect.py` files them into `data/detect/real/`
+- [x] M1 capture tool: F (in capture mode C) = freeze full frame, click 4 corners / 0 = no card → PNG + JSON; `sort_detect.py` files them into `data/detect/real/`
 - [ ] HUMAN: ≥ 40 empty-scene frames + ≥ 60 card frames (everywhere, tilted, near/far, hands, ring light on/off)
-- [ ] M2 `detect_synth.py` + `detect_preview.py` (HUMAN approves preview) · `detect_model.py` · `detect_train.py` (HUMAN runs) · `export_detector.py` + parity
-- [ ] M3 `homography.ts` (+ Python fixtures) · worker `detect()` · loop on warped card + fallback · debug quad overlay
+- [x] M2 `detect_synth.py` (preview = `python detect_synth.py` → `out/detect_preview.png`) · `detect_model.py` · `detect_train.py` · `export_detector.py` (ONNX parity 3.6e-7, 13.3 MB); 94 pipeline tests
+- [ ] HUMAN: approve `out/detect_preview.png` (regenerate after filing real empty frames: they become the backgrounds)
+- [ ] HUMAN: run `detect_train.py` in own terminal (~4 s/step → 2000 steps ≈ 2¼ h), then `export_detector.py`
+- [x] M3 `homography.ts` (OpenCV fixtures) · worker `initDetector/detect` + quad `recognize` · `region.ts` + loop on warped card + guide-box fallback · debug quad overlay + panel rows; 123 app tests
+- [ ] Browser check with the real model (detector p95, fps, overlay alignment incl. mirror/ring light)
 - [ ] Acceptance (PLAN §5.7): present acc ≥ 95%, corner err ≤ 3% card height, top-1 not worse than guide box, detector p95 ≤ 30 ms, fallback works
-- **Status:** in progress (M1)
+- **Status:** code complete; waiting for real frames + a full training run. `app/public/models/detector.onnx` is currently a 50-step smoke model (synthetic-only)
 
 ### Backlog: Nexus Night pack mode (switched off 2026-09-27, owner)
 - [ ] Find a source that says which printings come out of Nexus Night packs (Riftcodex misses some; TCGCSV doesn't mark them Promo) — 39 TCGCSV-only OPP candidates listed in NOTES.md

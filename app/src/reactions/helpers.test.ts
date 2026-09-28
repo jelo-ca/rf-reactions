@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Card } from "../types";
-import { countUp, isRepeat, sampleCardForTier } from "./helpers";
+import { countUp, firstSoundIndex, isRepeat, sampleCardForTier } from "./helpers";
 import type { TierConfig } from "./tiers";
 
 const CFG: TierConfig = {
@@ -67,5 +67,15 @@ describe("sampleCardForTier", () => {
   });
   it("returns undefined when nothing maps to the tier", () => {
     expect(sampleCardForTier(cards, prices, CFG, "price", 3)).toBeUndefined();
+  });
+});
+
+describe("firstSoundIndex", () => {
+  it("skips the quiet lead-in", () => {
+    expect(firstSoundIndex(new Float32Array([0, 0.01, -0.02, 0.4, 0.1]))).toBe(3);
+    expect(firstSoundIndex(new Float32Array([0, -0.3]))).toBe(1); // negative peaks count too
+  });
+  it("plays silence from the start", () => {
+    expect(firstSoundIndex(new Float32Array([0, 0.001, 0]))).toBe(0);
   });
 });

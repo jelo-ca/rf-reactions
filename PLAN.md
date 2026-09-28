@@ -512,6 +512,35 @@ export const CFG = {
 - [ ] Holding a card still moves to RECOGNIZING (stubbed) within ~150ms; removing it returns to IDLE.
 - [ ] Vitest covers signals, the state machine, and guide-box mapping.
 
+### 5.7 Card detection anywhere in the frame (owner request, 2026-09-27)
+The card no longer has to sit in the guide box: a trained detector finds it anywhere, the app warps it to the 224×320 crop the recognizer already takes, and the guide box stays as a **fallback** when no card is found. Branch `feat/card-detection`.
+
+**Model (`pipeline/detect_model.py`)** — one card per frame, so a corner-keypoint model, not general object detection:
+- Input: the full frame letterboxed to `DETECT_W × DETECT_H` (16:9, e.g. 384×224), normalization baked in (like the embedder).
+- Backbone: timm `mobilenetv3_large_100` (the only one cached offline), `features_only`, light top-down fusion to stride 8.
+- Heads: 4 corner heatmaps (TL, TR, BR, BL in the card's own orientation) → soft-argmax (DSNT, in-graph) → `corners [1,4,2]` normalized 0–1; and `present [1]` logit from pooled features.
+- Loss: BCE(present) + L1(corners, positives only) + small heatmap regularizer.
+
+**Data** — Phase 3 lesson: synthetic checks don't predict real photos, so real webcam frames are central.
+- `app` capture tool (**F** in capture mode): freeze a full raw frame, click the 4 corners (or `0` = no card) → saves `frame__<ts>.png` + `.json` (`{"corners": [[x,y]×4] | null}` in pixels). 🧑 HUMAN: ≥ 40 empty-scene frames (varied lighting, ring light on/off, you in frame) and ≥ 60 card frames (all over the frame, tilted, near/far, hand on edges). → `data/detect/real/`.
+- `pipeline/detect_synth.py`: online composites — random reference card image, random perspective/scale/position, rounded-corner alpha, hand-like occluders on edges, glare, blur, colour cast, JPEG noise; ~20% no-card frames. Backgrounds = the human's empty frames + procedural textures. `detect_preview.py` → grid PNG for human approval before training.
+- Real card frames: split into train (mixed into batches) and a held-out validation set used for checkpoint selection and acceptance.
+
+**Train / export** — `detect_train.py` (run in the human's own terminal; CPU), `export_detector.py` → `app/public/models/detector.onnx` + parity check (PyTorch vs ORT).
+
+**App**
+- `vision/homography.ts` (pure, tested against Python fixtures): 4 corners → 3×3 homography; perspective warp to 224×320 (bilinear) and to the tiny stability images.
+- Worker: a second ORT session `detect(frame)` → `{present, corners}`; runs every `DETECT_EVERY_MS` on a downscaled frame, serialized with recognition.
+- Loop: card present → signals (change / motion / sharpness) computed on the warped card instead of the guide box, plus corner jitter; same state machine; recognition uses the warped crop. No card → today's guide-box path.
+- Debug (D): detected quad + present score drawn over the video; also the source (`detector` / `guide box`) in the debug panel.
+
+**Acceptance (proposed; held-out real frames)**
+- [ ] Card-present accuracy ≥ 95% (incl. empty frames with the human in view)
+- [ ] Mean corner error ≤ 3% of the card's height
+- [ ] Recognition top-1 on detector crops ≥ guide-box crops for the same cards
+- [ ] Detector p95 ≤ 30 ms in the browser; the frame loop keeps ≥ 20 fps
+- [ ] Guide-box fallback still works with the detector disabled or failing
+
 ---
 
 ## 6. Phase 3 — Vision worker, recognition, eval

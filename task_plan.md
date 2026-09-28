@@ -81,6 +81,15 @@ Full specs + acceptance criteria live in `PLAN.md`. Do not start next phase unti
 - [x] Owner live check done; squash-merged to `main` (owner switched from `--no-ff` to squash; `--no-ff` version kept in local `backup/pre-squash-phase-4`)
 - **Status:** complete — 80 pipeline + 74 app tests pass, `tsc` / `oxlint` clean, `npm run build` green
 
+### Card detection anywhere in the frame (PLAN §5.7, owner request 2026-09-27) — branch `feat/card-detection`
+Owner choices: trained ML detector (not a classical edge/quad finder); guide box kept as fallback.
+- [ ] M1 capture tool: F = freeze full frame, click 4 corners / 0 = no card → PNG + JSON; `sort_detect.py` files them into `data/detect/real/`
+- [ ] HUMAN: ≥ 40 empty-scene frames + ≥ 60 card frames (everywhere, tilted, near/far, hands, ring light on/off)
+- [ ] M2 `detect_synth.py` + `detect_preview.py` (HUMAN approves preview) · `detect_model.py` · `detect_train.py` (HUMAN runs) · `export_detector.py` + parity
+- [ ] M3 `homography.ts` (+ Python fixtures) · worker `detect()` · loop on warped card + fallback · debug quad overlay
+- [ ] Acceptance (PLAN §5.7): present acc ≥ 95%, corner err ≤ 3% card height, top-1 not worse than guide box, detector p95 ≤ 30 ms, fallback works
+- **Status:** in progress (M1)
+
 ### Backlog: Nexus Night pack mode (switched off 2026-09-27, owner)
 - [ ] Find a source that says which printings come out of Nexus Night packs (Riftcodex misses some; TCGCSV doesn't mark them Promo) — 39 TCGCSV-only OPP candidates listed in NOTES.md
 - [ ] Add missing printings (manual printings CSV or new source) + real images (H7), then set `NEXUS_NIGHT_ENABLED: true`

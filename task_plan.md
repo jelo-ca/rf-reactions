@@ -4,7 +4,8 @@
 Build local web app that identifies a held-up Riftbound card (exact printing) in <300ms p95, shows its price, and fires a value-scaled reaction — per `PLAN.md` (source of truth).
 
 ## Current Phase
-**Phase 5 — Reactions** (next; branch `feat/phase-5-reactions` off `main`). First: H5 rarity → tier mapping.
+**Card detection anywhere in the frame** (owner request, 2026-09-27) — trained ML detector, guide box kept as fallback; branch `feat/card-detection` off `main`.
+Phase 5 (comedic reactions) squash-merged to `main` after the owner's live check ("it looks correct").
 Phase 4 (price card) squash-merged to `main` (2026-09-27) after the owner's live check. Nexus Night pack mode is OFF (backlog).
 Phase 3 accepted as-is by the owner (2026-09-26): 77.8% top-1 / 0 wrong accepts on 18 in-sample photos is "acceptable right now"; accuracy items moved to the Phase 3 backlog below.
 Retrospective: `docs/retrospective.md` · Learning doc: "Rift Pulls — How We Taught the Model to Recognize Cards" (Claude Doc).
@@ -84,9 +85,16 @@ Full specs + acceptance criteria live in `PLAN.md`. Do not start next phase unti
 - [ ] Find a source that says which printings come out of Nexus Night packs (Riftcodex misses some; TCGCSV doesn't mark them Promo) — 39 TCGCSV-only OPP candidates listed in NOTES.md
 - [ ] Add missing printings (manual printings CSV or new source) + real images (H7), then set `NEXUS_NIGHT_ENABLED: true`
 
-### Phase 5: Reactions (§8)
-- [ ] H5: confirm rarity → tier mapping (rarities: Common, Uncommon, Rare, Epic, Showcase, Promo)
-- **Status:** pending
+### Phase 5: Reactions (§8) — squash-merged to main (2026-09-27)
+- [x] H5 (owner, 2026-09-27): Common 0 · Uncommon 1 · Rare 2 · Epic 3 · Promo 4 · Showcase 5 · foil +1 (capped)
+- [x] Owner: comedic tiers — golf clap (0) … over-edited epic (5); PLAN §8.2 marked revised
+- [x] `public/data/tiers.json` + `reactions/tiers.ts` resolver (price / hype mode, missing price → rarity), validated at load; 19 tests
+- [x] `reactions/sounds.ts`: Web Audio synth per tier + optional file override (`tiers.json` `sounds`)
+- [x] `ReactionLayer` + `reactions.css` + `fx.ts` (Web Animations shakes/zooms, canvas-confetti, cancellable); tier 5 settles into a gold banner until the next card / click
+- [x] T dev panel (fires a real card from that tier), H hype mode toggle (toolbar + key), "Click to start" unlocks audio; reduced-motion still frames
+- [x] Checked in Chrome: all 6 tiers render, settled banner, no page scroll from shakes (fixed)
+- [x] Owner live check: "it looks correct"
+- **Status:** complete — 99 app tests, `tsc` / `oxlint` clean
 
 ### Phase 6: Optional OCR tie-breaker (§9) — only if Phase 3 needs it (H6)
 - **Status:** pending

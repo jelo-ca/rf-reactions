@@ -1,4 +1,5 @@
 // Loaders for the static files in public/data (built by scripts/build_data.sh).
+import { validateTiers } from "../reactions/tiers";
 import type { Card, Price } from "../types";
 
 async function getJson<T>(url: string): Promise<T> {
@@ -9,6 +10,7 @@ async function getJson<T>(url: string): Promise<T> {
 
 export const loadCards = () => getJson<Card[]>("/data/cards.json");
 export const loadPrices = () => getJson<Price[]>("/data/prices.json");
+export const loadTiers = () => getJson<unknown>("/data/tiers.json").then(validateTiers);
 
 /** Case/punctuation-insensitive search over name, printing id and set/number. */
 export function searchCards(cards: readonly Card[], query: string, limit = 20): Card[] {

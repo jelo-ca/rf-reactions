@@ -17,7 +17,7 @@
 html, body, #root { height: 100%; margin: 0; }
 body { background: var(--bg); color: var(--text); }
 
-.app { display: grid; grid-template-rows: auto 1fr auto; height: 100%; }
+.app { display: grid; grid-template-rows: auto 1fr auto; height: 100%; overflow: hidden; } /* stage shakes/zooms (reactions) must not scroll the page */
 
 .bar {
   display: flex; flex-wrap: wrap; align-items: center; gap: 12px;

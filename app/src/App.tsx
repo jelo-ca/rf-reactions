@@ -3,7 +3,14 @@ import { guideBoxVideoRect, type ObjectFit, videoRectToElement } from "./camera/
 import { useCamera } from "./camera/useCamera";
 import { CFG } from "./config";
 import { useStability } from "./stability/useStability";
-import { loadCards, loadPrices } from "./data/loaders";
+import { loadCards, loadPrices, loadTiers } from "./data/loaders";
+import { stageFx } from "./reactions/fx";
+import { sampleCardForTier } from "./reactions/helpers";
+import { StartScreen, TierDevPanel } from "./reactions/ReactionControls";
+import { tierModeLabel, useTierMode } from "./reactions/useTierMode";
+import { type Reaction, ReactionLayer } from "./reactions/ReactionLayer";
+import { playTier, unlockAudio } from "./reactions/sounds";
+import { resolveTier, type TierConfig } from "./reactions/tiers";
 import type { Card, Price } from "./types";
 import { CaptureMode } from "./ui/CaptureMode";
 import { DebugPanel } from "./ui/DebugPanel";
@@ -28,6 +35,13 @@ export default function App() {
   const [cards, setCards] = useState<Card[]>([]);
   const [priceById, setPriceById] = useState<Map<string, Price>>(new Map());
   const [dataError, setDataError] = useState<string | null>(null);
+  const [tiers, setTiers] = useState<TierConfig | null>(null);
+  const [started, setStarted] = useState(false);
+  const [showTierDev, setShowTierDev] = useState(false);
+  const [reaction, setReaction] = useState<Reaction | null>(null);
+  const stageRef = useRef<HTMLElement>(null);
+  const cancelFx = useRef<() => void>(() => {});
+  const reactionSeq = useRef(0);
   const { packMode, togglePackMode, packModeEnabled } = usePackMode();
   const { stream, devices, error } = useCamera(deviceId);
 
@@ -41,16 +55,46 @@ export default function App() {
       (ps) => setPriceById(new Map(ps.map((p) => [p.printingId, p]))),
       (e: unknown) => setDataError(String(e)),
     );
+    loadTiers().then(setTiers, (e: unknown) => setDataError(String(e)));
   }, []);
   const cardById = useMemo(() => new Map(cards.map((c) => [c.printingId, c])), [cards]);
   const prices = useMemo(() => new Map([...priceById].map(([id, p]) => [id, p.priceUsd])), [priceById]);
 
+  const { tierMode, toggleTierMode } = useTierMode(tiers?.mode);
+
+  /** Fire one reaction: stage fx + sound + overlay. The next one cancels this one's leftovers. */
+  const fire = useCallback(
+    (card: Card, tier: number) => {
+      cancelFx.current();
+      cancelFx.current = stageFx(tier, stageRef.current);
+      void playTier(tier, tiers?.sounds[String(tier)]);
+      setReaction({ id: ++reactionSeq.current, tier, card, priceUsd: prices.get(card.printingId) });
+    },
+    [tiers, prices],
+  );
+
+  const rec = useRecognizer(videoRef, packMode);
+  const { shownRef } = rec;
+  // Called by the state machine once per card hold (accept, or chooser pick): never twice.
   const onReact = useCallback(() => {
     setFlash(true);
     setTimeout(() => setFlash(false), FLASH_MS);
+    const card = shownRef.current ? cardById.get(shownRef.current) : undefined;
+    if (card && tiers) fire(card, resolveTier(card, prices.get(card.printingId), tiers, tierMode));
+  }, [shownRef, cardById, tiers, prices, tierMode, fire]);
+  const fireSample = useCallback(
+    (tier: number) => {
+      const card = tiers && sampleCardForTier(cards, prices, tiers, tierMode, tier);
+      if (card) fire(card, tier);
+      else console.warn(`[reactions] no card maps to tier ${tier} in ${tierMode} mode`);
+    },
+    [tiers, cards, prices, tierMode, fire],
+  );
+  const start = useCallback(() => {
+    unlockAudio();
+    setStarted(true);
   }, []);
-  const rec = useRecognizer(videoRef, packMode);
-  const { stats, rescan, pick } = useStability(videoRef, !!stream && rec.ready, rec.recognize, onReact);
+  const { stats, rescan, pick } = useStability(videoRef, !!stream && rec.ready && started, rec.recognize, onReact);
   const onPick = useCallback(
     (printingId: string) => {
       rec.choose(printingId);
@@ -69,10 +113,12 @@ export default function App() {
       else if (k === "m") setMirror((v) => !v);
       else if (k === "c") setCapture((v) => !v);
       else if (k === "l") toggleRing();
+      else if (k === "h") toggleTierMode();
+      else if (k === "t") setShowTierDev((v) => !v);
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [togglePackMode, rescan, toggleRing]);
+  }, [togglePackMode, rescan, toggleRing, toggleTierMode]);
 
   const { overlay, videoSize } = useGuideOverlay(videoRef, !!stream, ring ? "ring" : "plain");
   const phase = stats.state.phase;
@@ -110,6 +156,11 @@ export default function App() {
             {packMode === "booster" ? "Booster pack" : "Nexus Night pack"}
           </button>
         )}
+        {tiers && (
+          <button type="button" onClick={toggleTierMode} className={`tier-mode tier-mode-${tierMode}`} title="H">
+            {tierModeLabel(tierMode)}
+          </button>
+        )}
         <label>
           <input type="checkbox" checked={mirror} onChange={(e) => setMirror(e.target.checked)} /> Mirror
         </label>
@@ -118,7 +169,7 @@ export default function App() {
         </button>
       </header>
 
-      <main className="stage">
+      <main className="stage" ref={stageRef}>
         {(error || dataError || rec.initError) && (
           <p className="error" role="alert">{error ?? dataError ?? rec.initError}</p>
         )}
@@ -140,6 +191,11 @@ export default function App() {
           </div>
         )}
         {shown && <PriceCard key={shown.printingId} card={shown} cards={cards} prices={priceById} />}
+        <ReactionLayer reaction={reaction} onDismiss={() => setReaction(null)} />
+        {showTierDev && tiers && (
+          <TierDevPanel names={tiers.names} mode={tierMode} onFire={fireSample} onToggleMode={toggleTierMode} />
+        )}
+        {!started && <StartScreen onStart={start} />}
         {phase === "ASKING" && rec.askOptions && (
           <VariantChooser
             options={rec.askOptions.map((id) => cardById.get(id)).filter((c): c is Card => !!c)}
@@ -155,7 +211,7 @@ export default function App() {
         )}
         {capture && <CaptureMode cards={cards} videoRef={videoRef} />}
       </main>
-      <footer className="keys">D debug{packModeEnabled ? " · N pack mode" : ""} · B rescan · M mirror · C capture mode · L ring light</footer>
+      <footer className="keys">D debug{packModeEnabled ? " · N pack mode" : ""} · H hype mode · T tiers · B rescan · M mirror · C capture mode · L ring light</footer>
     </div>
   );
 }

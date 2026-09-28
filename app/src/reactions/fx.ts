@@ -1,0 +1,101 @@
+// Stage-level effects: shakes and zoom punches via the Web Animations API (replayable without
+// toggling classes on the stage, which also holds the <video>), plus canvas-confetti bursts.
+import confetti from "canvas-confetti";
+import { CFG } from "../config";
+
+export const reducedMotion = () =>
+  typeof matchMedia !== "undefined" && matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+function shake(el: HTMLElement, px: number, ms: number, delay = 0): Animation {
+  const frames: Keyframe[] = [];
+  for (let i = 0; i <= 10; i++) {
+    const k = i === 10 ? 0 : px * (1 - i / 10);
+    frames.push({ transform: `translate(${(Math.random() * 2 - 1) * k}px, ${(Math.random() * 2 - 1) * k}px) rotate(${(Math.random() * 2 - 1) * k * 0.08}deg)` });
+  }
+  return el.animate(frames, { duration: ms, delay, easing: "linear" });
+}
+
+function slowZoom(el: HTMLElement, scale: number, ms: number): Animation {
+  return el.animate([{ transform: "scale(1)" }, { transform: `scale(${scale})`, offset: 0.7 }, { transform: "scale(1)" }], {
+    duration: ms,
+    easing: "ease-in-out",
+  });
+}
+
+/** Tier 5 "over-edited" punch-ins: three hard zooms in a row, a bit crooked. */
+function punches(el: HTMLElement, delay: number): Animation {
+  return el.animate(
+    [
+      { transform: "scale(1)" },
+      { transform: "scale(1.18) rotate(-2deg)", offset: 0.08 },
+      { transform: "scale(1.05)", offset: 0.25 },
+      { transform: "scale(1.3) rotate(3deg)", offset: 0.33 },
+      { transform: "scale(1.08)", offset: 0.5 },
+      { transform: "scale(1.45) rotate(-4deg)", offset: 0.58 },
+      { transform: "scale(1)" },
+    ],
+    { duration: 1400, delay, easing: "ease-out" },
+  );
+}
+
+const emoji = (text: string) => confetti.shapeFromText({ text, scalar: 3 });
+
+/**
+ * Run the stage part of a tier. Reduced motion: no shaking/zooming, no confetti.
+ * Returns a cancel function (the next card's reaction stops this one's leftovers).
+ */
+export function stageFx(tier: number, stage: HTMLElement | null): () => void {
+  const calm = reducedMotion();
+  const anims: Animation[] = [];
+  const timers: number[] = [];
+  const later = (ms: number, fn: () => void) => void timers.push(window.setTimeout(fn, ms));
+  const cancel = () => {
+    timers.forEach((t) => { clearTimeout(t); clearInterval(t); });
+    anims.forEach((a) => a.cancel());
+  };
+  const base = { disableForReducedMotion: true, zIndex: 60 };
+  switch (tier) {
+    case 1:
+      void confetti({ ...base, particleCount: 25, spread: 50, startVelocity: 25, origin: { y: 0.7 } });
+      break;
+    case 2:
+      if (stage && !calm) anims.push(shake(stage, 6, 450));
+      break;
+    case 3:
+      if (stage && !calm) anims.push(slowZoom(stage, 1.06, CFG.REACTION_MS[3]));
+      void confetti({ ...base, particleCount: 120, spread: 100, origin: { y: 0.6 } });
+      break;
+    case 4: {
+      if (stage && !calm) {
+        anims.push(shake(stage, 18, 700), shake(stage, 12, 500, 480));
+      }
+      const shapes = [emoji("🔥"), emoji("💯")];
+      for (const [at, x] of [[0, 0.2], [250, 0.8], [500, 0.5]]) {
+        later(at, () => {
+          void confetti({ ...base, particleCount: 80, spread: 360, startVelocity: 40, origin: { x, y: 0.4 } });
+          void confetti({ ...base, particleCount: 12, spread: 120, shapes, scalar: 2.4, origin: { x, y: 0.5 } });
+        });
+      }
+      break;
+    }
+    case 5: {
+      const hit = CFG.EPIC_IMPACT_MS;
+      if (stage && !calm) {
+        anims.push(punches(stage, hit), shake(stage, 26, 900, hit));
+      }
+      const shapes = ["😱", "🔥", "💯", "💎", "🐐"].map(emoji);
+      later(hit, () => {
+        void confetti({ ...base, particleCount: 250, spread: 180, startVelocity: 60, origin: { y: 0.55 } });
+        let n = 0;
+        const storm = window.setInterval(() => {
+          void confetti({ ...base, particleCount: 6, angle: 60, spread: 70, shapes, scalar: 2.6, origin: { x: 0, y: 0.7 } });
+          void confetti({ ...base, particleCount: 6, angle: 120, spread: 70, shapes, scalar: 2.6, origin: { x: 1, y: 0.7 } });
+          if (++n > 24) clearInterval(storm);
+        }, 110);
+        timers.push(storm);
+      });
+      break;
+    }
+  }
+  return cancel;
+}

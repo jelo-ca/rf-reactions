@@ -1,0 +1,15 @@
+{
+  "mode": "price",
+  "priceTiers": [
+    { "tier": 0, "maxUsd": 1 },
+    { "tier": 1, "maxUsd": 5 },
+    { "tier": 2, "maxUsd": 20 },
+    { "tier": 3, "maxUsd": 75 },
+    { "tier": 4, "maxUsd": 200 },
+    { "tier": 5, "maxUsd": null }
+  ],
+  "rarityTiers": { "Common": 0, "Uncommon": 1, "Rare": 2, "Epic": 3, "Showcase": 5, "Promo": 4 },
+  "foilBonus": 1,
+  "names": ["Golf clap", "Participation trophy", "Sitcom OHHH", "Instant replay", "Air horn", "Over-edited epic"],
+  "sounds": {}
+}

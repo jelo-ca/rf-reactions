@@ -11,6 +11,10 @@ import { tierModeLabel, useTierMode } from "./reactions/useTierMode";
 import { type Reaction, ReactionLayer } from "./reactions/ReactionLayer";
 import { playTier, unlockAudio } from "./reactions/sounds";
 import { resolveTier, type TierConfig } from "./reactions/tiers";
+import { isRepeat } from "./reactions/helpers";
+import {
+  loadPriceLimits, priceLimits, priceTiersJson, savePriceLimits, tierCounts, withPriceLimits,
+} from "./reactions/tierTuning";
 import type { Card, Price } from "./types";
 import { CaptureMode } from "./ui/CaptureMode";
 import { DebugPanel } from "./ui/DebugPanel";
@@ -37,7 +41,8 @@ export default function App() {
   const [cards, setCards] = useState<Card[]>([]);
   const [priceById, setPriceById] = useState<Map<string, Price>>(new Map());
   const [dataError, setDataError] = useState<string | null>(null);
-  const [tiers, setTiers] = useState<TierConfig | null>(null);
+  const [baseTiers, setBaseTiers] = useState<TierConfig | null>(null); // public/data/tiers.json
+  const [limitOverride, setLimitOverride] = useState<number[] | null>(() => loadPriceLimits());
   const [started, setStarted] = useState(false);
   const [showTierDev, setShowTierDev] = useState(false);
   const [reaction, setReaction] = useState<Reaction | null>(null);
@@ -57,12 +62,30 @@ export default function App() {
       (ps) => setPriceById(new Map(ps.map((p) => [p.printingId, p]))),
       (e: unknown) => setDataError(String(e)),
     );
-    loadTiers().then(setTiers, (e: unknown) => setDataError(String(e)));
+    loadTiers().then(setBaseTiers, (e: unknown) => setDataError(String(e)));
   }, []);
   const cardById = useMemo(() => new Map(cards.map((c) => [c.printingId, c])), [cards]);
   const prices = useMemo(() => new Map([...priceById].map(([id, p]) => [id, p.priceUsd])), [priceById]);
 
+  // Thresholds tuned in the tier panel (T) override tiers.json in this browser; a stale/invalid saved
+  // override (e.g. tiers.json changed its tier count) is ignored.
+  const tiers = useMemo(() => {
+    if (!baseTiers || !limitOverride) return baseTiers;
+    try {
+      return withPriceLimits(baseTiers, limitOverride);
+    } catch {
+      return baseTiers;
+    }
+  }, [baseTiers, limitOverride]);
+  const setLimits = useCallback((limits: number[] | null) => {
+    setLimitOverride(limits);
+    savePriceLimits(limits);
+  }, []);
   const { tierMode, toggleTierMode } = useTierMode(tiers?.mode);
+  const counts = useMemo(
+    () => (tiers ? tierCounts(cards, prices, tiers, tierMode) : []),
+    [tiers, cards, prices, tierMode],
+  );
 
   /** Fire one reaction: stage fx + sound + overlay. The next one cancels this one's leftovers. */
   const fire = useCallback(
@@ -77,12 +100,20 @@ export default function App() {
 
   const rec = useRecognizer(videoRef, packMode);
   const { shownRef } = rec;
-  // Called by the state machine once per card hold (accept, or chooser pick): never twice.
+  const lastReacted = useRef<string | null>(null);
+  // Called by the state machine once per card hold (accept, or chooser pick). The same printing twice
+  // in a row doesn't react again (owner, 2026-09-28): guards against double reactions for one card.
   const onReact = useCallback(() => {
     setFlash(true);
     setTimeout(() => setFlash(false), FLASH_MS);
     const card = shownRef.current ? cardById.get(shownRef.current) : undefined;
-    if (card && tiers) fire(card, resolveTier(card, prices.get(card.printingId), tiers, tierMode));
+    if (!card || !tiers) return;
+    if (CFG.SKIP_REPEAT_REACTION && isRepeat(lastReacted.current, card.printingId)) {
+      console.info("[reactions] same card as last time, no reaction:", card.printingId);
+      return;
+    }
+    lastReacted.current = card.printingId;
+    fire(card, resolveTier(card, prices.get(card.printingId), tiers, tierMode));
   }, [shownRef, cardById, tiers, prices, tierMode, fire]);
   const fireSample = useCallback(
     (tier: number) => {
@@ -211,7 +242,17 @@ export default function App() {
         {shown && <PriceCard key={shown.printingId} card={shown} cards={cards} prices={priceById} />}
         <ReactionLayer reaction={reaction} onDismiss={() => setReaction(null)} />
         {showTierDev && tiers && (
-          <TierDevPanel names={tiers.names} mode={tierMode} onFire={fireSample} onToggleMode={toggleTierMode} />
+          <TierDevPanel
+            names={tiers.names}
+            mode={tierMode}
+            limits={priceLimits(tiers)}
+            defaults={baseTiers ? priceLimits(baseTiers) : priceLimits(tiers)}
+            counts={counts}
+            json={priceTiersJson(tiers)}
+            onFire={fireSample}
+            onToggleMode={toggleTierMode}
+            onLimits={setLimits}
+          />
         )}
         {!started && <StartScreen onStart={start} />}
         {phase === "ASKING" && rec.askOptions && (

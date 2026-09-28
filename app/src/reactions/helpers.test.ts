@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Card } from "../types";
-import { countUp, sampleCardForTier } from "./helpers";
+import { countUp, isRepeat, sampleCardForTier } from "./helpers";
 import type { TierConfig } from "./tiers";
 
 const CFG: TierConfig = {
@@ -17,6 +17,14 @@ const CFG: TierConfig = {
 const card = (printingId: string, extra: Partial<Card> = {}): Card => ({
   printingId, name: printingId, setCode: "OGN", setName: "Origins", collectorNumber: "001", rarity: "Common",
   variant: "normal", imageHash: printingId, imageUrl: "", pool: "booster", ...extra,
+});
+
+describe("isRepeat", () => {
+  it("only flags the same printing as the last reaction", () => {
+    expect(isRepeat(null, "OGN-001")).toBe(false);
+    expect(isRepeat("OGN-001", "OGN-001")).toBe(true);
+    expect(isRepeat("OGN-001", "OGN-001F")).toBe(false); // foil is a different printing
+  });
 });
 
 describe("countUp", () => {

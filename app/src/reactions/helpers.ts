@@ -2,6 +2,9 @@
 import type { Card } from "../types";
 import { resolveTier, type TierConfig, type TierMode } from "./tiers";
 
+/** The card that just reacted is shown again (same printing, nothing else in between). */
+export const isRepeat = (lastPrintingId: string | null, printingId: string): boolean => lastPrintingId === printingId;
+
 /** Tier 5 price count-up: ease-out from 0 to `target`, whole cents, exactly `target` at the end. */
 export function countUp(target: number, elapsedMs: number, durationMs: number): number {
   if (!(durationMs > 0) || elapsedMs >= durationMs) return target;

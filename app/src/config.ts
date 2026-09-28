@@ -29,6 +29,7 @@ export const CFG = {
   EPIC_IMPACT_MS: 2000, // tier 5: riser ends → bass drop, zoom punch, confetti storm
   EPIC_COUNT_MS: 1400, // tier 5: price counts up from $0 after the impact
   REACTION_VOLUME: 0.8, // master gain for the synthesized sounds (0–1)
+  SKIP_REPEAT_REACTION: true, // same printing twice in a row → no second reaction (a back-to-back duplicate pull stays quiet too)
 
   // Geometry (§5.2–5.3)
   MODEL_W: 224,

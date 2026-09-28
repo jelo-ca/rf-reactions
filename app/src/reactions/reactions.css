@@ -148,6 +148,23 @@
   color: #e8e9ee; font-size: 13px;
 }
 .tier-dev button { background: #1b1d24; color: #e8e9ee; border: 1px solid #2c2f39; border-radius: 6px; padding: 4px 8px; font: inherit; cursor: pointer; text-align: left; }
+.tier-dev button:disabled { opacity: 0.45; cursor: default; }
+.tier-dev-head, .tier-dev-foot { display: flex; gap: 8px; align-items: center; justify-content: space-between; }
+.tier-dev-foot { justify-content: flex-start; flex-wrap: wrap; }
+.tier-dev table { border-collapse: collapse; }
+.tier-dev td { padding: 2px 4px; white-space: nowrap; }
+.tier-dev td button { width: 100%; }
+.tier-dev .range { color: #8b8f9c; text-align: right; font-variant-numeric: tabular-nums; }
+.tier-dev .count { text-align: right; font-variant-numeric: tabular-nums; }
+.tier-dev .muted { color: #8b8f9c; }
+.tier-dev p { margin: 2px 0; max-width: 360px; }
+.tier-dev input {
+  width: 76px; background: #0e0f13; color: #e8e9ee; border: 1px solid #2c2f39; border-radius: 6px;
+  padding: 3px 6px; font: inherit; font-variant-numeric: tabular-nums;
+}
+.tier-dev input.changed { border-color: #f5c542; }
+.tier-dev input:focus { outline: none; border-color: #5aa9ff; }
+.tier-dev .error-inline { color: #ff5a5f; }
 .tier-dev button:hover { border-color: #5aa9ff; }
 
 @media (prefers-reduced-motion: reduce) {

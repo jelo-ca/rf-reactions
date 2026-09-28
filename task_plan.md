@@ -94,6 +94,11 @@ Owner choices: trained ML detector (not a classical edge/quad finder); guide box
 - [ ] Acceptance (PLAN §5.7): present acc ≥ 95%, corner err ≤ 3% card height, top-1 not worse than guide box, detector p95 ≤ 30 ms, fallback works
 - **Status:** code complete; waiting for real frames + a full training run. `app/public/models/detector.onnx` is currently a 50-step smoke model (synthetic-only)
 
+### Tier tuning + repeat guard (owner, 2026-09-28) — branch `feat/tier-tuning` (stacked on `feat/card-detection`)
+- [x] T panel: live price-threshold editor, per-tier counts, per-browser override, Reset, Copy JSON
+- [x] No second reaction for the same printing twice in a row (`SKIP_REPEAT_REACTION`)
+- [ ] HUMAN: try the panel live; paste final thresholds into `tiers.json` if they should be the default
+
 ### Backlog: Nexus Night pack mode (switched off 2026-09-27, owner)
 - [ ] Find a source that says which printings come out of Nexus Night packs (Riftcodex misses some; TCGCSV doesn't mark them Promo) — 39 TCGCSV-only OPP candidates listed in NOTES.md
 - [ ] Add missing printings (manual printings CSV or new source) + real images (H7), then set `NEXUS_NIGHT_ENABLED: true`

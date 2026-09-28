@@ -106,6 +106,20 @@ body { background: var(--bg); color: var(--text); }
 .capture kbd { border: 1px solid #444a58; border-radius: 3px; padding: 0 4px; }
 .error-inline { color: var(--bad); }
 
+/* Debug: detected card outline (PLAN §5.7) */
+.detect-overlay { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; z-index: 40; }
+.detect-overlay polygon { fill: rgba(61, 220, 132, 0.08); stroke: var(--ok); stroke-width: 3; stroke-linejoin: round; }
+.detect-overlay.guide polygon { stroke: var(--muted); stroke-dasharray: 8 6; fill: none; }
+.detect-overlay circle { fill: var(--hold); stroke: #000; stroke-width: 1.5; }
+.detect-overlay text {
+  fill: #fff; font: 700 13px ui-monospace, Consolas, monospace; text-anchor: middle;
+  paint-order: stroke; stroke: #000; stroke-width: 3;
+}
+.detect-none {
+  position: absolute; left: 50%; top: 12px; translate: -50% 0; z-index: 40; pointer-events: none;
+  background: var(--panel); color: var(--muted); border-radius: 6px; padding: 3px 10px; font: 12px ui-monospace, Consolas, monospace;
+}
+
 /* Detector frame labeler (F in capture mode, PLAN §5.7) */
 .labeler { position: fixed; inset: 0; z-index: 90; background: #000; display: grid; grid-template-rows: 1fr auto; }
 .labeler img { width: 100%; height: 100%; object-fit: contain; cursor: crosshair; user-select: none; min-height: 0; }

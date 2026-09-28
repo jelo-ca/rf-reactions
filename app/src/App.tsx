@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { guideBoxVideoRect, type ObjectFit, videoRectToElement } from "./camera/guideBox";
+import { guideBoxVideoRect, type ObjectFit, type StageTransform, videoRectToElement, videoToElementTransform } from "./camera/guideBox";
 import { useCamera } from "./camera/useCamera";
 import { CFG } from "./config";
 import { useStability } from "./stability/useStability";
@@ -14,11 +14,13 @@ import { resolveTier, type TierConfig } from "./reactions/tiers";
 import type { Card, Price } from "./types";
 import { CaptureMode } from "./ui/CaptureMode";
 import { DebugPanel } from "./ui/DebugPanel";
+import { DetectionOverlay } from "./ui/DetectionOverlay";
 import { PriceCard } from "./ui/PriceCard";
 import { ResultChip } from "./ui/ResultChip";
 import { usePackMode } from "./ui/usePackMode";
 import { useRingLight } from "./ui/useRingLight";
 import { VariantChooser } from "./ui/VariantChooser";
+import { useDetector } from "./vision/useDetector";
 import { useRecognizer } from "./vision/useRecognizer";
 
 const FIT: ObjectFit = "cover";
@@ -94,7 +96,8 @@ export default function App() {
     unlockAudio();
     setStarted(true);
   }, []);
-  const { stats, rescan, pick } = useStability(videoRef, !!stream && rec.ready && started, rec.recognize, onReact);
+  const detector = useDetector(videoRef, rec.ready);
+  const { stats, rescan, pick } = useStability(videoRef, !!stream && rec.ready && started, rec.recognize, onReact, detector.detect);
   const onPick = useCallback(
     (printingId: string) => {
       rec.choose(printingId);
@@ -120,7 +123,7 @@ export default function App() {
     return () => window.removeEventListener("keydown", onKey);
   }, [togglePackMode, rescan, toggleRing, toggleTierMode]);
 
-  const { overlay, videoSize } = useGuideOverlay(videoRef, !!stream, ring ? "ring" : "plain");
+  const { overlay, videoSize, xf } = useGuideOverlay(videoRef, !!stream, ring ? "ring" : "plain");
   const phase = stats.state.phase;
   const boxClass = flash
     ? "recognized"
@@ -206,8 +209,9 @@ export default function App() {
         {showDebug && !capture && accepted && (
           <ResultChip card={accepted} price={prices.get(accepted.printingId)} reason={rec.last?.reason} cardsByName={cards} prices={prices} />
         )}
+        {showDebug && !capture && <DetectionOverlay detection={stats.detection} xf={xf} mirrored={mirror} />}
         {showDebug && !capture && (
-          <DebugPanel stats={stats} packMode={packMode} videoSize={videoSize} rec={rec} cardById={cardById} prices={prices} />
+          <DebugPanel stats={stats} packMode={packMode} videoSize={videoSize} rec={rec} detector={detector.info} cardById={cardById} prices={prices} />
         )}
         {capture && <CaptureMode cards={cards} videoRef={videoRef} />}
       </main>
@@ -220,6 +224,7 @@ export default function App() {
 function useGuideOverlay(videoRef: React.RefObject<HTMLVideoElement | null>, active: boolean, layoutKey: string) {
   const [overlay, setOverlay] = useState<{ x: number; y: number; w: number; h: number } | null>(null);
   const [videoSize, setVideoSize] = useState({ w: 0, h: 0 });
+  const [xf, setXf] = useState<StageTransform | null>(null);
 
   useLayoutEffect(() => {
     const video = videoRef.current;
@@ -233,6 +238,8 @@ function useGuideOverlay(videoRef: React.RefObject<HTMLVideoElement | null>, act
       // The overlay is positioned in the stage; the video may be inset (ring light padding).
       setOverlay({ ...r, x: r.x + video.offsetLeft, y: r.y + video.offsetTop });
       setVideoSize({ w: vw, h: vh });
+      const t = videoToElementTransform(vw, vh, video.clientWidth, video.clientHeight, FIT);
+      setXf({ ...t, left: video.offsetLeft, top: video.offsetTop, elW: video.clientWidth });
     };
     const ro = new ResizeObserver(update);
     ro.observe(video);
@@ -246,5 +253,5 @@ function useGuideOverlay(videoRef: React.RefObject<HTMLVideoElement | null>, act
     };
   }, [videoRef, active, layoutKey]);
 
-  return { overlay, videoSize };
+  return { overlay, videoSize, xf };
 }

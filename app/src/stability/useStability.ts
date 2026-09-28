@@ -1,13 +1,28 @@
 // Per-frame loop (PLAN.md §5.3): crop the guide box into tiny grayscale images on the main
 // thread, compute signals, drive the state machine. Recognition is injected.
 // Change-based: `change` = difference from the view last sent to recognition (no background).
+// Card detection (§5.7): when the detector sees a card, the signals are computed on the warped card
+// wherever it is and recognition gets its corners; otherwise the guide box is watched (fallback).
 import { type RefObject, useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { guideBoxVideoRect } from "../camera/guideBox";
 import { CFG } from "../config";
 import { type FrameSignals, type MachineEvent, type MachineState, initialState, step, wantsSharpness } from "./machine";
+import { type Quad, scaleQuad, warpGray } from "../vision/homography";
+import type { DetectResult } from "../vision/worker";
+import { chooseRegion, cornersMoving, type Detection, type Region, toVideoQuad } from "./region";
 import { laplacianVariance, meanAbsDiff, toGray } from "./signals";
 
-export type RecognizeFn = () => Promise<"accepted" | "rejected" | "ask">;
+export type RecognizeFn = (quad: Quad | null) => Promise<"accepted" | "rejected" | "ask">;
+export type DetectFn = () => Promise<DetectResult>;
+
+export interface DetectionStats {
+  enabled: boolean;
+  source: Region["source"];
+  present: number | null;
+  quad: Quad | null; // video pixels, latest detection (even when below the threshold: null then)
+  ms: number | null;
+  moving: boolean;
+}
 
 export interface StabilityStats {
   state: MachineState;
@@ -18,6 +33,7 @@ export interface StabilityStats {
   lastStillToResultMs: number | null; // first still frame → recognition result (end to end)
   lastEffect: string | null;
   reactions: number;
+  detection: DetectionStats;
 }
 
 const STATS_EVERY_N_FRAMES = 3; // throttle React re-renders
@@ -27,6 +43,7 @@ export function useStability(
   active: boolean,
   recognize: RecognizeFn,
   onReact: () => void,
+  detect: DetectFn | null = null,
 ) {
   const [stats, setStats] = useState<StabilityStats>({
     state: initialState,
@@ -37,6 +54,7 @@ export function useStability(
     lastStillToResultMs: null,
     lastEffect: null,
     reactions: 0,
+    detection: { enabled: false, source: "guide", present: null, quad: null, ms: null, moving: false },
   });
 
   const r = useRef({
@@ -57,11 +75,20 @@ export function useStability(
     wantRescan: false,
     recognize,
     onReact,
+    detect,
+    det: null as Detection | null,
+    detInFlight: false,
+    lastDetectAt: 0,
+    detMoving: false,
+    region: { source: "guide", quad: null } as Region,
+    frame: null as CanvasRenderingContext2D | null, // downscaled full frame for warping the card
   });
   useLayoutEffect(() => {
     r.current.recognize = recognize;
     r.current.onReact = onReact;
-  }, [recognize, onReact]);
+    r.current.detect = detect;
+    if (!detect) r.current.det = null;
+  }, [recognize, onReact, detect]);
 
   /** Forget the last checked view so the current one is checked again (B). */
   const rescan = useCallback(() => {
@@ -96,7 +123,7 @@ export function useStability(
           s.lastStillToResultMs = performance.now() - started;
           dispatch({ type: "result", status });
         };
-        s.recognize().then(onResult, (err: unknown) => {
+        s.recognize(s.region.quad).then(onResult, (err: unknown) => {
           console.error("[vision] recognize failed:", err);
           onResult("rejected"); // never leave the machine stuck in RECOGNIZING
         });
@@ -111,8 +138,46 @@ export function useStability(
     const onFrame = () => {
       if (stopped) return;
       if (video.readyState >= 2 && video.videoWidth > 0) {
-        const box = guideBoxVideoRect(video.videoWidth, video.videoHeight, CFG.GUIDE_HEIGHT_FRAC, CFG.MODEL_W, CFG.MODEL_H);
-        const gray = grab(s.tiny!, video, box, CFG.TINY_W, CFG.TINY_H);
+        const vw = video.videoWidth;
+        const vh = video.videoHeight;
+        const now = performance.now();
+        if (s.detect && !s.detInFlight && now - s.lastDetectAt >= CFG.DETECT_EVERY_MS) {
+          s.detInFlight = true;
+          s.lastDetectAt = now;
+          s.detect()
+            .then((res) => {
+              const d: Detection = {
+                present: res.present,
+                quad: res.present >= CFG.DETECT_PRESENT_T ? toVideoQuad(res.corners, vw, vh) : null,
+                at: now,
+                ms: res.ms,
+              };
+              s.detMoving = cornersMoving(s.det, d, CFG);
+              s.det = d;
+            })
+            .catch((err: unknown) => console.warn("[detect] failed:", err))
+            .finally(() => {
+              s.detInFlight = false;
+            });
+        }
+        const region = chooseRegion(s.det, now, CFG);
+        s.region = region;
+        let gray: Float32Array;
+        let sharpGray: (() => Float32Array) | null = null;
+        if (region.source === "detector") {
+          const fw = CFG.DETECT_FRAME_W;
+          const fh = Math.round((fw * vh) / vw);
+          if (!s.frame || s.frame.canvas.height !== fh) s.frame = makeCtx(fw, fh);
+          s.frame.drawImage(video, 0, 0, fw, fh);
+          const full = toGray(s.frame.getImageData(0, 0, fw, fh).data, fw, fh);
+          const q = scaleQuad(region.quad, fw / vw, fh / vh);
+          gray = warpGray(full, fw, fh, q, CFG.TINY_W, CFG.TINY_H);
+          sharpGray = () => warpGray(full, fw, fh, q, CFG.SHARP_W, CFG.SHARP_H);
+        } else {
+          const box = guideBoxVideoRect(vw, vh, CFG.GUIDE_HEIGHT_FRAC, CFG.MODEL_W, CFG.MODEL_H);
+          gray = grab(s.tiny!, video, box, CFG.TINY_W, CFG.TINY_H);
+          sharpGray = () => grab(s.sharp!, video, box, CFG.SHARP_W, CFG.SHARP_H);
+        }
         s.frames++;
         if (s.wantRescan) {
           s.checked = null;
@@ -121,16 +186,17 @@ export function useStability(
         }
         const ready = s.frames >= CFG.WARMUP_FRAMES;
         const change = s.checked ? meanAbsDiff(gray, s.checked) : 255;
-        const motion = s.prev ? meanAbsDiff(gray, s.prev) : 255;
+        let motion = s.prev ? meanAbsDiff(gray, s.prev) : 255;
+        // The warped card looks the same while it slides across the frame; corner movement catches that.
+        if (region.source === "detector" && s.detMoving) motion = Math.max(motion, CFG.MOTION_T * 2);
         s.prev = gray;
         s.lastGray = gray;
         const sharpness = wantsSharpness(s.machine, motion, CFG)
-          ? laplacianVariance(grab(s.sharp!, video, box, CFG.SHARP_W, CFG.SHARP_H), CFG.SHARP_W, CFG.SHARP_H)
+          ? laplacianVariance(sharpGray(), CFG.SHARP_W, CFG.SHARP_H)
           : null;
         const signals = { change, motion, sharpness };
         if (ready) dispatch({ type: "frame", signals });
 
-        const now = performance.now();
         s.fpsWindow.push(now);
         while (s.fpsWindow.length && now - s.fpsWindow[0] > 1000) s.fpsWindow.shift();
         if (s.frames % STATS_EVERY_N_FRAMES === 0) {
@@ -143,6 +209,14 @@ export function useStability(
             lastStillToResultMs: s.lastStillToResultMs,
             lastEffect: s.lastEffect,
             reactions: s.reactions,
+            detection: {
+              enabled: !!s.detect,
+              source: region.source,
+              present: s.det?.present ?? null,
+              quad: s.det?.quad ?? null,
+              ms: s.det?.ms ?? null,
+              moving: s.detMoving,
+            },
           });
         }
       }

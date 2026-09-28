@@ -6,10 +6,25 @@ import * as ort from "onnxruntime-web/webgpu";
 import { CFG } from "../config";
 import type { Card, EmbeddingMeta, PackMode, Price, RecognitionResult } from "../types";
 import { decide, indexCards } from "./decide";
+import { type Quad, warpRgba } from "./homography";
 import { LAYOUT, layoutScore, layoutSignature } from "./layout";
 import { bestFromScores, rowIndex } from "./search";
 
 export type Backend = "webgpu" | "wasm";
+
+export interface DetectorInfo {
+  available: boolean; // false when public/models/detector.onnx is missing → guide box only
+  backend?: Backend;
+  loadMs?: number;
+  warmupMs?: number;
+  error?: string;
+}
+
+export interface DetectResult {
+  present: number; // probability 0–1
+  corners: [number, number][]; // 0–1 in the (stretched) frame, TL, TR, BR, BL
+  ms: number; // preprocessing + inference in the worker
+}
 
 export interface InitInfo {
   backend: Backend;
@@ -38,6 +53,12 @@ let state: State | null = null;
 let initOnce: Promise<InitInfo> | null = null;
 const canvas = new OffscreenCanvas(CFG.MODEL_W, CFG.MODEL_H);
 const ctx = canvas.getContext("2d", { willReadFrequently: true })!;
+const detCanvas = new OffscreenCanvas(CFG.DETECT_W, CFG.DETECT_H);
+const detCtx = detCanvas.getContext("2d", { willReadFrequently: true })!;
+const frameCanvas = new OffscreenCanvas(1, 1); // full-resolution frame for warping the detected card
+const frameCtx = frameCanvas.getContext("2d", { willReadFrequently: true })!;
+let detector: { session: ort.InferenceSession } | null = null;
+let detectorOnce: Promise<DetectorInfo> | null = null;
 
 async function fetchOk(url: string): Promise<Response> {
   const res = await fetch(url);
@@ -60,15 +81,54 @@ async function createSession(modelUrl: string): Promise<{ session: ort.Inference
 }
 
 /** RGBA ImageData → planar RGB float32 [1,3,H,W] in [0,1] (normalization is inside the model). */
-function toTensor(rgba: Uint8ClampedArray): ort.Tensor {
-  const n = CFG.MODEL_W * CFG.MODEL_H;
+function toTensor(rgba: Uint8ClampedArray, w: number = CFG.MODEL_W, h: number = CFG.MODEL_H): ort.Tensor {
+  const n = w * h;
   const out = new Float32Array(3 * n);
   for (let i = 0, p = 0; i < n; i++, p += 4) {
     out[i] = rgba[p] / 255;
     out[n + i] = rgba[p + 1] / 255;
     out[2 * n + i] = rgba[p + 2] / 255;
   }
-  return new ort.Tensor("float32", out, [1, 3, CFG.MODEL_H, CFG.MODEL_W]);
+  return new ort.Tensor("float32", out, [1, 3, h, w]);
+}
+
+/** Full frame + detected card corners (frame pixels) → the upright 224×320 crop the recognizer takes. */
+function warpedPixels(frame: ImageBitmap, quad: Quad): Uint8ClampedArray {
+  if (frameCanvas.width !== frame.width || frameCanvas.height !== frame.height) {
+    frameCanvas.width = frame.width;
+    frameCanvas.height = frame.height;
+  }
+  frameCtx.drawImage(frame, 0, 0);
+  frame.close();
+  const src = frameCtx.getImageData(0, 0, frameCanvas.width, frameCanvas.height).data;
+  return warpRgba(src, frameCanvas.width, frameCanvas.height, quad, CFG.MODEL_W, CFG.MODEL_H);
+}
+
+async function loadDetector(): Promise<DetectorInfo> {
+  const t0 = performance.now();
+  const res = await fetch("/models/detector.onnx");
+  // Vite's dev server answers unknown paths with index.html, so check the type too.
+  if (!res.ok || (res.headers.get("content-type") ?? "").includes("html")) {
+    return { available: false, error: "no /models/detector.onnx - run pipeline/export_detector.py" };
+  }
+  const bytes = new Uint8Array(await res.arrayBuffer());
+  const opts = { graphOptimizationLevel: "all" } as const;
+  let backend: Backend = "wasm";
+  let session: ort.InferenceSession | null = null;
+  if ("gpu" in navigator) {
+    try {
+      session = await ort.InferenceSession.create(bytes, { ...opts, executionProviders: ["webgpu"] });
+      backend = "webgpu";
+    } catch (e) {
+      console.warn("[detect] WebGPU unavailable, falling back to wasm:", e);
+    }
+  }
+  session ??= await ort.InferenceSession.create(bytes, { ...opts, executionProviders: ["wasm"] });
+  detector = { session };
+  const loadMs = performance.now() - t0;
+  const t1 = performance.now();
+  await serialized(() => session.run({ frame: toTensor(new Uint8ClampedArray(CFG.DETECT_W * CFG.DETECT_H * 4), CFG.DETECT_W, CFG.DETECT_H) }));
+  return { available: true, backend, loadMs, warmupMs: performance.now() - t1 };
 }
 
 function pixels(img: ImageBitmap): Uint8ClampedArray {
@@ -144,11 +204,36 @@ const api = {
     return initOnce;
   },
 
-  async recognize(img: ImageBitmap, packMode: PackMode): Promise<RecognitionResult> {
+  /** Load the card detector once (after init: the recognizer comes first). Never throws. */
+  initDetector(): Promise<DetectorInfo> {
+    detectorOnce ??= loadDetector().catch((e: unknown) => {
+      console.warn("[detect] detector failed to load, using the guide box only:", e);
+      return { available: false, error: String(e) };
+    });
+    return detectorOnce;
+  },
+
+  /** Card present? + its corners, on a frame already scaled to DETECT_W×DETECT_H (any size works). */
+  async detect(frame: ImageBitmap): Promise<DetectResult> {
+    if (!detector) throw new Error("detector not loaded");
+    const t0 = performance.now();
+    detCtx.drawImage(frame, 0, 0, CFG.DETECT_W, CFG.DETECT_H);
+    frame.close();
+    const rgba = detCtx.getImageData(0, 0, CFG.DETECT_W, CFG.DETECT_H).data;
+    const d = detector;
+    const out = await serialized(() => d.session.run({ frame: toTensor(rgba, CFG.DETECT_W, CFG.DETECT_H) }));
+    const logit = (out.present.data as Float32Array)[0];
+    const c = out.corners.data as Float32Array;
+    const corners: [number, number][] = [0, 1, 2, 3].map((k) => [c[k * 2], c[k * 2 + 1]]);
+    return { present: 1 / (1 + Math.exp(-logit)), corners, ms: performance.now() - t0 };
+  },
+
+  /** `img` = the 224×320 guide-box crop, or (with `quad`) the full frame + the detected card corners. */
+  async recognize(img: ImageBitmap, packMode: PackMode, quad?: Quad): Promise<RecognitionResult> {
     if (!state) throw new Error("vision worker not initialized");
     const s = state;
     const t0 = performance.now();
-    const rgba = pixels(img);
+    const rgba = quad ? warpedPixels(img, quad) : pixels(img);
     const t1 = performance.now();
     const { scores: rowScores } = await run(rgba);
     const t2 = performance.now();

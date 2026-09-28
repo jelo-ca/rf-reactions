@@ -3,12 +3,14 @@ import type { Summary } from "../metrics/rolling";
 import type { StabilityStats } from "../stability/useStability";
 import type { Card, PackMode } from "../types";
 import type { RecognizerState } from "../vision/useRecognizer";
+import type { DetectorInfo } from "../vision/worker";
 
 interface Props {
   stats: StabilityStats;
   packMode: PackMode;
   videoSize: { w: number; h: number };
   rec: RecognizerState;
+  detector: DetectorInfo | null;
   cardById: ReadonlyMap<string, Card>;
   prices: ReadonlyMap<string, number>;
 }
@@ -17,7 +19,7 @@ const fmt = (v: number | null | undefined, digits = 1) => (v === null || v === u
 const ms = (v: number | null | undefined) => (v === null || v === undefined ? "—" : `${v.toFixed(0)} ms`);
 const pct = (s: Summary | undefined) => (s ? `${ms(s.p50)} / ${ms(s.p95)} (n=${s.n})` : "—");
 
-export function DebugPanel({ stats, packMode, videoSize, rec, cardById, prices }: Props) {
+export function DebugPanel({ stats, packMode, videoSize, rec, detector, cardById, prices }: Props) {
   const { state, signals } = stats;
   const last = rec.last;
   const rows: [string, string, boolean?][] = [
@@ -31,6 +33,16 @@ export function DebugPanel({ stats, packMode, videoSize, rec, cardById, prices }
     ["still → result", ms(stats.lastStillToResultMs), (stats.lastStillToResultMs ?? Infinity) < 300],
     ["camera", stats.ready ? `ready · last: ${state.outcome}` : "warming up…"],
     ["pack mode", packMode],
+    [
+      "detector",
+      !detector ? "loading…" : detector.available ? `${detector.backend} · ${ms(detector.loadMs)} load` : "off (no model)",
+    ],
+    [
+      "watching",
+      `${stats.detection.source === "detector" ? "detected card" : "guide box"}${stats.detection.present === null ? "" : ` · p=${stats.detection.present.toFixed(2)}`} · ${ms(stats.detection.ms)}`,
+      stats.detection.source === "detector",
+    ],
+    ["last crop", last ? last.source : "—"],
     ["backend", rec.info ? `${rec.info.backend} · ${rec.info.threads}t` : "loading…"],
     ["load / warm-up", rec.info ? `${ms(rec.info.loadMs)} / ${ms(rec.info.warmupMs)}` : "—"],
     ["fps · video", `${stats.fps} · ${videoSize.w}×${videoSize.h}`],

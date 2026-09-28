@@ -115,5 +115,7 @@ DETECT_REAL_P = 0.3                # share of each batch drawn from real labelle
 DETECT_VAL_EVERY = 3               # every 3rd real frame (by capture time) is held out for validation
 DETECT_SIGMA = 1.0                 # target heatmap Gaussian, in cells
 DETECT_PRESENT_T = 0.5             # present probability threshold (mirror app config)
+# Frozen during training (ImageNet features up to stride 8): halves the CPU backward pass.
+DETECT_FROZEN = ("conv_stem", "bn1", "blocks.0", "blocks.1", "blocks.2")
 DETECT_WEIGHTS = OUT_DIR / "detect" / "best.pt"
 APP_DETECTOR = APP_PUBLIC / "models" / "detector.onnx"

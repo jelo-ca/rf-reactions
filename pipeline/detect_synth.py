@@ -20,7 +20,7 @@ import cv2
 import numpy as np
 
 import config
-from augment import glare, lighting, load_rgb
+from augment import lighting, load_rgb
 from detect_data import RealFrame
 
 OUT_W, OUT_H = config.DETECT_W, config.DETECT_H
@@ -37,15 +37,20 @@ class Sample:
 
 def procedural_background(rng: np.random.Generator, w: int, h: int) -> np.ndarray:
     """Room-like backdrop: two-tone gradient, soft blobs, a blurry person, furniture edges."""
-    c1 = rng.uniform(20, 235) + rng.uniform(-40, 40, 3)
-    c2 = rng.uniform(20, 235) + rng.uniform(-40, 40, 3)
+    c1 = (rng.uniform(20, 235) + rng.uniform(-40, 40, 3)).astype(np.float32)
+    c2 = (rng.uniform(20, 235) + rng.uniform(-40, 40, 3)).astype(np.float32)
     ang = rng.uniform(0, 2 * np.pi)
-    yy, xx = np.mgrid[0:h, 0:w].astype(np.float32)
-    t = ((xx / w - 0.5) * np.cos(ang) + (yy / h - 0.5) * np.sin(ang) + 0.5).clip(0, 1)[..., None]
-    img = c1 * (1 - t) + c2 * t
-    blobs = cv2.GaussianBlur(rng.uniform(-45, 45, (max(h // 24, 2), max(w // 24, 2), 3)).astype(np.float32), (0, 0), 1.2)
-    img = img + cv2.resize(blobs, (w, h), interpolation=cv2.INTER_CUBIC)
-    img = np.clip(img, 0, 255).astype(np.uint8)
+    # Smooth fields are built small and upscaled (numpy at full size was the training bottleneck).
+    sw, sh = max(w // 8, 2), max(h // 8, 2)
+    yy, xx = np.mgrid[0:sh, 0:sw].astype(np.float32)
+    t = ((xx / sw - 0.5) * np.cos(ang) + (yy / sh - 0.5) * np.sin(ang) + 0.5).clip(0, 1)[..., None]
+    small = c1 * (1 - t) + c2 * t
+    # Soft light/shadow patches: mostly brightness, a little colour (rooms aren't rainbow mosaics).
+    gh, gw = max(h // 24, 2), max(w // 24, 2)
+    grid = rng.uniform(-40, 40, (gh, gw, 1)) + rng.uniform(-12, 12, (gh, gw, 3))
+    blobs = cv2.resize(cv2.GaussianBlur(grid.astype(np.float32), (0, 0), 1.0), (sw, sh), interpolation=cv2.INTER_LINEAR)
+    small = cv2.GaussianBlur(np.clip(small + blobs, 0, 255).astype(np.float32), (0, 0), 1.0)
+    img = cv2.resize(small.astype(np.uint8), (w, h), interpolation=cv2.INTER_LINEAR)
     for _ in range(int(rng.integers(0, 5))):  # furniture / shelves / door frames: straight edges
         col = (rng.uniform(15, 240) + rng.uniform(-30, 30, 3)).clip(0, 255).tolist()
         x0, y0 = int(rng.uniform(-0.2, 1) * w), int(rng.uniform(-0.2, 1) * h)
@@ -98,6 +103,10 @@ def rounded_mask(w: int, h: int, r: int) -> np.ndarray:
 
 
 def paste_card(bg: np.ndarray, card: np.ndarray, quad: np.ndarray) -> np.ndarray:
+    # Shrink with area filtering first: warpPerspective only interpolates, so a big downscale would alias.
+    target_h = max(8, int(np.linalg.norm(quad[3] - quad[0]) * 1.5))
+    if card.shape[0] > target_h:
+        card = cv2.resize(card, (max(8, int(target_h * card.shape[1] / card.shape[0])), target_h), interpolation=cv2.INTER_AREA)
     ch, cw = card.shape[:2]
     src = np.array([[0, 0], [cw, 0], [cw, ch], [0, ch]], np.float32)
     m = cv2.getPerspectiveTransform(src, quad.astype(np.float32))
@@ -140,15 +149,32 @@ def distractors(img: np.ndarray, rng: np.random.Generator) -> np.ndarray:
     return img
 
 
+def glare(img: np.ndarray, rng: np.random.Generator) -> np.ndarray:
+    """Soft white elliptical highlight (like augment.glare, mask built at 1/4 size for speed)."""
+    h, w = img.shape[:2]
+    sw, sh = max(w // 4, 2), max(h // 4, 2)
+    cx, cy = rng.uniform(0, sw), rng.uniform(0, sh)
+    ax, ay = rng.uniform(0.15, 0.45) * sw, rng.uniform(0.05, 0.25) * sh
+    ang = rng.uniform(0, np.pi)
+    yy, xx = np.mgrid[0:sh, 0:sw].astype(np.float32)
+    dx, dy = xx - cx, yy - cy
+    u = (dx * np.cos(ang) + dy * np.sin(ang)) / ax
+    v = (-dx * np.sin(ang) + dy * np.cos(ang)) / ay
+    mask = cv2.resize(np.exp(-(u * u + v * v) * 2.0).astype(np.float32), (w, h), interpolation=cv2.INTER_LINEAR)[..., None]
+    alpha = np.float32(rng.uniform(*config.AUG_GLARE_OPACITY)) * mask
+    return (img * (1 - alpha) + 255.0 * alpha).clip(0, 255).astype(np.uint8)
+
+
 def camera(img: np.ndarray, rng: np.random.Generator) -> np.ndarray:
     """Webcam look: lighting/cast/haze, glare, blur, sensor noise, JPEG."""
     img = lighting(img, rng)
     if rng.random() < config.AUG_GLARE_P:
         img = glare(img, rng)
     if rng.random() < 0.6:
-        img = cv2.GaussianBlur(img, (0, 0), rng.uniform(0.3, 1.6))
+        img = cv2.GaussianBlur(img, (0, 0), rng.uniform(0.3, 1.2))
     if rng.random() < 0.7:
-        img = np.clip(img + rng.normal(0, rng.uniform(2, 9), img.shape), 0, 255).astype(np.uint8)
+        noise = rng.standard_normal(img.shape, dtype=np.float32) * np.float32(rng.uniform(2, 9))
+        img = (img + noise).clip(0, 255).astype(np.uint8)
     q = int(rng.integers(*config.AUG_JPEG_QUALITY))
     ok, buf = cv2.imencode(".jpg", img[..., ::-1], [cv2.IMWRITE_JPEG_QUALITY, q])
     return cv2.imdecode(buf, cv2.IMREAD_COLOR)[..., ::-1]
@@ -166,8 +192,8 @@ class DetectSource:
         self._real_cache: dict[Path, np.ndarray] = {}
 
     def synthetic(self, rng: np.random.Generator) -> Sample:
-        # Work at a camera-like aspect (16:9 mostly, some 4:3) at 2× output, then stretch like the app does.
-        w, h = (OUT_W * 2, int(OUT_W * 2 * 9 / 16)) if rng.random() < 0.8 else (OUT_W * 2, int(OUT_W * 2 * 3 / 4))
+        # Work at a camera-like aspect (16:9 mostly, some 4:3) at output width, then stretch like the app does.
+        w, h = (OUT_W, int(OUT_W * 9 / 16)) if rng.random() < 0.8 else (OUT_W, int(OUT_W * 3 / 4))
         if self.empty_frames and rng.random() < 0.7:
             img = real_background(self.empty_frames[int(rng.integers(0, len(self.empty_frames)))], rng, w, h)
         else:
@@ -188,7 +214,7 @@ class DetectSource:
     def real(self, rng: np.random.Generator) -> Sample:
         f = self.real_train[int(rng.integers(0, len(self.real_train)))]
         if f.png not in self._real_cache:
-            self._real_cache[f.png] = cv2.resize(load_rgb(f.png), (OUT_W * 2, OUT_H * 2), interpolation=cv2.INTER_AREA)
+            self._real_cache[f.png] = cv2.resize(load_rgb(f.png), (OUT_W, OUT_H), interpolation=cv2.INTER_AREA)
         img = self._real_cache[f.png]
         corners = np.array(f.corners, np.float32) / np.array([f.width, f.height], np.float32)
         img, corners = zoom_shift(img, corners, rng)
@@ -224,7 +250,7 @@ def default_source(real_train: list[RealFrame] | None = None) -> DetectSource:
         raise SystemExit("no card images in app/public/data/images - run ingest.py")
     from detect_data import load_real
     frames = load_real(config.DETECT_REAL_DIR) if config.DETECT_REAL_DIR.exists() else []
-    empties = [cv2.resize(load_rgb(f.png), (OUT_W * 2, int(OUT_W * 2 * f.height / f.width)), interpolation=cv2.INTER_AREA)
+    empties = [cv2.resize(load_rgb(f.png), (OUT_W, int(OUT_W * f.height / f.width)), interpolation=cv2.INTER_AREA)
                for f in frames if f.corners is None]
     return DetectSource(cards, empties, real_train or [])
 

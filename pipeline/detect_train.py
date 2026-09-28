@@ -2,7 +2,7 @@
 low-memory guard stops long jobs):
 
   cd pipeline; $env:PYTHONUTF8="1"
-  .\\.venv\\Scripts\\python -u detect_train.py --steps 3000 --workers 2 --log out\\detect\\train.log
+  .\\.venv\\Scripts\\python -u detect_train.py --steps 2000 --workers 2 --log out\\detect\\train.log
   (add --resume to continue from out/detect/last.pt)
 
 Batches mix online synthetic composites (detect_synth) with the human's real labelled train frames.
@@ -97,10 +97,25 @@ def evaluate(model: CardDetector, x, corners, present, frame_h) -> dict:
     return {"present_acc": acc, "corner_err": err, "n": len(x), "positives": int(pos.sum())}
 
 
+def freeze_early(model: CardDetector) -> list[torch.nn.Module]:
+    """Freeze config.DETECT_FROZEN backbone parts; returns their modules (kept in eval mode: BN stats fixed)."""
+    frozen = [m for n, m in model.backbone.named_children() if n in config.DETECT_FROZEN]
+    frozen += [b for i, b in enumerate(model.backbone.blocks) if f"blocks.{i}" in config.DETECT_FROZEN]
+    for m in frozen:
+        m.requires_grad_(False)
+    return frozen
+
+
+def train_mode(model: CardDetector, frozen: list[torch.nn.Module]) -> None:
+    model.train()
+    for m in frozen:
+        m.eval()
+
+
 def main() -> None:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--steps", type=int, default=3000)
-    ap.add_argument("--batch", type=int, default=24)
+    ap.add_argument("--steps", type=int, default=2000)
+    ap.add_argument("--batch", type=int, default=16)
     ap.add_argument("--lr", type=float, default=1e-3)
     ap.add_argument("--backbone-lr", type=float, default=3e-4)
     ap.add_argument("--workers", type=int, default=2)
@@ -128,8 +143,9 @@ def main() -> None:
     rval = real_val_batch(val_real) if val_real else None
 
     model = CardDetector(pretrained=True)
+    frozen = freeze_early(model)
     head = [p for n, p in model.named_parameters() if not n.startswith("backbone.")]
-    opt = torch.optim.AdamW([{"params": model.backbone.parameters(), "lr": args.backbone_lr},
+    opt = torch.optim.AdamW([{"params": [p for p in model.backbone.parameters() if p.requires_grad], "lr": args.backbone_lr},
                              {"params": head, "lr": args.lr}], weight_decay=1e-4)
     start, best = 0, None
     if args.resume and (OUT / "last.pt").exists():
@@ -143,7 +159,7 @@ def main() -> None:
 
     loader = DataLoader(Stream(src, config.SEED, start * args.batch, (args.steps - start) * args.batch),
                         batch_size=args.batch, num_workers=args.workers, persistent_workers=args.workers > 0)
-    model.train()
+    train_mode(model, frozen)
     t0, run = time.time(), {"bce": 0.0, "l1": 0.0, "js": 0.0}
     for step, (x, corners, present) in enumerate(loader, start=start + 1):
         loss, parts = detector_loss(model, x, corners, present)
@@ -161,6 +177,7 @@ def main() -> None:
             r = {"step": step, "synth": evaluate(model, *sval)}
             if rval is not None:
                 r["real"] = evaluate(model, *rval)
+            train_mode(model, frozen)
             key_src = r.get("real", r["synth"])
             key = (round(key_src["present_acc"], 3), -key_src["corner_err"] if key_src["corner_err"] == key_src["corner_err"] else 0)
             print("eval", json.dumps(r), flush=True)

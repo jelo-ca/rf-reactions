@@ -84,7 +84,7 @@ Full specs + acceptance criteria live in `PLAN.md`. Do not start next phase unti
 ### Card detection anywhere in the frame (PLAN §5.7, owner request 2026-09-27) — branch `feat/card-detection`
 Owner choices: trained ML detector (not a classical edge/quad finder); guide box kept as fallback.
 - [x] M1 capture tool: F (in capture mode C) = freeze full frame, click 4 corners / 0 = no card → PNG + JSON; `sort_detect.py` files them into `data/detect/real/`
-- [ ] HUMAN: ≥ 40 empty-scene frames + ≥ 60 card frames (everywhere, tilted, near/far, hands, ring light on/off)
+- [ ] HUMAN: ≥ 40 empty-scene frames + ≥ 60 card frames — have 23 empty + 35 card (2026-09-28); `detect_eval.py` baseline (smoke model): present 63.8%, corner err 81% (boxes the face)
 - [x] M2 `detect_synth.py` (preview = `python detect_synth.py` → `out/detect_preview.png`) · `detect_model.py` · `detect_train.py` · `export_detector.py` (ONNX parity 3.6e-7, 13.3 MB); 94 pipeline tests
 - [ ] HUMAN: approve `out/detect_preview.png` (regenerate after filing real empty frames: they become the backgrounds)
 - [ ] HUMAN: run `detect_train.py` in own terminal (~4 s/step → 2000 steps ≈ 2¼ h), then `export_detector.py`

@@ -146,6 +146,7 @@
 - Error: first speed-up made rainbow-mosaic backgrounds -> luminance-dominant blurred blobs
 - Flaky perf test under parallel load -> best-of-5
 - Dev server was stopped by the low-memory guard; not restarted (owner runs it)
+- 2026-09-28: owner captured frames; sort_detect filed 35 card + 23 empty (names say `none` = no printing picked, not no card). Smoke model baseline on all 58: present 63.8% (21/23 empties called card: it boxes the face), corner err 81% -> needs the full training run with real frames
 
 ## 5-Question Reboot Check (updated 2026-09-26, evening)
 | Question | Answer |

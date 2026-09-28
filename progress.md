@@ -150,10 +150,12 @@
 - Owner trained 2000 steps: held-out real present 100% (0 FP / 0 FN), corner err 5.1% (bar 3%), 9.8 px mean at 1080p; synth 1.9%. Plateaued from step 1250. detect_eval now also prints pixel error
 - Owner: remove the middle guide box (keep green debug box) -> done; owner: reactions fire twice per card -> hysteresis + 1.5 s forget + lost counter; my automation tab (2nd app instance on the same camera) closed
 
+- Owner: squash merge to main -> 3 squash commits (card detection, tier tuning, meme reactions)
+
 ## 5-Question Reboot Check (updated 2026-09-26, evening)
 | Question | Answer |
 |----------|--------|
-| Where am I? | Phases 0-5 on main; card detection code complete on `feat/card-detection`, waiting for the owner's real frames + training run |
+| Where am I? | Phases 0-5 + card detection + tier tuning + 5-tier meme reactions on main (squash-merged 2026-09-28); detection acceptance partly open |
 | Where am I going? | Phase 4 price card → Phase 5 reactions → (Phase 6 OCR if needed) → Phase 7 polish; Phase 3 accuracy backlog before the demo |
 | What's the goal? | Identify held-up card printing in < 300 ms p95 with ≥ 90% top-1 and 0 wrong accepts; show price; react |
 | What have I learned? | Test on real inputs early; fine-tuning + realistic augmentation fixed a 0% start; after fine-tuning, clean refs beat augmented refs; triggers must not depend on a static background with a user-facing webcam |

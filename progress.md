@@ -138,10 +138,22 @@
 - Error: bash heredocs containing apostrophes failed to parse ("unexpected EOF while looking for matching") → wrote those files with Write/Edit instead
 - Quirk: automation tab is hidden → rAF paused, timers throttled (count-up $0.00 in screenshots); verified via computed styles
 
+## Session: 2026-09-27 — card detection (feat/card-detection)
+- Owner: Phase 5 "looks correct" -> squash-merged to main (310d5d7); new request: detect the card anywhere + debug bounding box; chose trained ML detector + guide-box fallback
+- PLAN 5.7 written; M1 capture/label tool (F) + sort_detect.py; M2 synth/model/train/export; M3 homography.ts + worker + loop + debug overlay
+- Profiling: synth 425 -> 56 ms/sample; frozen early blocks; ~4 s/step
+- Error: detector training at batch 24 timed out (>11 s/step) -> profiled, fixed data gen
+- Error: first speed-up made rainbow-mosaic backgrounds -> luminance-dominant blurred blobs
+- Flaky perf test under parallel load -> best-of-5
+- Dev server was stopped by the low-memory guard; not restarted (owner runs it)
+- 2026-09-28: owner captured frames; sort_detect filed 35 card + 23 empty (names say `none` = no printing picked, not no card). Smoke model baseline on all 58: present 63.8% (21/23 empties called card: it boxes the face), corner err 81% -> needs the full training run with real frames
+- Owner trained 2000 steps: held-out real present 100% (0 FP / 0 FN), corner err 5.1% (bar 3%), 9.8 px mean at 1080p; synth 1.9%. Plateaued from step 1250. detect_eval now also prints pixel error
+- Owner: remove the middle guide box (keep green debug box) -> done; owner: reactions fire twice per card -> hysteresis + 1.5 s forget + lost counter; my automation tab (2nd app instance on the same camera) closed
+
 ## 5-Question Reboot Check (updated 2026-09-26, evening)
 | Question | Answer |
 |----------|--------|
-| Where am I? | Phases 0-5 on main; now card detection anywhere in the frame (ML detector, guide box fallback) on `feat/card-detection` |
+| Where am I? | Phases 0-5 on main; card detection code complete on `feat/card-detection`, waiting for the owner's real frames + training run |
 | Where am I going? | Phase 4 price card → Phase 5 reactions → (Phase 6 OCR if needed) → Phase 7 polish; Phase 3 accuracy backlog before the demo |
 | What's the goal? | Identify held-up card printing in < 300 ms p95 with ≥ 90% top-1 and 0 wrong accepts; show price; react |
 | What have I learned? | Test on real inputs early; fine-tuning + realistic augmentation fixed a 0% start; after fine-tuning, clean refs beat augmented refs; triggers must not depend on a static background with a user-facing webcam |

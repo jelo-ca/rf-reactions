@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { guideBoxVideoRect, videoRectToElement, videoToElementTransform } from "./guideBox";
+import { guideBoxVideoRect, videoPointToStage, videoRectToElement, videoToElementTransform } from "./guideBox";
 
 describe("guideBoxVideoRect", () => {
   it("is centered, 55% tall, 224:320 aspect in video pixels", () => {
@@ -50,5 +50,16 @@ describe("videoRectToElement", () => {
       expect(r.x + r.w / 2).toBeCloseTo(400, 0);
       expect(r.y + r.h / 2).toBeCloseTo(300, 0);
     }
+  });
+});
+
+describe("videoPointToStage", () => {
+  // 1920×1080 video in a 960×540 element (scale 0.5), inset 40px by the ring light
+  const xf = { scale: 0.5, offsetX: 0, offsetY: 0, left: 40, top: 40, elW: 960 };
+  it("maps and offsets", () => {
+    expect(videoPointToStage([100, 200], xf, false)).toEqual([90, 140]);
+  });
+  it("mirrors horizontally inside the element", () => {
+    expect(videoPointToStage([100, 200], xf, true)).toEqual([40 + 960 - 50, 140]);
   });
 });

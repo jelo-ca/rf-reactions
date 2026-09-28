@@ -81,6 +81,19 @@ Full specs + acceptance criteria live in `PLAN.md`. Do not start next phase unti
 - [x] Owner live check done; squash-merged to `main` (owner switched from `--no-ff` to squash; `--no-ff` version kept in local `backup/pre-squash-phase-4`)
 - **Status:** complete — 80 pipeline + 74 app tests pass, `tsc` / `oxlint` clean, `npm run build` green
 
+### Card detection anywhere in the frame (PLAN §5.7, owner request 2026-09-27) — branch `feat/card-detection`
+Owner choices: trained ML detector (not a classical edge/quad finder); guide box kept as fallback.
+- [x] M1 capture tool: F (in capture mode C) = freeze full frame, click 4 corners / 0 = no card → PNG + JSON; `sort_detect.py` files them into `data/detect/real/`
+- [ ] HUMAN: ≥ 40 empty-scene frames + ≥ 60 card frames — have 23 empty + 35 card (2026-09-28); `detect_eval.py` baseline (smoke model): present 63.8%, corner err 81% (boxes the face)
+- [x] M2 `detect_synth.py` (preview = `python detect_synth.py` → `out/detect_preview.png`) · `detect_model.py` · `detect_train.py` · `export_detector.py` (ONNX parity 3.6e-7, 13.3 MB); 94 pipeline tests
+- [ ] HUMAN: approve `out/detect_preview.png` (regenerate after filing real empty frames: they become the backgrounds)
+- [x] HUMAN ran `detect_train.py` (2000 steps) + export (2026-09-28). Held-out real (11 card / 7 empty): present **100%**, corner err **5.1%** of card height (9.8 px at 1920×1080, ~2 px at the 384×224 input) vs bar 3% → reported to owner, bar not changed
+- [ ] Recognition check on detector crops needs frames captured *with a printing picked* (all 58 have printingId null)
+- [x] M3 `homography.ts` (OpenCV fixtures) · worker `initDetector/detect` + quad `recognize` · `region.ts` + loop on warped card + guide-box fallback · debug quad overlay + panel rows; 123 app tests
+- [ ] Browser check with the real model (detector p95, fps, overlay alignment incl. mirror/ring light)
+- [ ] Acceptance (PLAN §5.7): present acc ≥ 95%, corner err ≤ 3% card height, top-1 not worse than guide box, detector p95 ≤ 30 ms, fallback works
+- **Status:** code complete; waiting for real frames + a full training run. `app/public/models/detector.onnx` is currently a 50-step smoke model (synthetic-only)
+
 ### Backlog: Nexus Night pack mode (switched off 2026-09-27, owner)
 - [ ] Find a source that says which printings come out of Nexus Night packs (Riftcodex misses some; TCGCSV doesn't mark them Promo) — 39 TCGCSV-only OPP candidates listed in NOTES.md
 - [ ] Add missing printings (manual printings CSV or new source) + real images (H7), then set `NEXUS_NIGHT_ENABLED: true`

@@ -53,3 +53,21 @@ export function videoRectToElement(
   const { scale, offsetX, offsetY } = videoToElementTransform(videoW, videoH, elW, elH, fit);
   return { x: offsetX + r.x * scale, y: offsetY + r.y * scale, w: r.w * scale, h: r.h * scale };
 }
+
+/** Video → stage transform for overlays drawn over the <video> (inset by the ring-light padding). */
+export interface StageTransform {
+  scale: number;
+  offsetX: number;
+  offsetY: number;
+  left: number; // video element offset inside the stage
+  top: number;
+  elW: number; // video element width (for mirroring)
+}
+
+/** A video-pixel point → stage pixels, honouring object-fit and the CSS mirror (scaleX(-1)). */
+export function videoPointToStage(p: readonly [number, number], xf: StageTransform, mirrored: boolean): [number, number] {
+  let x = xf.offsetX + p[0] * xf.scale;
+  const y = xf.offsetY + p[1] * xf.scale;
+  if (mirrored) x = xf.elW - x;
+  return [x + xf.left, y + xf.top];
+}

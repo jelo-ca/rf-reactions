@@ -6,12 +6,13 @@ import { Timings, type Summary } from "../metrics/rolling";
 import type { RecognizeFn } from "../stability/useStability";
 import type { PackMode, RecognitionResult } from "../types";
 import { transfer, vision } from "./client";
+import type { Quad } from "./homography";
 import type { InitInfo } from "./worker";
 
 export interface RecognizerState {
   info: InitInfo | null;
   initError: string | null;
-  last: (RecognitionResult & { cropMs: number; totalMs: number }) | null;
+  last: (RecognitionResult & { cropMs: number; totalMs: number; source: "detector" | "guide" }) | null;
   /** Printing currently shown (accepted, or chosen in the chooser). */
   shownId: string | null;
   askOptions: string[] | null;
@@ -41,13 +42,14 @@ export function useRecognizer(videoRef: RefObject<HTMLVideoElement | null>, pack
 
   const ready = st.info !== null;
 
-  const recognize: RecognizeFn = useCallback(async () => {
+  /** `quad` = detected card corners (video pixels) → warp in the worker; null → guide-box crop. */
+  const recognize: RecognizeFn = useCallback(async (quad: Quad | null) => {
     const video = videoRef.current;
     if (!ready || !video) return "rejected";
     const t0 = performance.now();
-    const bmp = await cropForModel(video);
+    const bmp = quad ? await createImageBitmap(video) : await cropForModel(video);
     const cropMs = performance.now() - t0;
-    const r = await vision().recognize(transfer(bmp), packModeRef.current);
+    const r = await vision().recognize(transfer(bmp), packModeRef.current, quad ?? undefined);
     const totalMs = performance.now() - t0;
 
     const t = timings.current;
@@ -59,7 +61,7 @@ export function useRecognizer(videoRef: RefObject<HTMLVideoElement | null>, pack
     if (r.status === "accepted") shownRef.current = r.best!.printingId;
     setSt((s) => ({
       ...s,
-      last: { ...r, cropMs, totalMs },
+      last: { ...r, cropMs, totalMs, source: quad ? "detector" : "guide" },
       summary: t.summary(),
       shownId: r.status === "accepted" ? r.best!.printingId : s.shownId,
       askOptions: r.status === "ask" ? r.askOptions ?? null : null,

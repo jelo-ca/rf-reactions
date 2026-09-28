@@ -39,10 +39,11 @@ export function DebugPanel({ stats, packMode, videoSize, rec, detector, cardById
     ],
     [
       "watching",
-      `${stats.detection.source === "detector" ? "detected card" : "guide box"}${stats.detection.present === null ? "" : ` · p=${stats.detection.present.toFixed(2)}`} · ${ms(stats.detection.ms)}`,
+      `${stats.detection.source === "detector" ? "detected card" : stats.detection.source === "guide" ? "guide box (no detector)" : "no card"}${stats.detection.present === null ? "" : ` · p=${stats.detection.present.toFixed(2)}`} · ${ms(stats.detection.ms)}`,
       stats.detection.source === "detector",
     ],
     ["last crop", last ? last.source : "—"],
+    ["card lost → forgotten", String(stats.detection.lostResets)],
     ["backend", rec.info ? `${rec.info.backend} · ${rec.info.threads}t` : "loading…"],
     ["load / warm-up", rec.info ? `${ms(rec.info.loadMs)} / ${ms(rec.info.warmupMs)}` : "—"],
     ["fps · video", `${stats.fps} · ${videoSize.w}×${videoSize.h}`],

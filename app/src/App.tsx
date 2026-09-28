@@ -97,7 +97,12 @@ export default function App() {
     setStarted(true);
   }, []);
   const detector = useDetector(videoRef, rec.ready);
-  const { stats, rescan, pick } = useStability(videoRef, !!stream && rec.ready && started, rec.recognize, onReact, detector.detect);
+  // The middle guide box is gone when the detector is loaded (owner, 2026-09-28): the card can be
+  // anywhere. It comes back, as box + fallback region, only if the detector model is missing.
+  const guideMode = detector.info !== null && !detector.info.available;
+  const { stats, rescan, pick } = useStability(
+    videoRef, !!stream && rec.ready && started, rec.recognize, onReact, detector.detect, guideMode,
+  );
   const onPick = useCallback(
     (printingId: string) => {
       rec.choose(printingId);
@@ -131,6 +136,16 @@ export default function App() {
     : phase === "RECOGNIZING" || phase === "ASKING" ? "busy"
     : phase === "COOLDOWN" && stats.state.outcome === "unsure" ? "failed"
     : "idle";
+  const noCard = !guideMode && stats.detection.source === "none";
+  const status =
+    phase === "CANDIDATE" ? "Hold still…"
+    : phase === "RECOGNIZING" ? "Recognizing…"
+    : phase === "ASKING" ? "Which one?"
+    : phase === "COOLDOWN" && boxClass === "failed" ? "Not sure - adjust the card"
+    : phase === "COOLDOWN" && flash ? "Got it!"
+    : noCard ? "Show a card"
+    : phase === "COOLDOWN" ? "Next card"
+    : guideMode ? "Place card here" : "Show a card";
   // Set on accept or chooser pick (when the reaction fires); kept until the next card replaces it.
   const shown = rec.shownId ? cardById.get(rec.shownId) : undefined;
   // Debug chip keeps the Phase 3 behaviour: only right after an accept, with that result's reason.
@@ -178,18 +193,18 @@ export default function App() {
         )}
         {!rec.ready && !rec.initError && <p className="loading">Loading recognizer…</p>}
         <video ref={videoRef} autoPlay playsInline muted className={mirror ? "mirrored" : ""} style={{ objectFit: FIT }} />
-        {overlay && (
+        {guideMode && overlay && (
           <div
             className={`guide ${boxClass}`}
             style={{ left: overlay.x, top: overlay.y, width: overlay.w, height: overlay.h }}
           >
-            <span className="guide-label">
-              {phase === "IDLE" && "Place card here"}
-              {phase === "CANDIDATE" && "Hold still…"}
-              {phase === "RECOGNIZING" && "Recognizing…"}
-              {phase === "ASKING" && "Which one?"}
-              {phase === "COOLDOWN" && (boxClass === "failed" ? "Not sure - adjust the card" : flash ? "Got it!" : "Next card")}
-            </span>
+            <span className="guide-label">{status}</span>
+            {packMode === "nexus_night" && <span className="guide-badge">Nexus Night</span>}
+          </div>
+        )}
+        {!guideMode && started && (
+          <div className={`status-pill ${boxClass}`} role="status">
+            {status}
             {packMode === "nexus_night" && <span className="guide-badge">Nexus Night</span>}
           </div>
         )}

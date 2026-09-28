@@ -15,7 +15,7 @@ export function DetectionOverlay({ detection, xf, mirrored }: Props) {
   if (!quad) {
     return (
       <div className="detect-none" aria-hidden="true">
-        no card found{present === null ? "" : ` (p=${present.toFixed(2)})`} → guide box
+        no card found{present === null ? "" : ` (p=${present.toFixed(2)})`}
       </div>
     );
   }

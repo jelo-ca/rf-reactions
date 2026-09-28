@@ -39,12 +39,15 @@ export const CFG = {
   SHARP_W: 112, // sharpness crop, only when motion is low
   SHARP_H: 160,
 
-  // Card detector (§5.7): full frame → card corners; the guide box is the fallback.
+  // Card detector (§5.7): full frame → card corners. The guide box is used only when the detector is missing.
   DETECT_W: 384, // detector input (frame stretched), mirrors pipeline/config.py
   DETECT_H: 224,
   DETECT_EVERY_MS: 100, // how often the detector runs (it is skipped while one is in flight)
-  DETECT_PRESENT_T: 0.5, // present probability to trust the corners
-  DETECT_STALE_MS: 400, // older detections are ignored → guide box
+  DETECT_PRESENT_T: 0.5, // present probability to start tracking a card
+  DETECT_KEEP_T: 0.3, // …and to keep tracking it (hysteresis: brief dips while held don't drop it)
+  DETECT_STALE_MS: 400, // older detections are ignored → no card
+  DETECT_LOST_MS: 1500, // no card this long → forget the last checked card (a duplicate pull reacts again).
+  // Shorter made one held card react twice when the detector briefly lost it.
   DETECT_JITTER_T: 0.03, // corner movement between detections (fraction of card height) that counts as motion
   DETECT_FRAME_W: 640, // main-thread frame downscale used to warp the card for stability signals
 

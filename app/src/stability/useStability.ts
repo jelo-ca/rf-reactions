@@ -22,6 +22,7 @@ export interface DetectionStats {
   quad: Quad | null; // video pixels, latest detection (even when below the threshold: null then)
   ms: number | null;
   moving: boolean;
+  lostResets: number; // times a card was forgotten after DETECT_LOST_MS without one (debug: double reactions)
 }
 
 export interface StabilityStats {
@@ -44,6 +45,7 @@ export function useStability(
   recognize: RecognizeFn,
   onReact: () => void,
   detect: DetectFn | null = null,
+  guideFallback = false, // true only once the detector is known to be missing → watch the guide box
 ) {
   const [stats, setStats] = useState<StabilityStats>({
     state: initialState,
@@ -54,7 +56,7 @@ export function useStability(
     lastStillToResultMs: null,
     lastEffect: null,
     reactions: 0,
-    detection: { enabled: false, source: "guide", present: null, quad: null, ms: null, moving: false },
+    detection: { enabled: false, source: "none", present: null, quad: null, ms: null, moving: false, lostResets: 0 },
   });
 
   const r = useRef({
@@ -76,10 +78,13 @@ export function useStability(
     recognize,
     onReact,
     detect,
+    guideFallback,
     det: null as Detection | null,
     detInFlight: false,
     lastDetectAt: 0,
     detMoving: false,
+    lastCardAt: 0,
+    lostResets: 0,
     region: { source: "guide", quad: null } as Region,
     frame: null as CanvasRenderingContext2D | null, // downscaled full frame for warping the card
   });
@@ -87,8 +92,9 @@ export function useStability(
     r.current.recognize = recognize;
     r.current.onReact = onReact;
     r.current.detect = detect;
+    r.current.guideFallback = guideFallback;
     if (!detect) r.current.det = null;
-  }, [recognize, onReact, detect]);
+  }, [recognize, onReact, detect, guideFallback]);
 
   /** Forget the last checked view so the current one is checked again (B). */
   const rescan = useCallback(() => {
@@ -148,7 +154,7 @@ export function useStability(
             .then((res) => {
               const d: Detection = {
                 present: res.present,
-                quad: res.present >= CFG.DETECT_PRESENT_T ? toVideoQuad(res.corners, vw, vh) : null,
+                quad: res.present >= CFG.DETECT_KEEP_T ? toVideoQuad(res.corners, vw, vh) : null,
                 at: now,
                 ms: res.ms,
               };
@@ -160,24 +166,9 @@ export function useStability(
               s.detInFlight = false;
             });
         }
-        const region = chooseRegion(s.det, now, CFG);
+        // While the detector is still loading there is nothing to watch (no invisible guide box).
+        const region = chooseRegion(s.det, now, CFG, !s.guideFallback, s.region.source === "detector");
         s.region = region;
-        let gray: Float32Array;
-        let sharpGray: (() => Float32Array) | null = null;
-        if (region.source === "detector") {
-          const fw = CFG.DETECT_FRAME_W;
-          const fh = Math.round((fw * vh) / vw);
-          if (!s.frame || s.frame.canvas.height !== fh) s.frame = makeCtx(fw, fh);
-          s.frame.drawImage(video, 0, 0, fw, fh);
-          const full = toGray(s.frame.getImageData(0, 0, fw, fh).data, fw, fh);
-          const q = scaleQuad(region.quad, fw / vw, fh / vh);
-          gray = warpGray(full, fw, fh, q, CFG.TINY_W, CFG.TINY_H);
-          sharpGray = () => warpGray(full, fw, fh, q, CFG.SHARP_W, CFG.SHARP_H);
-        } else {
-          const box = guideBoxVideoRect(vw, vh, CFG.GUIDE_HEIGHT_FRAC, CFG.MODEL_W, CFG.MODEL_H);
-          gray = grab(s.tiny!, video, box, CFG.TINY_W, CFG.TINY_H);
-          sharpGray = () => grab(s.sharp!, video, box, CFG.SHARP_W, CFG.SHARP_H);
-        }
         s.frames++;
         if (s.wantRescan) {
           s.checked = null;
@@ -185,17 +176,49 @@ export function useStability(
           dispatch({ type: "reset" });
         }
         const ready = s.frames >= CFG.WARMUP_FRAMES;
-        const change = s.checked ? meanAbsDiff(gray, s.checked) : 255;
-        let motion = s.prev ? meanAbsDiff(gray, s.prev) : 255;
-        // The warped card looks the same while it slides across the frame; corner movement catches that.
-        if (region.source === "detector" && s.detMoving) motion = Math.max(motion, CFG.MOTION_T * 2);
-        s.prev = gray;
-        s.lastGray = gray;
-        const sharpness = wantsSharpness(s.machine, motion, CFG)
-          ? laplacianVariance(sharpGray(), CFG.SHARP_W, CFG.SHARP_H)
-          : null;
-        const signals = { change, motion, sharpness };
-        if (ready) dispatch({ type: "frame", signals });
+        let signals: FrameSignals;
+        if (region.source === "none") {
+          // Detector on, no card anywhere: nothing to watch. Once the card has been gone a while,
+          // forget it, so the next card (even a duplicate of the same printing) is checked again.
+          // Never mid-recognition or while the "which one?" chooser is open.
+          const busy = s.machine.phase === "RECOGNIZING" || s.machine.phase === "ASKING";
+          if (s.checked && !busy && now - s.lastCardAt >= CFG.DETECT_LOST_MS) {
+            s.checked = null;
+            s.prev = null;
+            s.lostResets++;
+            dispatch({ type: "reset" });
+          }
+          signals = { change: 0, motion: 0, sharpness: null };
+        } else {
+          let gray: Float32Array;
+          let sharpGray: () => Float32Array;
+          if (region.source === "detector") {
+            s.lastCardAt = now;
+            const fw = CFG.DETECT_FRAME_W;
+            const fh = Math.round((fw * vh) / vw);
+            if (!s.frame || s.frame.canvas.height !== fh) s.frame = makeCtx(fw, fh);
+            s.frame.drawImage(video, 0, 0, fw, fh);
+            const full = toGray(s.frame.getImageData(0, 0, fw, fh).data, fw, fh);
+            const q = scaleQuad(region.quad, fw / vw, fh / vh);
+            gray = warpGray(full, fw, fh, q, CFG.TINY_W, CFG.TINY_H);
+            sharpGray = () => warpGray(full, fw, fh, q, CFG.SHARP_W, CFG.SHARP_H);
+          } else {
+            const box = guideBoxVideoRect(vw, vh, CFG.GUIDE_HEIGHT_FRAC, CFG.MODEL_W, CFG.MODEL_H);
+            gray = grab(s.tiny!, video, box, CFG.TINY_W, CFG.TINY_H);
+            sharpGray = () => grab(s.sharp!, video, box, CFG.SHARP_W, CFG.SHARP_H);
+          }
+          const change = s.checked ? meanAbsDiff(gray, s.checked) : 255;
+          let motion = s.prev ? meanAbsDiff(gray, s.prev) : 255;
+          // The warped card looks the same while it slides across the frame; corner movement catches that.
+          if (region.source === "detector" && s.detMoving) motion = Math.max(motion, CFG.MOTION_T * 2);
+          s.prev = gray;
+          s.lastGray = gray;
+          const sharpness = wantsSharpness(s.machine, motion, CFG)
+            ? laplacianVariance(sharpGray(), CFG.SHARP_W, CFG.SHARP_H)
+            : null;
+          signals = { change, motion, sharpness };
+          if (ready) dispatch({ type: "frame", signals });
+        }
 
         s.fpsWindow.push(now);
         while (s.fpsWindow.length && now - s.fpsWindow[0] > 1000) s.fpsWindow.shift();
@@ -216,6 +239,7 @@ export function useStability(
               quad: s.det?.quad ?? null,
               ms: s.det?.ms ?? null,
               moving: s.detMoving,
+              lostResets: s.lostResets,
             },
           });
         }

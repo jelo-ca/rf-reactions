@@ -109,7 +109,20 @@ body { background: var(--bg); color: var(--text); }
 /* Debug: detected card outline (PLAN §5.7) */
 .detect-overlay { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; z-index: 40; }
 .detect-overlay polygon { fill: rgba(61, 220, 132, 0.08); stroke: var(--ok); stroke-width: 3; stroke-linejoin: round; }
-.detect-overlay.guide polygon { stroke: var(--muted); stroke-dasharray: 8 6; fill: none; }
+.detect-overlay.guide polygon, .detect-overlay.none polygon { stroke: var(--muted); stroke-dasharray: 8 6; fill: none; }
+
+/* Status line that replaces the middle guide box when the detector is loaded */
+.status-pill {
+  position: absolute; left: 50%; bottom: 16px; translate: -50% 0; z-index: 45; pointer-events: none;
+  padding: 6px 14px; border-radius: 999px; background: var(--panel); color: var(--text);
+  border: 2px solid var(--idle); font-size: 15px; font-weight: 600; white-space: nowrap;
+  transition: border-color 120ms ease;
+}
+.status-pill.hold { border-color: var(--hold); }
+.status-pill.busy { border-color: var(--busy); }
+.status-pill.recognized { border-color: var(--ok); box-shadow: 0 0 18px var(--ok); }
+.status-pill.failed { border-color: var(--bad); }
+@media (prefers-reduced-motion: reduce) { .status-pill { transition: none; } }
 .detect-overlay circle { fill: var(--hold); stroke: #000; stroke-width: 1.5; }
 .detect-overlay text {
   fill: #fff; font: 700 13px ui-monospace, Consolas, monospace; text-anchor: middle;

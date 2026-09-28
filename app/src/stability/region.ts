@@ -1,5 +1,7 @@
 // Which part of the frame the stability loop watches (PLAN.md §5.7): the detected card when the
-// detector is confident and recent, else the guide box (fallback). Pure; unit tested.
+// detector is confident and recent. With the detector loaded there is no guide box (owner,
+// 2026-09-27): no card = nothing to watch. The guide box is only used when the detector is missing.
+// Pure; unit tested.
 import type { Quad } from "../vision/homography";
 import { quadJitter } from "../vision/homography";
 
@@ -10,19 +12,28 @@ export interface Detection {
   ms: number; // detector time (worker, incl. preprocessing)
 }
 
-export type Region = { source: "detector"; quad: Quad } | { source: "guide"; quad: null };
+export type Region =
+  | { source: "detector"; quad: Quad }
+  | { source: "guide"; quad: null } // detector unavailable: watch the guide box
+  | { source: "none"; quad: null }; // detector running, no card in view
 
 export interface RegionConfig {
   DETECT_PRESENT_T: number;
+  DETECT_KEEP_T: number;
   DETECT_STALE_MS: number;
   DETECT_JITTER_T: number;
 }
 
-export function chooseRegion(det: Detection | null, now: number, cfg: RegionConfig): Region {
-  if (det && det.quad && det.present >= cfg.DETECT_PRESENT_T && now - det.at <= cfg.DETECT_STALE_MS) {
+/** `tracking` = a card was being watched last frame: then the lower DETECT_KEEP_T applies (hysteresis). */
+export function chooseRegion(
+  det: Detection | null, now: number, cfg: RegionConfig, detectorOn: boolean, tracking = false,
+): Region {
+  if (!detectorOn) return { source: "guide", quad: null };
+  const threshold = tracking ? cfg.DETECT_KEEP_T : cfg.DETECT_PRESENT_T;
+  if (det && det.quad && det.present >= threshold && now - det.at <= cfg.DETECT_STALE_MS) {
     return { source: "detector", quad: det.quad };
   }
-  return { source: "guide", quad: null };
+  return { source: "none", quad: null };
 }
 
 /** True when the card's corners moved enough between two detections to count as "not still". */

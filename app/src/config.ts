@@ -23,11 +23,12 @@ export const CFG = {
   // Off = always booster mode, N toggle hidden. Code + data kept; see task_plan.md backlog.
   NEXUS_NIGHT_ENABLED: false,
 
-  // Reactions (§8.2): how long each tier's effect stays up; index = tier. Tier 5 = the cinematic
-  // intro, after which it settles into a small persistent state until the next card.
-  REACTION_MS: [1700, 1500, 2000, 2800, 3600, 5200],
-  EPIC_IMPACT_MS: 2000, // tier 5: riser ends → bass drop, zoom punch, confetti storm
-  EPIC_COUNT_MS: 1400, // tier 5: price counts up from $0 after the impact
+  // Reactions (§8.2, reworked by the owner 2026-09-28): how long each tier's effect stays up; index = tier.
+  // 0 golf clap · 1 crowd OOOH · 2 mogging slow-mo replay · 3 air horns · 4 soyjak air horns (then a gold
+  // banner until the next card).
+  REACTION_MS: [2600, 2400, 4200, 3400, 6400],
+  EPIC_IMPACT_MS: 1800, // top tier: horn build-up ends → bass drop, deep fry, confetti storm, soyjaks go wild
+  EPIC_COUNT_MS: 1400, // top tier: price counts up from $0 after the impact
   REACTION_VOLUME: 0.8, // master gain for the synthesized sounds (0–1)
   SKIP_REPEAT_REACTION: true, // same printing twice in a row → no second reaction (a back-to-back duplicate pull stays quiet too)
 

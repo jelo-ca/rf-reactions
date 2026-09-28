@@ -4,7 +4,7 @@
 Build local web app that identifies a held-up Riftbound card (exact printing) in <300ms p95, shows its price, and fires a value-scaled reaction — per `PLAN.md` (source of truth).
 
 ## Current Phase
-**Card detection anywhere in the frame** (owner request, 2026-09-27) — trained ML detector, guide box kept as fallback; branch `feat/card-detection` off `main`.
+**Next: Phase 6/7 or the open items below** (owner to choose). On `main` (squash-merged 2026-09-28, owner's request): card detection (guide box removed; fallback only without a model), T-panel tier tuning + repeat guard, 5-tier meme reactions. Detection acceptance is **not** fully met (corner error 5.1% vs 3%; recognition-on-detector-crops check still needs frames with a printing picked).
 Phase 5 (comedic reactions) squash-merged to `main` after the owner's live check ("it looks correct").
 Phase 4 (price card) squash-merged to `main` (2026-09-27) after the owner's live check. Nexus Night pack mode is OFF (backlog).
 Phase 3 accepted as-is by the owner (2026-09-26): 77.8% top-1 / 0 wrong accepts on 18 in-sample photos is "acceptable right now"; accuracy items moved to the Phase 3 backlog below.
@@ -92,12 +92,16 @@ Owner choices: trained ML detector (not a classical edge/quad finder); guide box
 - [x] M3 `homography.ts` (OpenCV fixtures) · worker `initDetector/detect` + quad `recognize` · `region.ts` + loop on warped card + guide-box fallback · debug quad overlay + panel rows; 123 app tests
 - [ ] Browser check with the real model (detector p95, fps, overlay alignment incl. mirror/ring light)
 - [ ] Acceptance (PLAN §5.7): present acc ≥ 95%, corner err ≤ 3% card height, top-1 not worse than guide box, detector p95 ≤ 30 ms, fallback works
-- **Status:** code complete; waiting for real frames + a full training run. `app/public/models/detector.onnx` is currently a 50-step smoke model (synthetic-only)
+- **Status:** squash-merged to `main` at the owner's request (2026-09-28) with acceptance open: present 100% ✅, corner 5.1% ❌ (bar 3%), recognition check + browser p95 pending
 
 ### Tier tuning + repeat guard (owner, 2026-09-28) — branch `feat/tier-tuning` (stacked on `feat/card-detection`)
 - [x] T panel: live price-threshold editor, per-tier counts, per-browser override, Reset, Copy JSON
 - [x] No second reaction for the same printing twice in a row (`SKIP_REPEAT_REACTION`)
 - [ ] HUMAN: try the panel live; paste final thresholds into `tiers.json` if they should be the default
+
+### Reactions rework (owner, 2026-09-28) — branch `feat/meme-reactions` (stacked on `feat/tier-tuning`)
+- [x] 5 tiers: golf clap · crowd OOOH (1+2 merged) · mogging slow-mo replay · classic air horns · soyjak air horns; tiers.json, sounds, visuals, fx, tests (135)
+- [ ] HUMAN: listen/watch all 5 via T; say what to tweak
 
 ### Backlog: Nexus Night pack mode (switched off 2026-09-27, owner)
 - [ ] Find a source that says which printings come out of Nexus Night packs (Riftcodex misses some; TCGCSV doesn't mark them Promo) — 39 TCGCSV-only OPP candidates listed in NOTES.md

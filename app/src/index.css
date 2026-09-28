@@ -106,6 +106,17 @@ body { background: var(--bg); color: var(--text); }
 .capture kbd { border: 1px solid #444a58; border-radius: 3px; padding: 0 4px; }
 .error-inline { color: var(--bad); }
 
+/* Detector frame labeler (F in capture mode, PLAN §5.7) */
+.labeler { position: fixed; inset: 0; z-index: 90; background: #000; display: grid; grid-template-rows: 1fr auto; }
+.labeler img { width: 100%; height: 100%; object-fit: contain; cursor: crosshair; user-select: none; min-height: 0; }
+.labeler-marks { position: fixed; pointer-events: none; overflow: visible; }
+.labeler-marks polygon { fill: rgba(61, 220, 132, 0.12); stroke: #f5c542; stroke-width: 2; stroke-dasharray: 6 4; }
+.labeler-marks polygon.closed { stroke: #3ddc84; stroke-dasharray: none; }
+.labeler-marks circle { fill: #3ddc84; stroke: #000; stroke-width: 2; }
+.labeler-marks text { fill: #fff; font: 700 16px system-ui; paint-order: stroke; stroke: #000; stroke-width: 3; }
+.labeler-help { padding: 10px 16px; background: #14161c; color: #e8e9ee; font-size: 14px; text-align: center; }
+.labeler-help kbd { border: 1px solid #444a58; border-radius: 3px; padding: 0 4px; }
+
 .parity { padding: 24px; max-width: 900px; font-size: 14px; }
 .parity table { border-collapse: collapse; width: 100%; margin: 12px 0; font-family: ui-monospace, Consolas, monospace; }
 .parity th, .parity td { text-align: left; padding: 4px 10px; border-bottom: 1px solid #22242c; }

@@ -21,6 +21,7 @@ PRICES_CSV = PRICES_DIR / "prices.csv"
 UNMATCHED_CSV = PRICES_DIR / "unmatched.csv"
 MANUAL_OVERRIDES_CSV = PRICES_DIR / "manual_overrides.csv"
 EVAL_DIR = DATA / "eval"
+DETECT_REAL_DIR = DATA / "detect" / "real"  # labelled full webcam frames (F in capture mode), PLAN §5.7
 APP_PUBLIC = ROOT / "app" / "public"
 APP_DATA = APP_PUBLIC / "data"
 APP_IMAGES = APP_DATA / "images"

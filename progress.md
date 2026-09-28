@@ -148,6 +148,7 @@
 - Dev server was stopped by the low-memory guard; not restarted (owner runs it)
 - 2026-09-28: owner captured frames; sort_detect filed 35 card + 23 empty (names say `none` = no printing picked, not no card). Smoke model baseline on all 58: present 63.8% (21/23 empties called card: it boxes the face), corner err 81% -> needs the full training run with real frames
 - Owner trained 2000 steps: held-out real present 100% (0 FP / 0 FN), corner err 5.1% (bar 3%), 9.8 px mean at 1080p; synth 1.9%. Plateaued from step 1250. detect_eval now also prints pixel error
+- Owner: remove the middle guide box (keep green debug box) -> done; owner: reactions fire twice per card -> hysteresis + 1.5 s forget + lost counter; my automation tab (2nd app instance on the same camera) closed
 
 ## 5-Question Reboot Check (updated 2026-09-26, evening)
 | Question | Answer |

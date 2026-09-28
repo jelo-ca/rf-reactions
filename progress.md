@@ -141,7 +141,7 @@
 ## 5-Question Reboot Check (updated 2026-09-26, evening)
 | Question | Answer |
 |----------|--------|
-| Where am I? | Phase 5 reactions (comedic tiers) built on `feat/phase-5-reactions`, waiting for the owner live check; Phase 4 on main |
+| Where am I? | Phases 0-5 on main; now card detection anywhere in the frame (ML detector, guide box fallback) on `feat/card-detection` |
 | Where am I going? | Phase 4 price card → Phase 5 reactions → (Phase 6 OCR if needed) → Phase 7 polish; Phase 3 accuracy backlog before the demo |
 | What's the goal? | Identify held-up card printing in < 300 ms p95 with ≥ 90% top-1 and 0 wrong accepts; show price; react |
 | What have I learned? | Test on real inputs early; fine-tuning + realistic augmentation fixed a 0% start; after fine-tuning, clean refs beat augmented refs; triggers must not depend on a static background with a user-facing webcam |

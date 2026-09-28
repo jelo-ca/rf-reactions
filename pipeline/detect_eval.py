@@ -39,15 +39,18 @@ def main() -> None:
     said = prob > config.DETECT_PRESENT_T
     truth = present > 0.5
 
-    rows, errs = [], []
+    rows, errs, pxs, heights = [], [], [], []
     for i, f in enumerate(frames):
         err = None
         if truth[i]:
             scale = np.array([f.width, f.height], np.float32)
             gt, pr = corners[i].numpy() * scale, pred[i].numpy() * scale
             card_h = (np.linalg.norm(gt[3] - gt[0]) + np.linalg.norm(gt[2] - gt[1])) / 2
-            err = float(np.linalg.norm(pr - gt, axis=1).mean() / card_h)
+            px = float(np.linalg.norm(pr - gt, axis=1).mean())
+            err = px / card_h
             errs.append(err)
+            pxs.append(px)
+            heights.append(card_h)
         rows.append((f, float(prob[i]), err))
 
     acc = float((said == truth).float().mean())
@@ -58,6 +61,7 @@ def main() -> None:
     if errs:
         print(f"corner error: mean {np.mean(errs):.1%}, median {np.median(errs):.1%}, worst {max(errs):.1%} of card height   "
               f"bar <= {ACCEPT_CORNER_ERR:.0%}")
+        print(f"  in frame pixels: mean {np.mean(pxs):.1f} px, worst {max(pxs):.1f} px; card heights {min(heights):.0f}-{max(heights):.0f} px")
     sheet(rows, pred)
 
 

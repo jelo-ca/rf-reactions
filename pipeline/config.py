@@ -99,3 +99,21 @@ EMBED_WARN_MB = 25
 UI_IMAGE_W, UI_IMAGE_H = 372, 520  # price-card UI images (JPEG), half the 744×1039 source
 UI_IMAGE_QUALITY = 85
 PARITY_COUNT = 5
+
+# --- Card detector (PLAN §5.7) -------------------------------------------------
+# Full webcam frame stretched to DETECT_W×DETECT_H (landscape, multiples of 32); mirror app/src/config.ts.
+DETECT_W, DETECT_H = 384, 224
+DETECT_STRIDE = 8                  # heatmap cell = 8×8 input pixels → 48×28 heatmaps
+DETECT_CARD_ASPECT = 63 / 88       # card width / height
+DETECT_CARD_H = (0.22, 0.95)       # synthetic card height as a fraction of the frame height
+DETECT_ROTATE_DEG = 35
+DETECT_PERSPECTIVE = 0.08          # max corner jitter as a fraction of the card height
+DETECT_EMPTY_P = 0.2               # synthetic frames with no card
+DETECT_HAND_P = 0.75
+DETECT_DISTRACTOR_P = 0.5          # non-card rectangles / blobs (phones, books, posters)
+DETECT_REAL_P = 0.3                # share of each batch drawn from real labelled train frames (when any)
+DETECT_VAL_EVERY = 3               # every 3rd real frame (by capture time) is held out for validation
+DETECT_SIGMA = 1.0                 # target heatmap Gaussian, in cells
+DETECT_PRESENT_T = 0.5             # present probability threshold (mirror app config)
+DETECT_WEIGHTS = OUT_DIR / "detect" / "best.pt"
+APP_DETECTOR = APP_PUBLIC / "models" / "detector.onnx"

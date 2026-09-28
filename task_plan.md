@@ -99,6 +99,10 @@ Owner choices: trained ML detector (not a classical edge/quad finder); guide box
 - [x] No second reaction for the same printing twice in a row (`SKIP_REPEAT_REACTION`)
 - [ ] HUMAN: try the panel live; paste final thresholds into `tiers.json` if they should be the default
 
+### Reactions rework (owner, 2026-09-28) — branch `feat/meme-reactions` (stacked on `feat/tier-tuning`)
+- [x] 5 tiers: golf clap · crowd OOOH (1+2 merged) · mogging slow-mo replay · classic air horns · soyjak air horns; tiers.json, sounds, visuals, fx, tests (135)
+- [ ] HUMAN: listen/watch all 5 via T; say what to tweak
+
 ### Backlog: Nexus Night pack mode (switched off 2026-09-27, owner)
 - [ ] Find a source that says which printings come out of Nexus Night packs (Riftcodex misses some; TCGCSV doesn't mark them Promo) — 39 TCGCSV-only OPP candidates listed in NOTES.md
 - [ ] Add missing printings (manual printings CSV or new source) + real images (H7), then set `NEXUS_NIGHT_ENABLED: true`

@@ -128,119 +128,176 @@ function distortion(c: AudioContext, amount: number): WaveShaperNode {
   return w;
 }
 
-// ---- tiers ----
+// ---- tiers (reworked by the owner 2026-09-28) ----
 
-/** Tier 0 — golf clap: three slow, polite, fading claps. */
-const golfClap: Synth = (c, out, t0) => {
-  [0, 0.62, 1.24].forEach((at, i) => {
-    const vol = 0.55 - i * 0.12;
-    for (const flam of [0, 0.009, 0.02]) {
-      // one clap = a few transients a few ms apart
-      const t = t0 + at + flam;
-      noiseSrc(c, t, 0.12)
-        .connect(filter(c, "bandpass", 1400, 1.1))
-        .connect(filter(c, "highpass", 700))
-        .connect(env(c, t, vol, 0.002, 0.004, 0.07))
-        .connect(out);
+let room: AudioBuffer | null = null;
+
+/** A small room: stereo decaying noise impulse (generated, no files) for crowds and the slow-mo voice. */
+function reverb(c: AudioContext, seconds: number, wet: number, out: AudioNode): AudioNode {
+  if (!room || room.sampleRate !== c.sampleRate) {
+    const n = Math.floor(c.sampleRate * 2.5);
+    room = c.createBuffer(2, n, c.sampleRate);
+    for (let ch = 0; ch < 2; ch++) {
+      const d = room.getChannelData(ch);
+      for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / n, 3.2);
     }
-  });
-};
+  }
+  const input = c.createGain();
+  const conv = c.createConvolver();
+  conv.buffer = room;
+  const wetG = c.createGain();
+  wetG.gain.value = wet;
+  const tail = c.createGain(); // shorten the room by fading the wet tail
+  tail.gain.setValueAtTime(1, c.currentTime + seconds);
+  tail.gain.linearRampToValueAtTime(0, c.currentTime + seconds + 1.5);
+  input.connect(out);
+  input.connect(conv).connect(wetG).connect(tail).connect(out);
+  return input;
+}
 
-/** Tier 1 — participation trophy: kazoo "doo-doot". */
-const kazoo: Synth = (c, out, t0) => {
-  const notes: [number, number, number][] = [[0, 0.16, 349.2], [0.2, 0.34, 440]];
-  for (const [at, dur, f] of notes) {
-    const t = t0 + at;
-    const o = osc(c, "sawtooth", f, t, dur + 0.1);
-    wobble(c, o.frequency, "sine", 7, 9, t, dur + 0.1);
-    o.connect(distortion(c, 8))
-      .connect(filter(c, "bandpass", 1300, 2.5))
-      .connect(env(c, t, 0.5, 0.02, dur - 0.06, 0.06))
+/** One hand clap: two quick noise transients through a palm-sized resonance. */
+function clap(c: AudioContext, out: AudioNode, t: number, vol: number, tone: number) {
+  for (const flam of [0, 0.004 + Math.random() * 0.006]) {
+    noiseSrc(c, t + flam, 0.09)
+      .connect(filter(c, "bandpass", tone, 0.9))
+      .connect(filter(c, "highpass", 500))
+      .connect(env(c, t + flam, vol * (flam ? 0.6 : 1), 0.0015, 0.003, 0.05 + Math.random() * 0.03))
       .connect(out);
   }
-};
+}
 
-/** Tier 2 — sitcom studio audience "OHHHH": detuned voices gliding up through "oh" formants. */
-const sitcomOh: Synth = (c, out, t0) => {
-  const bus = env(c, t0, 0.35, 0.25, 0.7, 0.7);
-  const f1 = filter(c, "bandpass", 480, 4);
-  const f2 = filter(c, "bandpass", 820, 5);
-  f1.connect(bus);
-  f2.connect(bus);
-  bus.connect(out);
-  for (let i = 0; i < 10; i++) {
-    const base = 140 + Math.random() * 150;
-    const o = osc(c, "sawtooth", base, t0, 1.8);
-    o.frequency.exponentialRampToValueAtTime(base * 1.22, t0 + 0.9);
-    o.frequency.exponentialRampToValueAtTime(base * 1.1, t0 + 1.6);
-    o.connect(f1);
-    o.connect(f2);
-  }
-  noiseSrc(c, t0, 1.8).connect(filter(c, "lowpass", 1100)).connect(env(c, t0, 0.08, 0.3, 0.6, 0.7)).connect(out);
-};
-
-/** Tier 3 — instant replay: ref whistle "tweet-tweeeet" + stadium roar. */
-const stadium: Synth = (c, out, t0) => {
-  for (const [at, dur] of [[0, 0.12], [0.18, 0.45]]) {
-    const t = t0 + at;
-    const o = osc(c, "sine", 2900, t, dur + 0.05);
-    wobble(c, o.frequency, "square", 28, 180, t, dur + 0.05);
-    o.connect(env(c, t, 0.22, 0.01, dur - 0.03, 0.04)).connect(out);
-  }
-  const t = t0 + 0.35;
-  noiseSrc(c, t, 2.6)
-    .connect(filter(c, "lowpass", 900))
-    .connect(filter(c, "peaking", 400, 0.8))
-    .connect(env(c, t, 0.6, 0.5, 0.8, 1.1))
-    .connect(out);
-};
-
-/** Tier 4 — air horn x3 (short, short, looong). */
-const airHorn: Synth = (c, out, t0) => {
-  for (const [at, dur] of [[0, 0.17], [0.24, 0.17], [0.48, 0.95]]) {
-    const t = t0 + at;
-    const chain = distortion(c, 20);
-    chain.connect(filter(c, "lowpass", 3200)).connect(env(c, t, 0.45, 0.012, dur, 0.06)).connect(out);
-    for (const f of [415, 421, 622, 830]) osc(c, "sawtooth", f, t, dur + 0.1).connect(chain);
-  }
-};
-
-/** Tier 5 — over-edited epic: riser → bass-boosted impact → choir pad. */
-const epic: Synth = (c, out, t0) => {
-  const hit = t0 + CFG.EPIC_IMPACT_MS / 1000;
-  // riser: noise sweeping up + a sine sliding up ~3 octaves
-  const bp = filter(c, "bandpass", 300, 2);
-  bp.frequency.exponentialRampToValueAtTime(7000, hit);
-  const rise = c.createGain();
-  rise.gain.setValueAtTime(0.0001, t0);
-  rise.gain.exponentialRampToValueAtTime(0.5, hit - 0.02);
-  rise.gain.linearRampToValueAtTime(0, hit);
-  noiseSrc(c, t0, hit - t0).connect(bp).connect(rise).connect(out);
-  const s = osc(c, "sine", 110, t0, hit - t0);
-  s.frequency.exponentialRampToValueAtTime(1100, hit);
-  const sg = c.createGain();
-  sg.gain.setValueAtTime(0.0001, t0);
-  sg.gain.exponentialRampToValueAtTime(0.18, hit - 0.02);
-  sg.gain.linearRampToValueAtTime(0, hit);
-  s.connect(sg).connect(out);
-  // impact: pitched-down sine thump through heavy distortion ("bass boosted") + a noise crack
-  const boom = osc(c, "sine", 95, hit, 1.6);
-  boom.frequency.exponentialRampToValueAtTime(32, hit + 0.8);
-  boom.connect(distortion(c, 60))
-    .connect(filter(c, "lowpass", 600))
-    .connect(env(c, hit, 0.9, 0.005, 0.25, 1.2))
-    .connect(out);
-  noiseSrc(c, hit, 0.8).connect(filter(c, "lowpass", 2500)).connect(env(c, hit, 0.6, 0.003, 0.02, 0.5)).connect(out);
-  // choir-ish pad: A minor add9, detuned saw pairs, slow attack
-  const lp = filter(c, "lowpass", 1500, 0.7);
-  lp.connect(env(c, hit + 0.05, 0.16, 0.5, 2.6, 1.6)).connect(out);
-  for (const f of [110, 220, 261.6, 329.6, 493.9]) {
-    for (const d of [-6, 6]) {
-      const o = osc(c, "sawtooth", f, hit, 5);
-      o.detune.value = d;
-      o.connect(lp);
+/** Tier 0 — golf clap: 5 spectators, polite, unhurried, slightly out of sync, fading after ~2 s. */
+const golfClap: Synth = (c, out, t0) => {
+  const bus = reverb(c, 1.2, 0.35, out);
+  for (let p = 0; p < 5; p++) {
+    const rate = 0.34 + Math.random() * 0.12; // seconds between claps: polite, not enthusiastic
+    const tone = 1100 + Math.random() * 1300; // each person's hands sound different
+    const vol = 0.22 + Math.random() * 0.14;
+    const start = Math.random() * 0.25;
+    const n = 4 + Math.floor(Math.random() * 3);
+    for (let k = 0; k < n; k++) {
+      const t = t0 + start + k * rate + (Math.random() - 0.5) * 0.05;
+      clap(c, bus, t, vol * (1 - k / (n + 1)), tone); // each person tails off
     }
   }
 };
 
-const SYNTHS: Synth[] = [golfClap, kazoo, sitcomOh, stadium, airHorn, epic];
+/**
+ * Tier 1 — crowd "OOOOOH": ~18 voices (low and high), staggered, each with its own vibrato,
+ * gliding up then settling, through "oo"→"oh" formants, plus breath, in a room.
+ */
+const crowdOoh: Synth = (c, out, t0) => {
+  const bus = reverb(c, 2.0, 0.5, out);
+  const mix = env(c, t0, 0.42, 0.35, 0.9, 0.9);
+  // Formants for "oo" (F1 ~320, F2 ~800) opening toward "oh" (F1 ~450, F2 ~850).
+  const f1 = filter(c, "bandpass", 320, 5);
+  f1.frequency.linearRampToValueAtTime(450, t0 + 0.8);
+  const f2 = filter(c, "bandpass", 800, 6);
+  f2.frequency.linearRampToValueAtTime(870, t0 + 0.8);
+  const f3 = filter(c, "bandpass", 2500, 8);
+  const f3g = c.createGain();
+  f3g.gain.value = 0.25;
+  f1.connect(mix);
+  f2.connect(mix);
+  f3.connect(f3g).connect(mix);
+  mix.connect(bus);
+  for (let v = 0; v < 18; v++) {
+    const low = v % 2 === 0;
+    const base = low ? 95 + Math.random() * 55 : 190 + Math.random() * 80;
+    const t = t0 + Math.random() * 0.18; // people react at slightly different times
+    const o = osc(c, "sawtooth", base, t, 2.3);
+    o.frequency.exponentialRampToValueAtTime(base * (1.18 + Math.random() * 0.1), t + 0.7); // oooOO
+    o.frequency.exponentialRampToValueAtTime(base * (1.02 + Math.random() * 0.05), t + 1.9); // ...oh
+    wobble(c, o.frequency, "sine", 4.5 + Math.random() * 2, base * 0.012, t, 2.3);
+    const g = c.createGain();
+    g.gain.value = 0.35 + Math.random() * 0.3;
+    o.connect(g);
+    g.connect(f1);
+    g.connect(f2);
+    g.connect(f3);
+  }
+  noiseSrc(c, t0, 2.2).connect(filter(c, "bandpass", 700, 1.2)).connect(env(c, t0, 0.05, 0.3, 0.9, 0.8)).connect(bus);
+};
+
+/**
+ * Tier 2 — "wow" mogging slow-mo replay: a deep boom, then a slowed-down, pitched-down "woooow"
+ * (a vowel glide u → a → u) drenched in reverb, over slow heartbeat thumps.
+ */
+const slowMoWow: Synth = (c, out, t0) => {
+  const bus = reverb(c, 3.0, 0.8, out);
+  // boom + rewind-ish swell
+  const boom = osc(c, "sine", 70, t0, 1.4);
+  boom.frequency.exponentialRampToValueAtTime(34, t0 + 1.0);
+  boom.connect(env(c, t0, 0.8, 0.005, 0.15, 1.1)).connect(bus);
+  // slowed "wooooow": low voice, formants sweep u(300/870) → a(700/1150) → u
+  const t = t0 + 0.35;
+  const v = osc(c, "sawtooth", 82, t, 2.8);
+  v.frequency.linearRampToValueAtTime(96, t + 1.0);
+  v.frequency.linearRampToValueAtTime(70, t + 2.6);
+  wobble(c, v.frequency, "sine", 3, 1.5, t, 2.8);
+  const a = filter(c, "bandpass", 300, 6);
+  a.frequency.linearRampToValueAtTime(700, t + 0.9);
+  a.frequency.linearRampToValueAtTime(320, t + 2.4);
+  const b = filter(c, "bandpass", 870, 7);
+  b.frequency.linearRampToValueAtTime(1150, t + 0.9);
+  b.frequency.linearRampToValueAtTime(900, t + 2.4);
+  const voice = env(c, t, 0.9, 0.25, 1.6, 0.9);
+  v.connect(a).connect(voice);
+  v.connect(b).connect(voice);
+  voice.connect(bus);
+  // slow heartbeat underneath (lub-dub)
+  for (const beat of [0.2, 1.3, 2.4, 3.5]) {
+    for (const [dt, vol] of [[0, 0.5], [0.16, 0.35]] as const) {
+      const bt = t0 + beat + dt;
+      const h = osc(c, "sine", 55, bt, 0.25);
+      h.frequency.exponentialRampToValueAtTime(38, bt + 0.2);
+      h.connect(env(c, bt, vol, 0.01, 0.03, 0.18)).connect(out);
+    }
+  }
+};
+
+/** One classic air horn blast: detuned stacked saws, overdriven, with the pitch sagging at the end. */
+function horn(c: AudioContext, out: AudioNode, t: number, dur: number, vol = 0.45) {
+  const chain = distortion(c, 20);
+  chain.connect(filter(c, "lowpass", 3200)).connect(env(c, t, vol, 0.012, dur, 0.07)).connect(out);
+  for (const f of [415, 421, 622, 830]) {
+    const o = osc(c, "sawtooth", f, t, dur + 0.1);
+    o.frequency.setValueAtTime(f, t + dur * 0.7);
+    o.frequency.linearRampToValueAtTime(f * 0.94, t + dur + 0.05); // horn running out of air
+    o.connect(chain);
+  }
+}
+
+/** Tier 3 — classic air horns: BWAA BWAA BWAAAAAA. */
+const airHorn: Synth = (c, out, t0) => {
+  for (const [at, dur] of [[0, 0.17], [0.24, 0.17], [0.48, 0.95]]) horn(c, out, t0 + at, dur);
+};
+
+/**
+ * Tier 4 — soyjak air horns: a longer horn remix building up to EPIC_IMPACT_MS, then a bass-boosted
+ * drop, a horn barrage and a rising siren, all louder and dumber.
+ */
+const soyHorns: Synth = (c, out, t0) => {
+  const hit = t0 + CFG.EPIC_IMPACT_MS / 1000;
+  // build-up: horn rhythm getting faster
+  const pattern = [0, 0.3, 0.55, 0.78, 0.98, 1.15, 1.3, 1.42, 1.53, 1.62, 1.7];
+  pattern.forEach((at, i) => horn(c, out, t0 + at, i < 3 ? 0.18 : 0.07, 0.35 + i * 0.01));
+  // riser into the drop
+  const r = osc(c, "sawtooth", 200, t0 + 0.6, hit - t0 - 0.6);
+  r.frequency.exponentialRampToValueAtTime(1600, hit);
+  r.connect(filter(c, "lowpass", 2500)).connect(env(c, t0 + 0.6, 0.12, hit - t0 - 0.65, 0.01, 0.03)).connect(out);
+  // the drop: distorted sub thump + crack
+  const boom = osc(c, "sine", 95, hit, 1.6);
+  boom.frequency.exponentialRampToValueAtTime(30, hit + 0.9);
+  boom.connect(distortion(c, 60)).connect(filter(c, "lowpass", 600)).connect(env(c, hit, 0.95, 0.005, 0.3, 1.2)).connect(out);
+  noiseSrc(c, hit, 0.6).connect(filter(c, "lowpass", 2500)).connect(env(c, hit, 0.55, 0.003, 0.02, 0.4)).connect(out);
+  // after the drop: horn barrage in a stupid rhythm + a wailing siren
+  for (const [at, dur] of [[0.25, 0.14], [0.45, 0.14], [0.65, 0.5], [1.35, 0.14], [1.55, 0.14], [1.75, 1.1]]) {
+    horn(c, out, hit + at, dur, 0.42);
+  }
+  const siren = osc(c, "square", 700, hit + 0.2, 2.8);
+  wobble(c, siren.frequency, "sine", 1.6, 220, hit + 0.2, 2.8);
+  siren.connect(filter(c, "lowpass", 1800)).connect(env(c, hit + 0.2, 0.06, 0.3, 2.0, 0.4)).connect(out);
+};
+
+const SYNTHS: Synth[] = [golfClap, crowdOoh, slowMoWow, airHorn, soyHorns];

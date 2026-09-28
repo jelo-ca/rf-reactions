@@ -55,42 +55,39 @@ export function stageFx(tier: number, stage: HTMLElement | null): () => void {
   };
   const base = { disableForReducedMotion: true, zIndex: 60 };
   switch (tier) {
-    case 1:
-      void confetti({ ...base, particleCount: 25, spread: 50, startVelocity: 25, origin: { y: 0.7 } });
+    case 0: // golf clap: nothing moves, that's the joke
+    case 1: // crowd OOOH: the caption does the work
       break;
-    case 2:
-      if (stage && !calm) anims.push(shake(stage, 6, 450));
+    case 2: // mogging slow-mo replay: a slow, heavy push-in
+      if (stage && !calm) anims.push(slowZoom(stage, 1.1, CFG.REACTION_MS[2]));
       break;
-    case 3:
-      if (stage && !calm) anims.push(slowZoom(stage, 1.06, CFG.REACTION_MS[3]));
-      void confetti({ ...base, particleCount: 120, spread: 100, origin: { y: 0.6 } });
-      break;
-    case 4: {
-      if (stage && !calm) {
-        anims.push(shake(stage, 18, 700), shake(stage, 12, 500, 480));
-      }
+    case 3: {
+      // classic air horns: a jolt per blast + fire confetti
+      if (stage && !calm) anims.push(shake(stage, 14, 260), shake(stage, 14, 260, 240), shake(stage, 20, 800, 480));
       const shapes = [emoji("🔥"), emoji("💯")];
-      for (const [at, x] of [[0, 0.2], [250, 0.8], [500, 0.5]]) {
+      for (const [at, x] of [[0, 0.2], [240, 0.8], [480, 0.5]]) {
         later(at, () => {
-          void confetti({ ...base, particleCount: 80, spread: 360, startVelocity: 40, origin: { x, y: 0.4 } });
-          void confetti({ ...base, particleCount: 12, spread: 120, shapes, scalar: 2.4, origin: { x, y: 0.5 } });
+          void confetti({ ...base, particleCount: 70, spread: 360, startVelocity: 38, origin: { x, y: 0.4 } });
+          void confetti({ ...base, particleCount: 10, spread: 120, shapes, scalar: 2.4, origin: { x, y: 0.5 } });
         });
       }
       break;
     }
-    case 5: {
+    case 4: {
+      // soyjak air horns: jolts on the build-up horns, then the drop: punches, big shake, emoji storm
       const hit = CFG.EPIC_IMPACT_MS;
       if (stage && !calm) {
-        anims.push(punches(stage, hit), shake(stage, 26, 900, hit));
+        for (const at of [0, 300, 550, 780, 980, 1150, 1300, 1420, 1530, 1620, 1700]) anims.push(shake(stage, 6, 120, at));
+        anims.push(punches(stage, hit), shake(stage, 26, 1000, hit));
       }
-      const shapes = ["😱", "🔥", "💯", "💎", "🐐"].map(emoji);
+      const shapes = ["😱", "🔥", "💯", "‼️", "🤯", "📈"].map(emoji);
       later(hit, () => {
         void confetti({ ...base, particleCount: 250, spread: 180, startVelocity: 60, origin: { y: 0.55 } });
         let n = 0;
         const storm = window.setInterval(() => {
           void confetti({ ...base, particleCount: 6, angle: 60, spread: 70, shapes, scalar: 2.6, origin: { x: 0, y: 0.7 } });
           void confetti({ ...base, particleCount: 6, angle: 120, spread: 70, shapes, scalar: 2.6, origin: { x: 1, y: 0.7 } });
-          if (++n > 24) clearInterval(storm);
+          if (++n > 30) clearInterval(storm);
         }, 110);
         timers.push(storm);
       });

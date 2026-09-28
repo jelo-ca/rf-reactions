@@ -97,10 +97,18 @@ describe("tier mode storage", () => {
 
 describe("shipped public/data/tiers.json", () => {
   const files = import.meta.glob<unknown>("../../public/data/tiers.json", { eager: true, import: "default" });
-  it("is valid and matches the H5 mapping (owner, 2026-09-27)", () => {
+  it("is valid and matches the owner's 5-tier rework (2026-09-28; tiers 1 + 2 merged)", () => {
     const cfg = validateTiers(files["../../public/data/tiers.json"]);
-    expect(cfg.priceTiers).toEqual(CFG.priceTiers);
-    expect(cfg.rarityTiers).toEqual(CFG.rarityTiers);
+    expect(cfg.priceTiers).toEqual([
+      { tier: 0, maxUsd: 1 }, { tier: 1, maxUsd: 20 }, { tier: 2, maxUsd: 75 }, { tier: 3, maxUsd: 200 }, { tier: 4, maxUsd: null },
+    ]);
+    expect(cfg.rarityTiers).toEqual({ Common: 0, Uncommon: 1, Rare: 1, Epic: 2, Promo: 3, Showcase: 4 });
     expect(cfg.foilBonus).toBe(1);
+    expect(cfg.names).toHaveLength(5);
+  });
+  it("has a reaction duration for every tier", async () => {
+    const { CFG: app } = await import("../config");
+    const cfg = validateTiers(files["../../public/data/tiers.json"]);
+    expect(app.REACTION_MS).toHaveLength(cfg.priceTiers.length);
   });
 });

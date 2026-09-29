@@ -12,7 +12,8 @@ import type { DetectResult } from "../vision/worker";
 import { chooseRegion, cornersMoving, type Detection, type Region, toVideoQuad } from "./region";
 import { laplacianVariance, meanAbsDiff, toGray } from "./signals";
 
-export type RecognizeFn = (quad: Quad | null) => Promise<"accepted" | "rejected" | "ask">;
+/** `stillAt` = performance.now() of the first still frame of this hold (session metrics, §10.1). */
+export type RecognizeFn = (quad: Quad | null, stillAt: number) => Promise<"accepted" | "rejected" | "ask">;
 export type DetectFn = () => Promise<DetectResult>;
 
 export interface DetectionStats {
@@ -129,7 +130,7 @@ export function useStability(
           s.lastStillToResultMs = performance.now() - started;
           dispatch({ type: "result", status });
         };
-        s.recognize(s.region.quad).then(onResult, (err: unknown) => {
+        s.recognize(s.region.quad, started).then(onResult, (err: unknown) => {
           console.error("[vision] recognize failed:", err);
           onResult("rejected"); // never leave the machine stuck in RECOGNIZING
         });

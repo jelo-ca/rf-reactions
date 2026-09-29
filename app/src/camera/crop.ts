@@ -1,5 +1,6 @@
 // The exact 224×320 crop the recognizer sees (PLAN.md §6.2). Capture mode saves the same crop.
 import { CFG } from "../config";
+import { type Quad, warpRgba } from "../vision/homography";
 import { guideBoxVideoRect } from "./guideBox";
 
 /** Guide-box region of the raw (unmirrored) video frame, stretched to MODEL_W×MODEL_H. */
@@ -10,6 +11,21 @@ export function cropForModel(video: HTMLVideoElement): Promise<ImageBitmap> {
     resizeHeight: CFG.MODEL_H,
     resizeQuality: "high",
   });
+}
+
+/**
+ * The detected card (corners in raw video pixels) warped upright to MODEL_W×MODEL_H from the
+ * full-resolution frame: the same warp the worker does before recognition (PLAN.md §5.7).
+ */
+export function cropDetected(video: HTMLVideoElement, quad: Quad): Promise<ImageBitmap> {
+  const w = video.videoWidth;
+  const h = video.videoHeight;
+  const ctx = new OffscreenCanvas(w, h).getContext("2d");
+  if (!ctx) throw new Error("2D canvas unavailable");
+  ctx.drawImage(video, 0, 0);
+  const out = new Uint8ClampedArray(new ArrayBuffer(CFG.MODEL_W * CFG.MODEL_H * 4));
+  warpRgba(ctx.getImageData(0, 0, w, h).data, w, h, quad, CFG.MODEL_W, CFG.MODEL_H, out);
+  return createImageBitmap(new ImageData(out, CFG.MODEL_W, CFG.MODEL_H));
 }
 
 export async function bitmapToPngBlob(bmp: ImageBitmap): Promise<Blob> {

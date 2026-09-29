@@ -213,13 +213,12 @@ class DetectSource:
 
     def real(self, rng: np.random.Generator) -> Sample:
         f = self.real_train[int(rng.integers(0, len(self.real_train)))]
-        if f.png not in self._real_cache:
-            self._real_cache[f.png] = cv2.resize(load_rgb(f.png), (OUT_W, OUT_H), interpolation=cv2.INTER_AREA)
-        img = self._real_cache[f.png]
+        if f.png not in self._real_cache:  # 2x the output size, so zoomed-in cards stay sharp
+            self._real_cache[f.png] = cv2.resize(load_rgb(f.png), (2 * OUT_W, 2 * OUT_H), interpolation=cv2.INTER_AREA)
         corners = np.array(f.corners, np.float32) / np.array([f.width, f.height], np.float32)
-        img, corners = zoom_shift(img, corners, rng)
+        img, corners = real_transform(self._real_cache[f.png], corners, rng, OUT_W, OUT_H)
         img = camera(img, rng) if rng.random() < 0.5 else img
-        return Sample(cv2.resize(img, (OUT_W, OUT_H), interpolation=cv2.INTER_AREA), corners, 1.0)
+        return Sample(img, corners, 1.0)
 
     def sample(self, seed: int, index: int) -> Sample:
         rng = np.random.default_rng([config.SEED, seed, index])
@@ -228,19 +227,29 @@ class DetectSource:
         return self.synthetic(rng)
 
 
-def zoom_shift(img: np.ndarray, corners: np.ndarray, rng: np.random.Generator) -> tuple[np.ndarray, np.ndarray]:
-    """Random zoom (0.85–1.15) and shift that keeps every corner inside the frame."""
-    h, w = img.shape[:2]
-    for _ in range(8):
-        s = rng.uniform(0.85, 1.15)
-        tx, ty = rng.uniform(-0.1, 0.1) * w, rng.uniform(-0.1, 0.1) * h
-        m = np.array([[s, 0, (1 - s) * w / 2 + tx], [0, s, (1 - s) * h / 2 + ty]], np.float32)
-        px = corners * np.array([w, h], np.float32)
-        moved = px @ m[:, :2].T + m[:, 2]
-        if (moved >= 1).all() and (moved[:, 0] <= w - 1).all() and (moved[:, 1] <= h - 1).all():
-            out = cv2.warpAffine(img, m, (w, h), borderMode=cv2.BORDER_REFLECT_101)
-            return out, (moved / np.array([w, h], np.float32)).astype(np.float32)
-    return img, corners
+def real_transform(img: np.ndarray, corners: np.ndarray, rng: np.random.Generator, w: int, h: int,
+                   ) -> tuple[np.ndarray, np.ndarray]:
+    """Scale (DETECT_REAL_SCALE), rotate (±DETECT_REAL_ROTATE_DEG) and move a real frame's card anywhere
+    in a w×h output, every corner inside. The real frames are few (overfitting: 2.5% train vs 5.1%
+    held-out corner error), so they're varied as much as the synthetic cards. Falls back to a plain resize."""
+    sh, sw = img.shape[:2]
+    px = corners * np.array([w, h], np.float32)  # card corners in output pixels at scale 1
+    c = px.mean(0)
+    for _ in range(12):
+        s = math.exp(rng.uniform(*np.log(config.DETECT_REAL_SCALE)))
+        th = math.radians(rng.uniform(-config.DETECT_REAL_ROTATE_DEG, config.DETECT_REAL_ROTATE_DEG))
+        a = s * np.array([[math.cos(th), -math.sin(th)], [math.sin(th), math.cos(th)]], np.float32)
+        moved = (px - c) @ a.T
+        lo, hi = moved.min(0), moved.max(0)
+        if hi[0] - lo[0] > w - 4 or hi[1] - lo[1] > h - 4:
+            continue
+        dest = np.array([rng.uniform(2 - lo[0], w - 2 - hi[0]), rng.uniform(2 - lo[1], h - 2 - hi[1])], np.float32)
+        # output = A · (input_scaled - c) + dest, where input_scaled = source pixels · (w/sw, h/sh)
+        pre = np.diag([w / sw, h / sh]).astype(np.float32)
+        m = np.hstack([a @ pre, (dest - a @ c)[:, None]]).astype(np.float32)
+        out = cv2.warpAffine(img, m, (w, h), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_REPLICATE)
+        return out, ((moved + dest) / np.array([w, h], np.float32)).astype(np.float32)
+    return cv2.resize(img, (w, h), interpolation=cv2.INTER_AREA), corners
 
 
 def default_source(real_train: list[RealFrame] | None = None) -> DetectSource:

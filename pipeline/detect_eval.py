@@ -1,12 +1,14 @@
 """Evaluate the card detector on the human's real labelled frames (PLAN.md §5.7 acceptance).
 
-Usage: python detect_eval.py [--split val|all]   (default val = the held-out frames detect_train uses)
+Usage: python detect_eval.py [--split val|all] [--weights out/detect/best_v1.pt]
+(default split val = the held-out frames detect_train uses; default weights = out/detect/best.pt)
 Prints present accuracy (all frames, empties separately) and corner error as a fraction of the
 card's height, and writes pipeline/out/detect_eval.png: green = label, red = prediction.
 """
 from __future__ import annotations
 
 import argparse
+from pathlib import Path
 
 import cv2
 import numpy as np
@@ -25,13 +27,15 @@ ACCEPT_CORNER_ERR = 0.03
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--split", choices=["val", "all"], default="val")
+    ap.add_argument("--weights", type=Path, default=config.DETECT_WEIGHTS, help="compare models on the same frames")
     args = ap.parse_args()
     frames = load_real(config.DETECT_REAL_DIR)
     if args.split == "val":
         frames = split_real(frames)[1]
     if not frames:
         raise SystemExit("no labelled frames - capture with F in capture mode, then run sort_detect.py")
-    model = load_detector()
+    model = load_detector(args.weights)
+    print(f"weights: {args.weights}")
     x, corners, present, frame_h = real_val_batch(frames)
     with torch.no_grad():
         logit, pred = model(x)

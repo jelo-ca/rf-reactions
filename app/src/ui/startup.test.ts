@@ -38,6 +38,7 @@ describe("latestAsOf", () => {
   it("picks the newest date", () => {
     const p = (asOf: string) => ({ printingId: "x", priceUsd: 1, source: "tcgcsv", asOf });
     expect(latestAsOf([p("2026-09-20"), p("2026-09-25"), p("")])).toBe("2026-09-25");
+    expect(latestAsOf([p("2026-09-25T20:05:42Z")])).toBe("2026-09-25"); // snapshot timestamps → date
     expect(latestAsOf([])).toBeNull();
   });
 });

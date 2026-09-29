@@ -4,7 +4,7 @@
 Build local web app that identifies a held-up Riftbound card (exact printing) in <300ms p95, shows its price, and fires a value-scaled reaction — per `PLAN.md` (source of truth).
 
 ## Current Phase
-**Next: Phase 6/7 or the open items below** (owner to choose). On `main` (squash-merged 2026-09-28, owner's request): card detection (guide box removed; fallback only without a model), T-panel tier tuning + repeat guard, 5-tier meme reactions. Detection acceptance is **not** fully met (corner error 5.1% vs 3%; recognition-on-detector-crops check still needs frames with a printing picked).
+**Now: Phase 7** (code done on `feat/phase-7`; acceptance runs need the owner). On `main` (squash-merged 2026-09-28, owner's request): card detection (guide box removed; fallback only without a model), T-panel tier tuning + repeat guard, 5-tier meme reactions. Detection acceptance is **not** fully met (corner error 5.1% vs 3%; recognition-on-detector-crops check still needs frames with a printing picked).
 Phase 5 (comedic reactions) squash-merged to `main` after the owner's live check ("it looks correct").
 Phase 4 (price card) squash-merged to `main` (2026-09-27) after the owner's live check. Nexus Night pack mode is OFF (backlog).
 Phase 3 accepted as-is by the owner (2026-09-26): 77.8% top-1 / 0 wrong accepts on 18 in-sample photos is "acceptable right now"; accuracy items moved to the Phase 3 backlog below.
@@ -123,8 +123,16 @@ Owner choices: trained ML detector (not a classical edge/quad finder); guide box
 ### Phase 6: Optional OCR tie-breaker (§9) — only if Phase 3 needs it (H6)
 - **Status:** pending
 
-### Phase 7: Metrics, polish, README, demo readiness (§10)
-- **Status:** pending
+### Phase 7: Metrics, polish, README, demo readiness (§10) — branch `feat/phase-7` (stacked on `feat/real-meme-assets`)
+- [x] 10.1 session log (per-pull stage timings, still → result / reaction), cold start, Export session (debug panel); 11 tests
+- [x] 10.2 loading checklist on the start screen, guide states (existed), ? shortcuts overlay, footer credits + Riot notice
+- [x] 10.3/10.4 README with the demo checklist
+- [x] Chrome check: loading → ready → start, ? / Esc, footer, no console errors; cold start 16.3 s first load / 8.1 s reload
+- [ ] HUMAN: confirm the Riot notice wording (footer + README)
+- [ ] HUMAN: acceptance — ≥ 30 pulls on the demo laptop, Export session, p95 still → result < 300 ms → I summarize in NOTES.md
+- [ ] HUMAN: 20-card mock pack opening with zero wrong reactions
+- [ ] Cold start < 10 s on a *first* load (now 16.3 s; 8.1 s warm) — only if the owner wants it: parallel detector load / prod build
+- **Status:** code done; acceptance runs need the owner
 
 ## Open Questions
 1. Will the fine-tuned model reach ≥ 90% on a *fresh* eval set, or does it need more steps / online hard-negative mining / a stronger backbone?

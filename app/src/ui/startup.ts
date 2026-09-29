@@ -40,9 +40,9 @@ export function startupSteps(i: StartupInputs): Step[] {
 export const modelsReady = (steps: readonly Step[]) =>
   steps.filter((s) => s.label !== "Camera").every((s) => s.state === "done" || s.state === "off");
 
-/** Newest price snapshot date, for the footer credit. */
+/** Newest price snapshot date (YYYY-MM-DD), for the footer credit. */
 export function latestAsOf(prices: Iterable<Price>): string | null {
   let best: string | null = null;
   for (const p of prices) if (p.asOf && (best === null || p.asOf > best)) best = p.asOf;
-  return best;
+  return best && best.slice(0, 10);
 }

@@ -3,7 +3,9 @@ low-memory guard stops long jobs):
 
   cd pipeline; $env:PYTHONUTF8="1"
   .\\.venv\\Scripts\\python -u detect_train.py --steps 2000 --workers 2 --log out\\detect\\train.log
-  (add --resume to continue from out/detect/last.pt)
+  (add --resume to continue from out/detect/last.pt, or --init out/detect/best_v1.pt --steps 1000
+   --lr 3e-4 --backbone-lr 1e-4 to fine-tune a previous model with a fresh schedule; best.pt is only
+   replaced when the run beats the starting model)
 
 Batches mix online synthetic composites (detect_synth) with the human's real labelled train frames.
 Checkpoint selection uses held-out real frames (every DETECT_VAL_EVERY-th by capture time) when
@@ -97,6 +99,12 @@ def evaluate(model: CardDetector, x, corners, present, frame_h) -> dict:
     return {"present_acc": acc, "corner_err": err, "n": len(x), "positives": int(pos.sum())}
 
 
+def eval_key(r: dict) -> tuple[float, float]:
+    """Checkpoint ranking: real frames when there are any, present accuracy first, then corner error."""
+    src = r.get("real", r["synth"])
+    return round(src["present_acc"], 3), -src["corner_err"] if src["corner_err"] == src["corner_err"] else 0
+
+
 def freeze_early(model: CardDetector) -> list[torch.nn.Module]:
     """Freeze config.DETECT_FROZEN backbone parts; returns their modules (kept in eval mode: BN stats fixed)."""
     frozen = [m for n, m in model.backbone.named_children() if n in config.DETECT_FROZEN]
@@ -121,6 +129,7 @@ def main() -> None:
     ap.add_argument("--workers", type=int, default=2)
     ap.add_argument("--eval-every", type=int, default=250)
     ap.add_argument("--resume", action="store_true")
+    ap.add_argument("--init", type=Path, help="start from these weights (new schedule, new best)")
     ap.add_argument("--log", type=Path)
     args = ap.parse_args()
     OUT.mkdir(parents=True, exist_ok=True)
@@ -143,11 +152,18 @@ def main() -> None:
     rval = real_val_batch(val_real) if val_real else None
 
     model = CardDetector(pretrained=True)
+    if args.init:
+        model.load_state_dict(torch.load(args.init, map_location="cpu"))
+        print(f"initialized from {args.init}")
     frozen = freeze_early(model)
     head = [p for n, p in model.named_parameters() if not n.startswith("backbone.")]
     opt = torch.optim.AdamW([{"params": [p for p in model.backbone.parameters() if p.requires_grad], "lr": args.backbone_lr},
                              {"params": head, "lr": args.lr}], weight_decay=1e-4)
     start, best = 0, None
+    if args.init:  # the starting model is the one to beat
+        r = {"step": 0, "synth": evaluate(model, *sval), **({"real": evaluate(model, *rval)} if rval is not None else {})}
+        best = {"key": list(eval_key(r)), **r}
+        print("eval", json.dumps(r), "(starting model)", flush=True)
     if args.resume and (OUT / "last.pt").exists():
         ck = torch.load(OUT / "last.pt", map_location="cpu")
         model.load_state_dict(ck["model"])
@@ -178,8 +194,7 @@ def main() -> None:
             if rval is not None:
                 r["real"] = evaluate(model, *rval)
             train_mode(model, frozen)
-            key_src = r.get("real", r["synth"])
-            key = (round(key_src["present_acc"], 3), -key_src["corner_err"] if key_src["corner_err"] == key_src["corner_err"] else 0)
+            key = eval_key(r)
             print("eval", json.dumps(r), flush=True)
             if best is None or key > tuple(best["key"]):
                 best = {"key": list(key), "step": step, **r}

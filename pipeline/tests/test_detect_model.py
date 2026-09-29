@@ -3,7 +3,7 @@ import torch
 
 import config
 from detect_model import CardDetector, detector_loss, gaussian_targets, soft_argmax
-from detect_synth import DetectSource, card_quad, zoom_shift
+from detect_synth import DetectSource, card_quad, real_transform
 
 
 def test_soft_argmax_finds_peak():
@@ -48,15 +48,20 @@ def test_card_quad_inside_and_clockwise():
         assert area2 > 0  # TL, TR, BR, BL clockwise on screen
 
 
-def test_zoom_shift_keeps_corners_consistent():
-    rng = np.random.default_rng(2)
-    img = np.zeros((100, 200, 3), np.uint8)
-    img[40:60, 50:70] = 255  # a white square at known corners
-    corners = np.array([[50, 40], [70, 40], [70, 60], [50, 60]], np.float32) / np.array([200, 100], np.float32)
-    out, moved = zoom_shift(img, corners, rng)
-    px = moved * np.array([200, 100])
-    cx, cy = px.mean(0)
-    assert out[int(cy), int(cx)].mean() > 200  # the square moved with its corners
+def test_real_transform_moves_pixels_with_corners():
+    img = np.zeros((200, 400, 3), np.uint8)  # 2x source, like the real-frame cache
+    img[80:120, 100:140] = 255  # a white square at known corners
+    corners = np.array([[100, 80], [140, 80], [140, 120], [100, 120]], np.float32) / np.array([400, 200], np.float32)
+    for seed in range(20):
+        out, moved = real_transform(img, corners, np.random.default_rng(seed), 200, 100)
+        assert out.shape == (100, 200, 3)
+        px = moved * np.array([200, 100])
+        assert (px >= 1).all() and (px[:, 0] <= 199).all() and (px[:, 1] <= 99).all()
+        cx, cy = px.mean(0)
+        assert out[int(cy), int(cx)].mean() > 200  # the square moved with its corners
+        for x, y in px:  # each corner lands on the square's edge (bright nearby, dark further out)
+            patch = out[max(0, int(y) - 2):int(y) + 3, max(0, int(x) - 2):int(x) + 3]
+            assert patch.max() > 100
 
 
 def test_samples_are_deterministic_and_valid(tmp_path):

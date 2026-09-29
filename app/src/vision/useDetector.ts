@@ -7,6 +7,7 @@ import type { DetectorInfo, DetectResult } from "./worker";
 
 export function useDetector(videoRef: RefObject<HTMLVideoElement | null>, recognizerReady: boolean) {
   const [info, setInfo] = useState<DetectorInfo | null>(null);
+  const [readyAtMs, setReadyAtMs] = useState<number | null>(null); // loaded (or known missing): cold start
 
   useEffect(() => {
     if (!recognizerReady) return;
@@ -16,6 +17,7 @@ export function useDetector(videoRef: RefObject<HTMLVideoElement | null>, recogn
       .then((i) => {
         if (!live) return;
         setInfo(i);
+        setReadyAtMs(performance.now());
         if (!i.available) console.info("[detect]", i.error);
       });
     return () => {
@@ -35,5 +37,5 @@ export function useDetector(videoRef: RefObject<HTMLVideoElement | null>, recogn
     return vision().detect(transfer(bmp));
   }, [videoRef]);
 
-  return { info, detect: info?.available ? detect : null };
+  return { info, readyAtMs, detect: info?.available ? detect : null };
 }

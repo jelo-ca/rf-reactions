@@ -97,15 +97,3 @@ export function TierDevPanel({ names, mode, limits, defaults, counts, json, onFi
     </div>
   );
 }
-
-/** Browsers only allow sound after a user gesture, so the app starts with one click. */
-export function StartScreen({ onStart }: { onStart: () => void }) {
-  return (
-    <div className="start-screen">
-      <button type="button" onClick={onStart} autoFocus>
-        Click to start
-      </button>
-      <p>Turns on the camera loop and the (very professional) reaction sounds.</p>
-    </div>
-  );
-}

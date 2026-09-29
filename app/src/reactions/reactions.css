@@ -144,7 +144,7 @@
 }
 .epic-settled span { margin-left: 6px; }
 
-/* Click to start (unlocks audio) */
+/* Loading screen + click to start (unlocks audio), PLAN §10.2 */
 .start-screen {
   position: absolute; inset: 0; z-index: 70; display: grid; place-content: center; gap: 12px; text-align: center;
   background: rgba(8, 9, 12, 0.88); color: #e8e9ee;
@@ -154,6 +154,18 @@
   background: linear-gradient(90deg, #ffb300, #ff5a5f); color: #1a0d00;
 }
 .start-screen p { margin: 0; color: #8b8f9c; font-size: 14px; }
+.start-screen h2 { margin: 0 0 4px; font-size: 28px; }
+.start-screen .steps { list-style: none; margin: 0 auto; padding: 0; display: grid; gap: 6px; min-width: min(320px, 90vw); text-align: left; }
+.start-screen .step { display: flex; gap: 8px; align-items: baseline; }
+.start-screen .step-icon { width: 1.2em; text-align: center; font-weight: 700; }
+.start-screen .step-detail { margin-left: auto; color: #8b8f9c; font-size: 12px; }
+.start-screen .step.loading .step-icon { color: #f5c542; animation: fx-step-pulse 900ms ease-in-out infinite alternate; }
+.start-screen .step.done .step-icon { color: #3ddc84; }
+.start-screen .step.off { color: #8b8f9c; }
+.start-screen .step.error { color: #ff5a5f; }
+.start-screen progress { width: min(320px, 90vw); margin: 0 auto; accent-color: #ffb300; }
+.start-screen button:disabled { cursor: progress; opacity: 0.5; }
+@keyframes fx-step-pulse { to { opacity: 0.3; } }
 
 /* Dev panel (T): fire any tier on demand */
 .tier-dev {

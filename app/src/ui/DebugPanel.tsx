@@ -1,5 +1,6 @@
 import { CFG } from "../config";
 import type { Summary } from "../metrics/rolling";
+import type { SessionLog } from "../metrics/session";
 import type { StabilityStats } from "../stability/useStability";
 import type { Card, PackMode } from "../types";
 import type { RecognizerState } from "../vision/useRecognizer";
@@ -13,13 +14,16 @@ interface Props {
   detector: DetectorInfo | null;
   cardById: ReadonlyMap<string, Card>;
   prices: ReadonlyMap<string, number>;
+  session: SessionLog;
+  coldStartMs: number | null;
+  onExport: () => void;
 }
 
 const fmt = (v: number | null | undefined, digits = 1) => (v === null || v === undefined ? "—" : v.toFixed(digits));
 const ms = (v: number | null | undefined) => (v === null || v === undefined ? "—" : `${v.toFixed(0)} ms`);
 const pct = (s: Summary | undefined) => (s ? `${ms(s.p50)} / ${ms(s.p95)} (n=${s.n})` : "—");
 
-export function DebugPanel({ stats, packMode, videoSize, rec, detector, cardById, prices }: Props) {
+export function DebugPanel({ stats, packMode, videoSize, rec, detector, cardById, prices, session, coldStartMs, onExport }: Props) {
   const { state, signals } = stats;
   const last = rec.last;
   const rows: [string, string, boolean?][] = [
@@ -45,10 +49,14 @@ export function DebugPanel({ stats, packMode, videoSize, rec, detector, cardById
     ["last crop", last ? last.source : "—"],
     ["card lost → forgotten", String(stats.detection.lostResets)],
     ["backend", rec.info ? `${rec.info.backend} · ${rec.info.threads}t` : "loading…"],
+    ["cold start", coldStartMs === null ? "loading…" : ms(coldStartMs), coldStartMs !== null && coldStartMs < 10_000],
     ["load / warm-up", rec.info ? `${ms(rec.info.loadMs)} / ${ms(rec.info.warmupMs)}` : "—"],
-    ["fps · video", `${stats.fps} · ${videoSize.w}×${videoSize.h}`],
+    ["fps loop · camera", `${stats.fps} · ${stats.cameraFps ?? "—"} (${videoSize.w}×${videoSize.h})`, stats.fps >= 25],
+    ["frame work p50 / p95", `${ms(stats.frameWork.p50)} / ${ms(stats.frameWork.p95)}`],
     ["reactions · asks", `${stats.reactions} · ${rec.asks}`],
   ];
+  const sum = session.summary();
+  const n = session.counts();
   const name = (id: string) => cardById.get(id)?.name ?? id;
   return (
     <aside className="debug" aria-label="Debug panel">
@@ -61,6 +69,17 @@ export function DebugPanel({ stats, packMode, videoSize, rec, detector, cardById
           </div>
         ))}
       </dl>
+      <h2>Session</h2>
+      <dl>
+        <div><dt>pulls</dt><dd>{n.pulls} · ✓{n.accepted} ?{n.asked} ✕{n.rejected}</dd></div>
+        <div className={(sum.stillToResultMs.p95 ?? Infinity) < 300 ? "ok" : "off"}>
+          <dt>still → result</dt><dd>{pct(sum.stillToResultMs)}</dd>
+        </div>
+        <div><dt>still → reaction</dt><dd>{pct(sum.stillToReactionMs)}</dd></div>
+      </dl>
+      <button type="button" className="export" onClick={onExport} disabled={n.pulls === 0} title="Timings + results as JSON (PLAN §10.1)">
+        Export session
+      </button>
       {last && (
         <>
           <h2>Last result</h2>

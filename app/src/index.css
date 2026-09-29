@@ -71,7 +71,12 @@ body { background: var(--bg); color: var(--text); }
   background: #3a1216; border: 1px solid var(--bad); border-radius: 6px;
 }
 
-.keys { padding: 6px 16px; font-size: 12px; color: var(--muted); border-top: 1px solid #22242c; }
+.keys {
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 14px; padding: 6px 16px;
+  font-size: 12px; color: var(--muted); border-top: 1px solid #22242c;
+}
+.keys .legal { flex-basis: 100%; font-size: 10px; opacity: 0.8; }
+.linkish { padding: 0; border: 0; background: none; color: inherit; font: inherit; text-decoration: underline; cursor: pointer; }
 
 @media (max-width: 600px) {
   .debug { width: auto; left: 12px; }
@@ -160,7 +165,6 @@ body { background: var(--bg); color: var(--text); }
 .debug .top li { display: list-item; }
 .debug .top li span:last-child { float: right; color: var(--muted); }
 .guide.failed { border-color: var(--bad); }
-.loading { position: absolute; top: 12px; left: 12px; margin: 0; padding: 6px 10px; background: var(--panel); border-radius: 6px; }
 
 .price-card {
   position: absolute; left: 16px; bottom: 16px; display: flex; gap: 14px; align-items: flex-start;
@@ -240,3 +244,16 @@ body { background: var(--bg); color: var(--text); }
 .ring-toggle[aria-checked="true"] .switch { background: #f5c542; }
 .ring-toggle[aria-checked="true"] .switch::after { transform: translateX(14px); }
 @media (prefers-reduced-motion: reduce) { .ring-toggle .switch, .ring-toggle .switch::after { transition: none; } }
+
+/* Debug: export the session log (PLAN §10.1) */
+.debug .export { width: 100%; margin: 6px 0 10px; padding: 4px 8px; font: inherit; cursor: pointer; }
+
+/* ? keyboard shortcuts overlay (PLAN §10.2) */
+.shortcuts { position: absolute; inset: 0; z-index: 80; display: grid; place-items: center; padding: 16px; background: rgba(0, 0, 0, 0.6); }
+.shortcuts-card { width: min(440px, 100%); padding: 16px 20px; background: #16181f; border: 1px solid #2a2d38; border-radius: 12px; }
+.shortcuts-card h2 { margin: 0 0 10px; font-size: 16px; }
+.shortcuts-card dl { display: grid; grid-template-columns: auto 1fr; gap: 6px 12px; margin: 0 0 14px; }
+.shortcuts-card dl div { display: contents; }
+.shortcuts-card dd { margin: 0; color: var(--muted); }
+.shortcuts-card kbd { display: inline-block; min-width: 24px; padding: 2px 6px; text-align: center; border: 1px solid #3a3e4c; border-bottom-width: 2px; border-radius: 4px; font: 600 12px/1.4 ui-monospace, monospace; }
+.shortcuts-card button { padding: 6px 12px; font: inherit; cursor: pointer; }

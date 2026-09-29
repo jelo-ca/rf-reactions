@@ -210,3 +210,21 @@ The app never uses layout alone; §6.4 combines them. Human approved the new bar
 - Prices: **1797 / 1797 = 100% auto** (tcgplayer_id 1610, set_and_number 187; marketPrice 1793, midPrice 4). 0 unmatched, no manual overrides needed (all 28 no-price items were excluded promos).
 - Look-alike groups: 180.
 - **Reused-image variants: 104 = every Nexus Night promo** — source serves the base card art. Until real images are supplied (H7, `data/cards/image_overrides/<printing_id>.png`), a Nexus Night promo is treated as "same picture" as its base → app shows the cheaper printing with a hint. The 19 VEN alt arts flagged earlier dropped out: their `AA` twins were tagged duplicates now excluded.
+
+## Phase 7 — metrics, polish, README (branch `feat/phase-7`, stacked on `feat/real-meme-assets`, 2026-09-28)
+- **Session log** (`metrics/session.ts`): one record per recognition. `stillToResultMs` = first still frame → result (the headline latency), `stillToReactionMs` = → reaction start (sound + overlay fire), plus crop/prep/infer/search/layout/total. The worker's decision (thresholds, margin) is inside `searchMs`; there's no separate "decide" timing. Reactions that waited for a chooser pick are flagged `viaChooser` and left out of the latency p50/p95 (they measure the human). T-panel test reactions are not logged.
+- **Cold start** = navigation start → cards/prices/tiers + recognizer + detector loaded; each loader stamps its own finish time and the app takes the max. Measured in Chrome (dev server, WebGPU): **16.3 s first load** (recognizer load 4.3 s + warm-up 4.4 s, detector after) vs **8.1 s on reload** (warm-up 0.5 s). The first-load cost is WebGPU shader compilation, so the demo checklist says open the app once beforehand. Target is < 10 s; possible later wins: load the detector alongside the recognizer, production build.
+- **Loading screen** is the start screen: checklist + progress bar; "Click to start" stays disabled until data + models are ready (a missing detector counts as ready, since the guide box takes over).
+- **Guide-box states** (grey / yellow / green / red) already existed from Phase 2 (+ status pill for detection mode). No change.
+- **? overlay** + footer link; **footer** credits with the price snapshot date and Riot's fan-project notice (Legal Jibber Jabber wording). **Owner to confirm the wording.**
+- README written (install, build data, run, parity, tests, metrics, demo checklist).
+- `search.test.ts` "fast enough at demo scale" failed twice under full-suite load (3.7 s), passes alone. Timing test, not related to these changes.
+
+### First real session (owner, exported 2026-09-29 00:48 UTC, `rift-pulls-session-2026-09-29T00-48-11-648Z.json`)
+Chrome 153, WebGPU (recognizer + detector), 1280×720, booster pack mode, price tiers. Cold start **4.5 s** (warm cache).
+- 32 pulls: 23 accepted, 9 rejected (all `low_score`, top score 0.33–0.42 vs ACCEPT_T 0.42), 0 asks; 21 reactions (2 accepts were repeat-guard skips).
+- **still → result p50 320 ms / p95 398 ms: misses the < 300 ms bar.** still → reaction p50 324 / p95 376 ms.
+- Where it goes (p50 / p95): waiting for the card to be still (still → recognize) **200 / 223 ms**; recognition total 117 / 182 ms (prep 23 / 49, infer 84 / 132, search 0.3, layout 0 / 11, crop 0.3).
+- The hold-still wait is `STABLE_FRAMES = 3` frames, and the loop ran at **10 fps** at export time (Phase 2 measured 30–31 fps on the same camera), so 3 frames ≈ 200 ms. At 30 fps it would be ≈ 100 ms and p95 would land around 290 ms. Cause of the 10 fps not known yet (camera dropping frame rate in low light is the usual one).
+- Rejected holds of the same card were retried and mostly accepted on a later hold (OGN-168: 3 rejects, then 0.606).
+- **Correctness (owner, 2026-09-28): none of the 23 accepts was wrong** → 21 reactions, 0 wrong. Counted toward the "20-card mock pack, zero wrong reactions" bar. The 9 rejects cost a re-hold but never a wrong reaction (28% reject rate is the accuracy backlog's problem, not a correctness one).

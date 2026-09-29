@@ -4,7 +4,7 @@
 Build local web app that identifies a held-up Riftbound card (exact printing) in <300ms p95, shows its price, and fires a value-scaled reaction — per `PLAN.md` (source of truth).
 
 ## Current Phase
-**Next: Phase 6/7 or the open items below** (owner to choose). On `main` (squash-merged 2026-09-28, owner's request): card detection (guide box removed; fallback only without a model), T-panel tier tuning + repeat guard, 5-tier meme reactions. Detection acceptance is **not** fully met (corner error 5.1% vs 3%; recognition-on-detector-crops check still needs frames with a printing picked).
+**Now: Phase 7 latency** — real meme assets + Phase 7 code squash-merged to `main` (2026-09-28, owner). Open: p95 still → result 398 ms vs 300 (loop at 10–16 fps; debug rows camera fps / frame work added to find why), Riot notice wording. On `main` (squash-merged 2026-09-28, owner's request): card detection (guide box removed; fallback only without a model), T-panel tier tuning + repeat guard, 5-tier meme reactions. Detection acceptance is **not** fully met (corner error 5.1% vs 3%; recognition-on-detector-crops check still needs frames with a printing picked).
 Phase 5 (comedic reactions) squash-merged to `main` after the owner's live check ("it looks correct").
 Phase 4 (price card) squash-merged to `main` (2026-09-27) after the owner's live check. Nexus Night pack mode is OFF (backlog).
 Phase 3 accepted as-is by the owner (2026-09-26): 77.8% top-1 / 0 wrong accepts on 18 in-sample photos is "acceptable right now"; accuracy items moved to the Phase 3 backlog below.
@@ -103,7 +103,7 @@ Owner choices: trained ML detector (not a classical edge/quad finder); guide box
 - [x] 5 tiers: golf clap · crowd OOOH (1+2 merged) · mogging slow-mo replay · classic air horns · soyjak air horns; tiers.json, sounds, visuals, fx, tests (135)
 - [ ] HUMAN: listen/watch all 5 via T; say what to tweak
 - [x] Real assets (owner: synth "too AI generated"), branch `feat/real-meme-assets`: golf clap / crowd ooh / crowd wow / MLG horn clips + real Two Soyjaks Pointing art in `app/public/memes/` (CREDITS.md); `MOTION_T` 4 → 7
-- [ ] HUMAN: audition the clips via T (golf clap cut, 1.8 s wow under a 4.2 s replay); squash-merge `feat/real-meme-assets` when happy
+- [x] Squash-merged to `main` (owner, 2026-09-28)
 
 ### Backlog: Nexus Night pack mode (switched off 2026-09-27, owner)
 - [ ] Find a source that says which printings come out of Nexus Night packs (Riftcodex misses some; TCGCSV doesn't mark them Promo) — 39 TCGCSV-only OPP candidates listed in NOTES.md
@@ -123,8 +123,19 @@ Owner choices: trained ML detector (not a classical edge/quad finder); guide box
 ### Phase 6: Optional OCR tie-breaker (§9) — only if Phase 3 needs it (H6)
 - **Status:** pending
 
-### Phase 7: Metrics, polish, README, demo readiness (§10)
-- **Status:** pending
+### Phase 7: Metrics, polish, README, demo readiness (§10) — squash-merged to `main` (2026-09-28) with latency acceptance open
+- [x] 10.1 session log (per-pull stage timings, still → result / reaction), cold start, Export session (debug panel); 11 tests
+- [x] 10.2 loading checklist on the start screen, guide states (existed), ? shortcuts overlay, footer credits + Riot notice
+- [x] 10.3/10.4 README with the demo checklist
+- [x] Chrome check: loading → ready → start, ? / Esc, footer, no console errors; cold start 16.3 s first load / 8.1 s reload
+- [ ] HUMAN: confirm the Riot notice wording (footer + README)
+- [ ] Acceptance p95 still → result < 300 ms: first session (32 pulls) p95 **398 ms** ❌ — 200 ms is the 3-frame hold-still wait at 10 fps (was 30 fps in Phase 2). Next: owner checks fps with better light; else time-based / 2-frame stability
+- [x] Zero wrong reactions: same session, 21 reactions / 23 accepts, 0 wrong (owner confirmed)
+- [x] Cold start < 10 s warm: 4.5 s in that session
+- [ ] Cold start < 10 s on a *first* load (now 16.3 s; 8.1 s warm) — only if the owner wants it: parallel detector load / prod build
+- [x] Debug: camera fps vs loop fps + per-frame work time (diagnosing the 10–16 fps)
+- [ ] HUMAN: read those two rows with a card up → pick the fix (camera frame rate / move frame work to the worker / fewer re-renders)
+- **Status:** code merged; latency bar open
 
 ## Open Questions
 1. Will the fine-tuned model reach ≥ 90% on a *fresh* eval set, or does it need more steps / online hard-negative mining / a stronger backbone?

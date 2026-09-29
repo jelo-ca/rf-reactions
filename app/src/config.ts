@@ -24,7 +24,7 @@ export const CFG = {
   NEXUS_NIGHT_ENABLED: false,
 
   // Reactions (§8.2, reworked by the owner 2026-09-28): how long each tier's effect stays up; index = tier.
-  // 0 golf clap · 1 crowd OOOH · 2 The Rock eyebrow raise · 3 air horns · 4 soyjak air horns (then a gold
+  // 0 golf clap · 1 crowd OOOH · 2 Michael Rosen "Nice" · 3 air horns · 4 soyjak air horns (then a gold
   // banner until the next card).
   REACTION_MS: [2600, 2400, 3000, 3400, 6400],
   EPIC_IMPACT_MS: 1800, // top tier: horn build-up ends → bass drop, deep fry, confetti storm, soyjaks go wild

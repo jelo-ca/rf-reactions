@@ -17,10 +17,11 @@ function shake(el: HTMLElement, px: number, ms: number, delay = 0): Animation {
 
 /** Snap in to `scale` (~90 ms), hold, ease back out over the last third. Uses the CSS `scale`
  *  property, not `transform`, so a mirrored video (transform: scaleX(-1)) stays mirrored. */
-function zoomPunch(el: HTMLElement, scale: number, ms: number): Animation {
+function zoomPunch(el: HTMLElement, scale: number, ms: number, delay = 0): Animation {
   const zoomed = { scale: String(scale) };
   return el.animate([{ scale: "1" }, { ...zoomed, offset: 90 / ms }, { ...zoomed, offset: 0.65 }, { scale: "1" }], {
     duration: ms,
+    delay,
     easing: "linear",
   });
 }
@@ -40,6 +41,9 @@ function punches(el: HTMLElement, delay: number): Animation {
     { duration: 1400, delay, easing: "ease-out" },
   );
 }
+
+/** When Rosen says "Nice" after the click, from the start of the trimmed clip (sounds.ts). */
+export const NICE_AT_MS = 800;
 
 const emoji = (text: string) => confetti.shapeFromText({ text, scalar: 3 });
 
@@ -62,10 +66,10 @@ export function stageFx(tier: number, stage: HTMLElement | null): () => void {
     case 1: // crowd OOOH: the caption does the work
       break;
     case 2: {
-      // The Rock's eyebrow: a hard zoom punch on the vine boom, held, then eased back. Only the camera
-      // video zooms; zooming the stage would push the Rock and the caption off screen.
+      // Michael Rosen: a hard zoom punch on "Nice", held, then eased back. Only the camera video
+      // zooms; zooming the stage would push Rosen and the caption off screen.
       const video = stage?.querySelector("video");
-      if (video && !calm) anims.push(zoomPunch(video, 1.2, CFG.REACTION_MS[2]));
+      if (video && !calm) anims.push(zoomPunch(video, 1.15, CFG.REACTION_MS[2] - NICE_AT_MS, NICE_AT_MS));
       break;
     }
     case 3: {

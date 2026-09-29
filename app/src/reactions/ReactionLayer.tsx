@@ -1,10 +1,11 @@
 // Reaction overlay above the video (PLAN.md §8.2), tiers reworked by the owner (2026-09-28):
-// 0 golf clap · 1 crowd "OOOOH" · 2 The Rock's eyebrow raise (owner, 2026-09-28; was a "mogging" replay) · 3 classic air horns ·
+// 0 golf clap · 1 crowd "OOOOH" · 2 Michael Rosen's "*click* Nice" (owner, 2026-09-28) · 3 classic air horns ·
 // 4 soyjak air horns (longer, memier; settles into a gold banner until the next card).
 // Each tier = one small component + CSS keyframes; stage shakes/confetti live in fx.ts, sounds in sounds.ts.
 import { useEffect, useState } from "react";
 import "./reactions.css";
 import { CFG } from "../config";
+import { NICE_AT_MS } from "./fx";
 import { formatUsd } from "../prices/priceCard";
 import type { Card } from "../types";
 import { countUp } from "./helpers";
@@ -92,15 +93,13 @@ function CrowdOoh({ price }: TierProps) {
   );
 }
 
-/** 2 — The Rock's eyebrow raise (vine boom): impressed, but suspicious. */
-function RockEyebrow({ card, price }: TierProps) {
+/** 2 — Michael Rosen: *click* … "Nice". */
+function RosenNice({ card, price }: TierProps) {
   return (
-    <div className="fx-rock">
-      <div className="rock-face">
-        <img src="/memes/rock-eyebrow.jpg" alt="" draggable={false} />
-      </div>
-      <div className="rock-emoji">🤨</div>
-      <div className="rock-lower">
+    <div className="fx-nice" style={{ "--nice": `${NICE_AT_MS}ms` } as React.CSSProperties}>
+      <img className="rosen" src="/memes/rosen-nice.png" alt="" draggable={false} />
+      <div className="nice-text">NICE</div>
+      <div className="nice-lower">
         <b>{card.name}</b> <span>{price}</span>
       </div>
     </div>
@@ -171,5 +170,5 @@ function useCountUp(target: number | undefined, delayMs: number, durationMs: num
   return v;
 }
 
-const TIERS = [GolfClap, CrowdOoh, RockEyebrow, AirHorn, SoyEpic];
+const TIERS = [GolfClap, CrowdOoh, RosenNice, AirHorn, SoyEpic];
 const TOP = TIERS.length - 1;

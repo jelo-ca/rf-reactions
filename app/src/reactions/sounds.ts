@@ -13,7 +13,7 @@ const buffers = new Map<string, Promise<AudioBuffer | null>>();
 const MEME = {
   golfClap: "/memes/golf-clap.mp3",
   crowdOoh: "/memes/crowd-ooh.mp3",
-  vineBoom: "/memes/vine-boom.mp3",
+  nice: "/memes/rosen-nice.mp3", // Michael Rosen "*click* Nice"; starts on the click, "Nice" ~0.8 s later
   airHorn: "/memes/mlg-airhorn.mp3",
   omg: "/memes/oh-my-god.mp3", // the Xbox kid "OH MY GOD" (owner, 2026-09-28)
 };
@@ -180,7 +180,7 @@ const soyHorns: Tier = async (c, out) => {
 const TIERS: Tier[] = [
   single(MEME.golfClap, { dur: CFG.REACTION_MS[0] / 1000, fade: 0.8 }), // 0 — a few people, clearly unimpressed
   single(MEME.crowdOoh), // 1 — crowd "OOOOH"
-  single(MEME.vineBoom, { gain: 1.1 }), // 2 — vine boom for The Rock's eyebrow
+  single(MEME.nice, { gain: 1.3 }), // 2 — Michael Rosen "*click* Nice"
   single(MEME.airHorn), // 3 — the MLG air horn
   soyHorns, // 4
 ];

@@ -6,7 +6,7 @@ import { useStability } from "./stability/useStability";
 import { loadCards, loadPrices, loadTiers } from "./data/loaders";
 import { stageFx } from "./reactions/fx";
 import { sampleCardForTier } from "./reactions/helpers";
-import { StartScreen, TierDevPanel } from "./reactions/ReactionControls";
+import { TierDevPanel } from "./reactions/ReactionControls";
 import { tierModeLabel, useTierMode } from "./reactions/useTierMode";
 import { type Reaction, ReactionLayer } from "./reactions/ReactionLayer";
 import { playTier, unlockAudio } from "./reactions/sounds";
@@ -16,11 +16,16 @@ import {
   loadPriceLimits, priceLimits, priceTiersJson, savePriceLimits, tierCounts, withPriceLimits,
 } from "./reactions/tierTuning";
 import type { Card, Price } from "./types";
+import { AppFooter } from "./ui/AppFooter";
 import { CaptureMode } from "./ui/CaptureMode";
 import { DebugPanel } from "./ui/DebugPanel";
 import { DetectionOverlay } from "./ui/DetectionOverlay";
+import { downloadJson } from "./ui/download";
 import { PriceCard } from "./ui/PriceCard";
 import { ResultChip } from "./ui/ResultChip";
+import { ShortcutsOverlay } from "./ui/ShortcutsOverlay";
+import { StartScreen } from "./ui/StartScreen";
+import { latestAsOf, modelsReady, startupSteps } from "./ui/startup";
 import { usePackMode } from "./ui/usePackMode";
 import { useRingLight } from "./ui/useRingLight";
 import { VariantChooser } from "./ui/VariantChooser";
@@ -41,10 +46,12 @@ export default function App() {
   const [cards, setCards] = useState<Card[]>([]);
   const [priceById, setPriceById] = useState<Map<string, Price>>(new Map());
   const [dataError, setDataError] = useState<string | null>(null);
+  const [dataAtMs, setDataAtMs] = useState<number | null>(null);
   const [baseTiers, setBaseTiers] = useState<TierConfig | null>(null); // public/data/tiers.json
   const [limitOverride, setLimitOverride] = useState<number[] | null>(() => loadPriceLimits());
   const [started, setStarted] = useState(false);
   const [showTierDev, setShowTierDev] = useState(false);
+  const [showKeys, setShowKeys] = useState(false);
   const [reaction, setReaction] = useState<Reaction | null>(null);
   const stageRef = useRef<HTMLElement>(null);
   const cancelFx = useRef<() => void>(() => {});
@@ -57,12 +64,13 @@ export default function App() {
   }, [stream]);
 
   useEffect(() => {
-    loadCards().then(setCards, (e: unknown) => setDataError(String(e)));
-    loadPrices().then(
+    const cardsP = loadCards().then(setCards, (e: unknown) => setDataError(String(e)));
+    const pricesP = loadPrices().then(
       (ps) => setPriceById(new Map(ps.map((p) => [p.printingId, p]))),
       (e: unknown) => setDataError(String(e)),
     );
-    loadTiers().then(setBaseTiers, (e: unknown) => setDataError(String(e)));
+    const tiersP = loadTiers().then(setBaseTiers, (e: unknown) => setDataError(String(e)));
+    void Promise.all([cardsP, pricesP, tiersP]).then(() => setDataAtMs(performance.now()));
   }, []);
   const cardById = useMemo(() => new Map(cards.map((c) => [c.printingId, c])), [cards]);
   const prices = useMemo(() => new Map([...priceById].map(([id, p]) => [id, p.priceUsd])), [priceById]);
@@ -99,7 +107,7 @@ export default function App() {
   );
 
   const rec = useRecognizer(videoRef, packMode);
-  const { shownRef } = rec;
+  const { shownRef, logReaction } = rec;
   const lastReacted = useRef<string | null>(null);
   // Called by the state machine once per card hold (accept, or chooser pick). The same printing twice
   // in a row doesn't react again (owner, 2026-09-28): guards against double reactions for one card.
@@ -113,8 +121,10 @@ export default function App() {
       return;
     }
     lastReacted.current = card.printingId;
-    fire(card, resolveTier(card, prices.get(card.printingId), tiers, tierMode));
-  }, [shownRef, cardById, tiers, prices, tierMode, fire]);
+    const tier = resolveTier(card, prices.get(card.printingId), tiers, tierMode);
+    logReaction(card.printingId, tier);
+    fire(card, tier);
+  }, [shownRef, cardById, tiers, prices, tierMode, fire, logReaction]);
   const fireSample = useCallback(
     (tier: number) => {
       const card = tiers && sampleCardForTier(cards, prices, tiers, tierMode, tier);
@@ -134,6 +144,37 @@ export default function App() {
   const { stats, rescan, pick } = useStability(
     videoRef, !!stream && rec.ready && started, rec.recognize, onReact, detector.detect, guideMode,
   );
+  const { overlay, videoSize, xf } = useGuideOverlay(videoRef, !!stream, ring ? "ring" : "plain");
+  // Loading screen steps; cold start = navigation start → data + both models ready (§10 acceptance).
+  const steps = startupSteps({
+    data: cards.length > 0 && priceById.size > 0 && !!baseTiers,
+    dataError,
+    recognizer: rec.info,
+    recognizerError: rec.initError,
+    detector: detector.info,
+    camera: !!stream,
+    cameraError: error,
+  });
+  const ready = modelsReady(steps);
+  const coldStartMs = ready ? Math.max(dataAtMs ?? 0, rec.readyAtMs ?? 0, detector.readyAtMs ?? 0) : null;
+  const asOf = useMemo(() => latestAsOf(priceById.values()), [priceById]);
+
+  const exportSession = useCallback(() => {
+    const data = rec.session.toExport({
+      userAgent: navigator.userAgent,
+      coldStartMs,
+      recognizer: rec.info,
+      detector: detector.info,
+      video: videoSize,
+      fps: stats.fps,
+      tierMode,
+      packMode,
+      pricesAsOf: asOf,
+      config: CFG,
+    });
+    downloadJson(`rift-pulls-session-${new Date().toISOString().replace(/[:.]/g, "-")}.json`, data);
+  }, [rec.session, rec.info, coldStartMs, detector.info, videoSize, stats.fps, tierMode, packMode, asOf]);
+
   const onPick = useCallback(
     (printingId: string) => {
       rec.choose(printingId);
@@ -146,7 +187,9 @@ export default function App() {
     const onKey = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLSelectElement) return;
       const k = e.key.toLowerCase();
-      if (k === "d") setShowDebug((v) => !v);
+      if (k === "?") setShowKeys((v) => !v);
+      else if (k === "escape") setShowKeys(false);
+      else if (k === "d") setShowDebug((v) => !v);
       else if (k === "n") togglePackMode();
       else if (k === "b") rescan();
       else if (k === "m") setMirror((v) => !v);
@@ -159,7 +202,6 @@ export default function App() {
     return () => window.removeEventListener("keydown", onKey);
   }, [togglePackMode, rescan, toggleRing, toggleTierMode]);
 
-  const { overlay, videoSize, xf } = useGuideOverlay(videoRef, !!stream, ring ? "ring" : "plain");
   const phase = stats.state.phase;
   const boxClass = flash
     ? "recognized"
@@ -222,7 +264,6 @@ export default function App() {
         {(error || dataError || rec.initError) && (
           <p className="error" role="alert">{error ?? dataError ?? rec.initError}</p>
         )}
-        {!rec.ready && !rec.initError && <p className="loading">Loading recognizer…</p>}
         <video ref={videoRef} autoPlay playsInline muted className={mirror ? "mirrored" : ""} style={{ objectFit: FIT }} />
         {guideMode && overlay && (
           <div
@@ -254,7 +295,8 @@ export default function App() {
             onLimits={setLimits}
           />
         )}
-        {!started && <StartScreen onStart={start} />}
+        {!started && <StartScreen steps={steps} onStart={start} />}
+        {showKeys && <ShortcutsOverlay packMode={packModeEnabled} onClose={() => setShowKeys(false)} />}
         {phase === "ASKING" && rec.askOptions && (
           <VariantChooser
             options={rec.askOptions.map((id) => cardById.get(id)).filter((c): c is Card => !!c)}
@@ -267,11 +309,14 @@ export default function App() {
         )}
         {showDebug && !capture && <DetectionOverlay detection={stats.detection} xf={xf} mirrored={mirror} />}
         {showDebug && !capture && (
-          <DebugPanel stats={stats} packMode={packMode} videoSize={videoSize} rec={rec} detector={detector.info} cardById={cardById} prices={prices} />
+          <DebugPanel
+            stats={stats} packMode={packMode} videoSize={videoSize} rec={rec} detector={detector.info} cardById={cardById}
+            prices={prices} session={rec.session} coldStartMs={coldStartMs} onExport={exportSession}
+          />
         )}
         {capture && <CaptureMode cards={cards} videoRef={videoRef} />}
       </main>
-      <footer className="keys">D debug{packModeEnabled ? " · N pack mode" : ""} · H hype mode · T tiers · B rescan · M mirror · C capture mode · L ring light</footer>
+      <AppFooter asOf={asOf} onShortcuts={() => setShowKeys(true)} />
     </div>
   );
 }

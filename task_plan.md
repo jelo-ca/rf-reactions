@@ -91,6 +91,8 @@ Owner choices: trained ML detector (not a classical edge/quad finder); guide box
 - [ ] Recognition check on detector crops needs frames captured *with a printing picked* (all 58 have printingId null)
 - [x] M3 `homography.ts` (OpenCV fixtures) · worker `initDetector/detect` + quad `recognize` · `region.ts` + loop on warped card + guide-box fallback · debug quad overlay + panel rows; 123 app tests
 - [ ] Browser check with the real model (detector p95, fps, overlay alignment incl. mirror/ring light)
+- [x] v2 detector (owner, 2026-09-28): +35 frames, stronger real augmentation, fine-tuned from v1 → clean new-frame test 13.1% → 7.3%, held-out 6.0%; exported to the app
+- [x] Capture mode Space saves the detected card (was the hidden guide box)
 - [ ] Acceptance (PLAN §5.7): present acc ≥ 95%, corner err ≤ 3% card height, top-1 not worse than guide box, detector p95 ≤ 30 ms, fallback works
 - **Status:** squash-merged to `main` at the owner's request (2026-09-28) with acceptance open: present 100% ✅, corner 5.1% ❌ (bar 3%), recognition check + browser p95 pending
 

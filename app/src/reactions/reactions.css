@@ -40,18 +40,17 @@
   animation: fx-fade-in 200ms backwards, fx-fade-out 300ms 2050ms forwards;
 }
 
-/* 2 — Michael Rosen's "*click* Nice": he pops up on the click; on "Nice" (--nice) the caption slams in,
-   he nods and the camera video zoom-punches (fx.ts) */
+/* 2 — Michael Rosen's "*click* Nice": the GIF pops up on the click and plays so its "nice" lands on the
+   audio's; on "Nice" (--nice) the caption slams in and the camera video zoom-punches (fx.ts) */
 .fx-nice { position: absolute; inset: 0; --nice: 800ms; animation: fx-fade-out 400ms 2600ms forwards; }
-.rosen {
-  position: absolute; right: 0; bottom: 0; height: min(64vh, 520px); width: auto; filter: drop-shadow(0 8px 24px rgba(0, 0, 0, 0.6));
-  transform-origin: bottom right;
-  animation: fx-rosen-in 220ms cubic-bezier(0.2, 1.2, 0.4, 1) backwards, fx-rosen-nod 260ms var(--nice) ease-out;
+.fx-nice video.rosen { /* beats .stage video (the camera: 100% × 100%) */
+  position: absolute; right: 3%; bottom: 6%; width: min(50vw, 620px); height: auto; aspect-ratio: 965 / 500; object-fit: cover;
+  border: 3px solid #fff; border-radius: 14px; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7); background: #000;
+  transform-origin: bottom right; animation: fx-rosen-in 220ms cubic-bezier(0.2, 1.2, 0.4, 1) backwards;
 }
-@keyframes fx-rosen-in { from { transform: translateY(40%); opacity: 0; } }
-@keyframes fx-rosen-nod { 50% { transform: scale(1.06) rotate(-2deg); } }
+@keyframes fx-rosen-in { from { transform: translateY(40%) scale(0.8); opacity: 0; } }
 .nice-text {
-  position: absolute; right: calc(min(64vh, 520px) * 1.05); top: 30%; color: #fff; font: 900 96px/1 Impact, "Arial Black", sans-serif;
+  position: absolute; right: calc(3% + min(50vw, 620px) - 40px); bottom: calc(6% + min(50vw, 620px) * 0.518 - 30px); color: #fff; font: 900 96px/1 Impact, "Arial Black", sans-serif;
   letter-spacing: 0.04em; -webkit-text-stroke: 3px #000; text-shadow: 0 8px 30px rgba(0, 0, 0, 0.8);
   animation: fx-pop 260ms var(--nice) backwards;
 }

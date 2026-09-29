@@ -2,7 +2,7 @@
 // 0 golf clap · 1 crowd "OOOOH" · 2 Michael Rosen's "*click* Nice" (owner, 2026-09-28) · 3 classic air horns ·
 // 4 soyjak air horns (longer, memier; settles into a gold banner until the next card).
 // Each tier = one small component + CSS keyframes; stage shakes/confetti live in fx.ts, sounds in sounds.ts.
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import "./reactions.css";
 import { CFG } from "../config";
 import { NICE_AT_MS } from "./fx";
@@ -93,11 +93,20 @@ function CrowdOoh({ price }: TierProps) {
   );
 }
 
-/** 2 — Michael Rosen: *click* … "Nice". */
+/** The GIF's own "nice" (mouth opens) is ~0.55 s in; start it this late so it lines up with the audio. */
+const NICE_GIF_DELAY_MS = NICE_AT_MS - 550;
+
+/** 2 — Michael Rosen: *click* … "Nice" (the GIF, ending in the face-bulge "nooice"). */
 function RosenNice({ card, price }: TierProps) {
+  const ref = useRef<HTMLVideoElement>(null);
+  useEffect(() => {
+    const t = setTimeout(() => void ref.current?.play().catch(() => {}), NICE_GIF_DELAY_MS);
+    return () => clearTimeout(t);
+  }, []);
   return (
     <div className="fx-nice" style={{ "--nice": `${NICE_AT_MS}ms` } as React.CSSProperties}>
-      <img className="rosen" src="/memes/rosen-nice.png" alt="" draggable={false} />
+      {/* holds the first frame (hand at mouth, the *click*) until it plays, then the last (bulge) */}
+      <video ref={ref} className="rosen" src="/memes/rosen-nice.webm" muted playsInline preload="auto" />
       <div className="nice-text">NICE</div>
       <div className="nice-lower">
         <b>{card.name}</b> <span>{price}</span>

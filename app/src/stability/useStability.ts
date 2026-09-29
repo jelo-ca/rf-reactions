@@ -11,6 +11,7 @@ import { type Quad, scaleQuad, warpGray } from "../vision/homography";
 import type { DetectResult } from "../vision/worker";
 import { chooseRegion, cornersMoving, type Detection, type Region, toVideoQuad } from "./region";
 import { laplacianVariance, meanAbsDiff, toGray } from "./signals";
+import { percentile } from "../metrics/rolling";
 
 /** `stillAt` = performance.now() of the first still frame of this hold (session metrics, §10.1). */
 export type RecognizeFn = (quad: Quad | null, stillAt: number) => Promise<"accepted" | "rejected" | "ask">;
@@ -29,7 +30,9 @@ export interface DetectionStats {
 export interface StabilityStats {
   state: MachineState;
   signals: FrameSignals;
-  fps: number;
+  fps: number; // frames the loop processed in the last second
+  cameraFps: number | null; // frames the camera delivered in the last second (null: no requestVideoFrameCallback)
+  frameWork: { p50: number | null; p95: number | null }; // main-thread ms per processed frame, last ~2 s
   ready: boolean; // camera warm-up done (auto-exposure settled)
   lastStableToRecognizeMs: number | null; // first still frame of the run → RECOGNIZING
   lastStillToResultMs: number | null; // first still frame → recognition result (end to end)
@@ -52,6 +55,8 @@ export function useStability(
     state: initialState,
     signals: { change: 0, motion: 0, sharpness: null },
     fps: 0,
+    cameraFps: null,
+    frameWork: { p50: null, p95: null },
     ready: false,
     lastStableToRecognizeMs: null,
     lastStillToResultMs: null,
@@ -73,6 +78,8 @@ export function useStability(
     lastEffect: null as string | null,
     reactions: 0,
     fpsWindow: [] as number[],
+    camWindow: [] as [number, number][], // [time, presentedFrames]
+    workMs: [] as number[],
     tiny: null as CanvasRenderingContext2D | null,
     sharp: null as CanvasRenderingContext2D | null,
     wantRescan: false,
@@ -142,8 +149,13 @@ export function useStability(
 
     s.dispatch = dispatch;
 
-    const onFrame = () => {
+    const onFrame = (_t?: number, meta?: VideoFrameCallbackMetadata) => {
       if (stopped) return;
+      if (meta) {
+        const w = s.camWindow;
+        w.push([performance.now(), meta.presentedFrames]);
+        while (w.length > 2 && w.at(-1)![0] - w[0][0] > 1000) w.shift();
+      }
       if (video.readyState >= 2 && video.videoWidth > 0) {
         const vw = video.videoWidth;
         const vh = video.videoHeight;
@@ -221,6 +233,8 @@ export function useStability(
           if (ready) dispatch({ type: "frame", signals });
         }
 
+        s.workMs.push(performance.now() - now);
+        if (s.workMs.length > 60) s.workMs.shift();
         s.fpsWindow.push(now);
         while (s.fpsWindow.length && now - s.fpsWindow[0] > 1000) s.fpsWindow.shift();
         if (s.frames % STATS_EVERY_N_FRAMES === 0) {
@@ -228,6 +242,8 @@ export function useStability(
             state: s.machine,
             signals,
             fps: s.fpsWindow.length,
+            cameraFps: cameraFps(s.camWindow),
+            frameWork: { p50: percentile(s.workMs, 50), p95: percentile(s.workMs, 95) },
             ready,
             lastStableToRecognizeMs: s.lastStableToRecognizeMs,
             lastStillToResultMs: s.lastStillToResultMs,
@@ -264,6 +280,13 @@ export function useStability(
   }, [active, videoRef]);
 
   return { stats, rescan, pick };
+}
+
+/** Frames the camera presented per second over the window (counts frames the loop never saw). */
+function cameraFps(w: readonly [number, number][]): number | null {
+  if (w.length < 2) return null;
+  const dt = w.at(-1)![0] - w[0][0];
+  return dt > 0 ? Math.round(((w.at(-1)![1] - w[0][1]) * 1000) / dt) : null;
 }
 
 function makeCtx(w: number, h: number): CanvasRenderingContext2D {

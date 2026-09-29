@@ -51,7 +51,8 @@ export function DebugPanel({ stats, packMode, videoSize, rec, detector, cardById
     ["backend", rec.info ? `${rec.info.backend} · ${rec.info.threads}t` : "loading…"],
     ["cold start", coldStartMs === null ? "loading…" : ms(coldStartMs), coldStartMs !== null && coldStartMs < 10_000],
     ["load / warm-up", rec.info ? `${ms(rec.info.loadMs)} / ${ms(rec.info.warmupMs)}` : "—"],
-    ["fps · video", `${stats.fps} · ${videoSize.w}×${videoSize.h}`],
+    ["fps loop · camera", `${stats.fps} · ${stats.cameraFps ?? "—"} (${videoSize.w}×${videoSize.h})`, stats.fps >= 25],
+    ["frame work p50 / p95", `${ms(stats.frameWork.p50)} / ${ms(stats.frameWork.p95)}`],
     ["reactions · asks", `${stats.reactions} · ${rec.asks}`],
   ];
   const sum = session.summary();

@@ -167,13 +167,15 @@ export default function App() {
       detector: detector.info,
       video: videoSize,
       fps: stats.fps,
+      cameraFps: stats.cameraFps,
+      frameWorkMs: stats.frameWork,
       tierMode,
       packMode,
       pricesAsOf: asOf,
       config: CFG,
     });
     downloadJson(`rift-pulls-session-${new Date().toISOString().replace(/[:.]/g, "-")}.json`, data);
-  }, [rec.session, rec.info, coldStartMs, detector.info, videoSize, stats.fps, tierMode, packMode, asOf]);
+  }, [rec.session, rec.info, coldStartMs, detector.info, videoSize, stats.fps, stats.cameraFps, stats.frameWork, tierMode, packMode, asOf]);
 
   const onPick = useCallback(
     (printingId: string) => {

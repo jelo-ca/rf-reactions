@@ -316,7 +316,7 @@ export default function App() {
             prices={prices} session={rec.session} coldStartMs={coldStartMs} onExport={exportSession}
           />
         )}
-        {capture && <CaptureMode cards={cards} videoRef={videoRef} />}
+        {capture && <CaptureMode cards={cards} videoRef={videoRef} guideMode={guideMode} quad={stats.detection.quad} />}
       </main>
       <AppFooter asOf={asOf} onShortcuts={() => setShowKeys(true)} />
     </div>

@@ -1,17 +1,21 @@
 // Capture mode (PLAN.md §6.5): pick a printing, press Space to save the exact 224×320 crop the
 // recognizer would see as `<printing_id>__<timestamp>.png`. Builds the real-camera eval set (H4).
+// With the detector loaded that's the detected card, warped upright; without it, the guide box.
 import { type RefObject, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { bitmapToPngBlob, captureFileName, cropForModel } from "../camera/crop";
+import { bitmapToPngBlob, captureFileName, cropDetected, cropForModel } from "../camera/crop";
 import { searchCards } from "../data/loaders";
 import type { Card } from "../types";
+import type { Quad } from "../vision/homography";
 import { FrameLabeler } from "./FrameLabeler";
 
 interface Props {
   cards: readonly Card[];
   videoRef: RefObject<HTMLVideoElement | null>;
+  guideMode: boolean; // no detector model → crop the guide box
+  quad: Quad | null; // latest detected card corners (video pixels), null = no card
 }
 
-export function CaptureMode({ cards, videoRef }: Props) {
+export function CaptureMode({ cards, videoRef, guideMode, quad }: Props) {
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState<Card | null>(null);
   const [counts, setCounts] = useState<Record<string, number>>({});
@@ -24,6 +28,10 @@ export function CaptureMode({ cards, videoRef }: Props) {
     if (saved) setFrames((f) => ({ ...f, [saved]: f[saved] + 1 }));
   }, []);
   const inputRef = useRef<HTMLInputElement>(null);
+  const quadRef = useRef(quad); // read at key press; the quad changes every detection
+  useEffect(() => {
+    quadRef.current = quad;
+  }, [quad]);
   const results = useMemo(() => searchCards(cards, query, 12), [cards, query]);
 
   useEffect(() => {
@@ -42,8 +50,13 @@ export function CaptureMode({ cards, videoRef }: Props) {
       e.preventDefault();
       const video = videoRef.current;
       if (!selected || !video || !video.videoWidth) return;
+      const q = quadRef.current;
+      if (!guideMode && !q) {
+        setError("No card detected - hold it up until the green outline shows (D), then press Space.");
+        return;
+      }
       const file = captureFileName(selected.printingId);
-      cropForModel(video)
+      (guideMode ? cropForModel(video) : cropDetected(video, q!))
         .then(bitmapToPngBlob)
         .then((blob) => {
           const url = URL.createObjectURL(blob);
@@ -62,7 +75,7 @@ export function CaptureMode({ cards, videoRef }: Props) {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [selected, videoRef, labeling]);
+  }, [selected, videoRef, labeling, guideMode]);
 
   const choose = (c: Card) => {
     setSelected(c);
@@ -105,7 +118,9 @@ export function CaptureMode({ cards, videoRef }: Props) {
             <div className="muted">
               {selected.variant} · {counts[selected.printingId] ?? 0} captured
             </div>
-            <div className="hint">Hold it in the box · <kbd>Space</kbd> to save</div>
+            <div className="hint">
+              {guideMode ? "Hold it in the box" : quad ? "Card detected" : "Hold it up to the camera"} · <kbd>Space</kbd> to save
+            </div>
           </div>
         </div>
       ) : (

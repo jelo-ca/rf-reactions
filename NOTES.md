@@ -227,4 +227,4 @@ Chrome 153, WebGPU (recognizer + detector), 1280×720, booster pack mode, price 
 - Where it goes (p50 / p95): waiting for the card to be still (still → recognize) **200 / 223 ms**; recognition total 117 / 182 ms (prep 23 / 49, infer 84 / 132, search 0.3, layout 0 / 11, crop 0.3).
 - The hold-still wait is `STABLE_FRAMES = 3` frames, and the loop ran at **10 fps** at export time (Phase 2 measured 30–31 fps on the same camera), so 3 frames ≈ 200 ms. At 30 fps it would be ≈ 100 ms and p95 would land around 290 ms. Cause of the 10 fps not known yet (camera dropping frame rate in low light is the usual one).
 - Rejected holds of the same card were retried and mostly accepted on a later hold (OGN-168: 3 rejects, then 0.606).
-- Correctness not checked: the log has no ground truth. Owner to confirm whether any accepted card was wrong.
+- **Correctness (owner, 2026-09-28): none of the 23 accepts was wrong** → 21 reactions, 0 wrong. Counted toward the "20-card mock pack, zero wrong reactions" bar. The 9 rejects cost a re-hold but never a wrong reaction (28% reject rate is the accuracy backlog's problem, not a correctness one).

@@ -129,8 +129,9 @@ Owner choices: trained ML detector (not a classical edge/quad finder); guide box
 - [x] 10.3/10.4 README with the demo checklist
 - [x] Chrome check: loading → ready → start, ? / Esc, footer, no console errors; cold start 16.3 s first load / 8.1 s reload
 - [ ] HUMAN: confirm the Riot notice wording (footer + README)
-- [ ] HUMAN: acceptance — ≥ 30 pulls on the demo laptop, Export session, p95 still → result < 300 ms → I summarize in NOTES.md
-- [ ] HUMAN: 20-card mock pack opening with zero wrong reactions
+- [ ] Acceptance p95 still → result < 300 ms: first session (32 pulls) p95 **398 ms** ❌ — 200 ms is the 3-frame hold-still wait at 10 fps (was 30 fps in Phase 2). Next: owner checks fps with better light; else time-based / 2-frame stability
+- [x] Zero wrong reactions: same session, 21 reactions / 23 accepts, 0 wrong (owner confirmed)
+- [x] Cold start < 10 s warm: 4.5 s in that session
 - [ ] Cold start < 10 s on a *first* load (now 16.3 s; 8.1 s warm) — only if the owner wants it: parallel detector load / prod build
 - **Status:** code done; acceptance runs need the owner
 

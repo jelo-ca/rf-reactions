@@ -1,5 +1,5 @@
 // Reaction overlay above the video (PLAN.md §8.2), tiers reworked by the owner (2026-09-28):
-// 0 golf clap · 1 crowd "OOOOH" · 2 "wow" mogging slow-mo replay · 3 classic air horns ·
+// 0 golf clap · 1 crowd "OOOOH" · 2 The Rock's eyebrow raise (owner, 2026-09-28; was a "mogging" replay) · 3 classic air horns ·
 // 4 soyjak air horns (longer, memier; settles into a gold banner until the next card).
 // Each tier = one small component + CSS keyframes; stage shakes/confetti live in fx.ts, sounds in sounds.ts.
 import { useEffect, useState } from "react";
@@ -92,18 +92,15 @@ function CrowdOoh({ price }: TierProps) {
   );
 }
 
-/** 2 — slow-motion replay: letterbox, 0.25× tag, 🗿, MOGGED, aura gain. */
-function MogReplay({ card, price }: TierProps) {
+/** 2 — The Rock's eyebrow raise (vine boom): impressed, but suspicious. */
+function RockEyebrow({ card, price }: TierProps) {
   return (
-    <div className="fx-mog">
-      <div className="letterbox top" />
-      <div className="letterbox bottom" />
-      <div className="mog-tag">◀◀ REPLAY · 0.25×</div>
-      <div className="mog-wow">wow.</div>
-      <div className="mog-moai">🗿</div>
-      <div className="mog-text">MOGGED</div>
-      <div className="mog-aura">+1000 aura</div>
-      <div className="mog-lower">
+    <div className="fx-rock">
+      <div className="rock-face">
+        <img src="/memes/rock-eyebrow.jpg" alt="" draggable={false} />
+      </div>
+      <div className="rock-emoji">🤨</div>
+      <div className="rock-lower">
         <b>{card.name}</b> <span>{price}</span>
       </div>
     </div>
@@ -147,7 +144,7 @@ function SoyEpic({ card, price, priceUsd }: TierProps) {
           ✕
         </span>
       ))}
-      <div className="soy-title" data-text="IT'S REAL!!!">IT&apos;S REAL!!!</div>
+      <div className="soy-title" data-text="IS THIS IRL?!">IS THIS IRL?!</div>
       <div className="soy-bubble left">OMG</div>
       <div className="soy-bubble right">IS THAT A {card.name.split(" - ")[0].toUpperCase()}?!</div>
       <div className="soy-price">{priceUsd === undefined ? price : formatUsd(shown)}</div>
@@ -174,5 +171,5 @@ function useCountUp(target: number | undefined, delayMs: number, durationMs: num
   return v;
 }
 
-const TIERS = [GolfClap, CrowdOoh, MogReplay, AirHorn, SoyEpic];
+const TIERS = [GolfClap, CrowdOoh, RockEyebrow, AirHorn, SoyEpic];
 const TOP = TIERS.length - 1;

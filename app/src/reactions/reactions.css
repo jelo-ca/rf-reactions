@@ -40,33 +40,23 @@
   animation: fx-fade-in 200ms backwards, fx-fade-out 300ms 2050ms forwards;
 }
 
-/* 2 — "wow" mogging slow-mo replay: letterbox, desaturating vignette, 🗿, MOGGED, aura */
-.fx-mog { position: absolute; inset: 0; animation: fx-fade-out 500ms 3700ms forwards; }
-.fx-mog::before { content: ""; position: absolute; inset: 0; box-shadow: inset 0 0 200px 60px rgba(0, 0, 0, 0.8); animation: fx-fade-in 800ms backwards; }
-.fx-mog .letterbox { position: absolute; left: 0; right: 0; height: 12%; background: #000; animation: fx-letterbox 700ms ease-out backwards; }
-.fx-mog .letterbox.top { top: 0; transform-origin: top; }
-.fx-mog .letterbox.bottom { bottom: 0; transform-origin: bottom; }
-@keyframes fx-letterbox { from { transform: scaleY(0); } }
-.mog-tag { position: absolute; top: calc(12% + 12px); left: 20px; color: #fff; font: 800 18px/1 ui-monospace, Consolas, monospace; animation: fx-blink 900ms steps(1, end) infinite; }
-@keyframes fx-blink { 50% { opacity: 0.2; } }
-.mog-wow {
-  position: absolute; left: 50%; top: 24%; translate: -50% 0; color: #fff; font: italic 300 58px/1 Georgia, serif;
-  letter-spacing: 0.2em; text-shadow: 0 0 20px rgba(0, 0, 0, 0.9); animation: fx-slowmo-in 1800ms 300ms ease-out backwards;
+/* 2 — The Rock's eyebrow raise: vine boom + zoom punch, he cuts in and stares, slow push-in on his face */
+.fx-rock { position: absolute; inset: 0; animation: fx-fade-out 400ms 2600ms forwards; }
+.fx-rock::before { content: ""; position: absolute; inset: 0; box-shadow: inset 0 0 220px 70px rgba(0, 0, 0, 0.75); animation: fx-fade-in 120ms backwards; }
+.rock-face {
+  position: absolute; right: 3%; bottom: 6%; width: min(40vw, 420px); aspect-ratio: 600 / 611; overflow: hidden;
+  border-radius: 14px; border: 3px solid #fff; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7);
+  animation: fx-rock-cut 110ms 60ms steps(2, end) backwards;
 }
-@keyframes fx-slowmo-in { from { opacity: 0; transform: scale(1.6); letter-spacing: 0.6em; } }
-.mog-moai { position: absolute; right: 12%; top: 34%; font-size: 90px; animation: fx-moai 2600ms 700ms ease-in-out backwards; }
-@keyframes fx-moai { 0% { opacity: 0; transform: translateX(60px) rotate(8deg); } 40% { opacity: 1; transform: translateX(0) rotate(-4deg); } 100% { transform: rotate(0deg); } }
-.mog-text {
-  position: absolute; left: 50%; top: 48%; translate: -50% 0; font: 900 76px/1 Impact, "Arial Black", sans-serif;
-  color: #fff; letter-spacing: 0.08em; -webkit-text-stroke: 2px #000; text-shadow: 0 6px 30px rgba(0, 0, 0, 0.9);
-  animation: fx-slam 700ms 1300ms cubic-bezier(0.2, 1.3, 0.4, 1) backwards;
+.rock-face img { width: 100%; height: 100%; object-fit: cover; transform-origin: 52% 42%; animation: fx-rock-push 2900ms 60ms linear both; }
+@keyframes fx-rock-cut { from { opacity: 0; transform: scale(1.25); } }
+@keyframes fx-rock-push { from { transform: scale(1); } to { transform: scale(1.18); } }
+.rock-emoji { position: absolute; right: calc(3% + min(40vw, 420px) - 30px); bottom: calc(6% + min(40vw, 420px) * 0.93 - 40px); font-size: 72px; animation: fx-pop 300ms 350ms backwards; }
+.rock-lower {
+  position: absolute; left: 24px; bottom: 6%; padding: 6px 14px; background: rgba(0, 0, 0, 0.75); color: #fff;
+  font-size: 18px; border-left: 6px solid #f5c542; animation: fx-slide-up 400ms 450ms ease-out backwards;
 }
-.mog-aura { position: absolute; left: 14%; top: 36%; color: #b27cff; font: 800 26px/1 system-ui; text-shadow: 0 0 16px #b27cff; animation: fx-drift-up 2200ms 1600ms ease-out backwards; }
-.mog-lower {
-  position: absolute; left: 24px; bottom: calc(12% + 14px); padding: 6px 14px; background: rgba(0, 0, 0, 0.75); color: #fff;
-  font-size: 18px; border-left: 6px solid #b27cff; animation: fx-slide-up 600ms 900ms ease-out backwards;
-}
-.mog-lower span { font-weight: 900; margin-left: 8px; }
+.rock-lower span { font-weight: 900; margin-left: 8px; }
 @keyframes fx-slide-up { from { opacity: 0; transform: translateY(30px); } }
 
 /* 3 — classic air horns (MLG) */
@@ -198,5 +188,5 @@
      slams, shakes, flicker, glitches or strobing. fx.ts also skips stage shakes and confetti. */
   .reaction-layer *, .reaction-layer *::before { animation: none !important; }
   .fx-golf .claps span { opacity: 1; }
-  .fx-soy .fry, .fx-soy .flash, .fx-soy .soy-pre, .hitmarker, .flames, .mog-tag { display: none; }
+  .fx-soy .fry, .fx-soy .flash, .fx-soy .soy-pre, .hitmarker, .flames { display: none; }
 }

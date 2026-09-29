@@ -219,3 +219,12 @@ The app never uses layout alone; §6.4 combines them. Human approved the new bar
 - **? overlay** + footer link; **footer** credits with the price snapshot date and Riot's fan-project notice (Legal Jibber Jabber wording). **Owner to confirm the wording.**
 - README written (install, build data, run, parity, tests, metrics, demo checklist).
 - `search.test.ts` "fast enough at demo scale" failed twice under full-suite load (3.7 s), passes alone. Timing test, not related to these changes.
+
+### First real session (owner, exported 2026-09-29 00:48 UTC, `rift-pulls-session-2026-09-29T00-48-11-648Z.json`)
+Chrome 153, WebGPU (recognizer + detector), 1280×720, booster pack mode, price tiers. Cold start **4.5 s** (warm cache).
+- 32 pulls: 23 accepted, 9 rejected (all `low_score`, top score 0.33–0.42 vs ACCEPT_T 0.42), 0 asks; 21 reactions (2 accepts were repeat-guard skips).
+- **still → result p50 320 ms / p95 398 ms: misses the < 300 ms bar.** still → reaction p50 324 / p95 376 ms.
+- Where it goes (p50 / p95): waiting for the card to be still (still → recognize) **200 / 223 ms**; recognition total 117 / 182 ms (prep 23 / 49, infer 84 / 132, search 0.3, layout 0 / 11, crop 0.3).
+- The hold-still wait is `STABLE_FRAMES = 3` frames, and the loop ran at **10 fps** at export time (Phase 2 measured 30–31 fps on the same camera), so 3 frames ≈ 200 ms. At 30 fps it would be ≈ 100 ms and p95 would land around 290 ms. Cause of the 10 fps not known yet (camera dropping frame rate in low light is the usual one).
+- Rejected holds of the same card were retried and mostly accepted on a later hold (OGN-168: 3 rejects, then 0.606).
+- Correctness not checked: the log has no ground truth. Owner to confirm whether any accepted card was wrong.

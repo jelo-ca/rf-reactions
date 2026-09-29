@@ -21,7 +21,7 @@ A local web app for a **live demo**. The user holds a freshly pulled Riftbound c
 - No live price lookups at runtime. Prices are a **one-time snapshot** fetched by the pipeline (Phase 0) and never refreshed automatically.
 - No network calls from the app at runtime. Everything the app needs is fetched once, cached, and bundled.
 - No vector database. Search is brute-force in a Web Worker.
-- No copyrighted meme audio or images. Sounds are synthesized (see Phase 5).
+- Reaction sounds and soyjaks are real meme recordings/art in `app/public/memes/` (owner, 2026-09-28), credited in `CREDITS.md` there. Only the soyjak bass drop is synthesized.
 
 ### Core architecture
 ```
@@ -691,7 +691,7 @@ Try in order, re-running eval after each, and log results:
 ### 8.2 Tier effects (`reactions/`)
 Each tier is one React component plus one sound. Effects render in an overlay layer above the video.
 
-> **Revised again (owner, 2026-09-28): 5 tiers.** 0 proper golf clap (a few spectators) · 1 natural crowd "OOOOH" (old 1 + 2 merged) · 2 "wow" mogging slow-motion replay · 3 classic air horns · 4 soyjak air horns (longer, memier; gold banner until the next card). Price ≤1 / ≤20 / ≤75 / ≤200 / above; hype mode Common 0, Uncommon 1, Rare 1, Epic 2, Promo 3, Showcase 4, foil +1. Soyjaks are an original inline-SVG drawing (no meme files).
+> **Revised again (owner, 2026-09-28): 5 tiers.** 0 proper golf clap (a few spectators) · 1 natural crowd "OOOOH" (old 1 + 2 merged) · 2 "wow" mogging slow-motion replay · 3 classic air horns · 4 soyjak air horns (longer, memier; gold banner until the next card). Price ≤1 / ≤20 / ≤75 / ≤200 / above; hype mode Common 0, Uncommon 1, Rare 1, Epic 2, Promo 3, Showcase 4, foil +1. Soyjaks are the real "Two Soyjaks Pointing" art; sounds are real clips (golf clap, crowd ooh, crowd wow, MLG air horn) — see `app/public/memes/CREDITS.md`.
 >
 > **Revised (owner, 2026-09-27): comedic tiers.** Same six tiers, durations and rules, new theme — 0 golf clap · 1 participation trophy (kazoo) · 2 sitcom studio audience "OHHH" · 3 instant replay (whistle + stadium) · 4 air horn / MLG · 5 over-edited epic (riser → bass-boosted impact, deep-fried, stays as a gold banner until the next card). H5 mapping: Common 0, Uncommon 1, Rare 2, Epic 3, Promo 4, Showcase 5, foil +1. Details in NOTES.md. The table below is the original spec.
 
@@ -707,7 +707,7 @@ Each tier is one React component plus one sound. Effects render in an overlay la
 Rules:
 - Use CSS keyframes on `transform` and `opacity` only, plus `canvas-confetti`. Add PixiJS **only** if tier 5 truly needs it, and log why.
 - Respect `prefers-reduced-motion` with a calmer version of each tier.
-- **Sounds:** synthesize with the Web Audio API (oscillators, noise buffers, gain envelopes) in `reactions/sounds.ts`. Do not download or bundle meme audio. The human may later drop licensed files into `public/sounds/`; support an optional override path per tier.
+- **Sounds:** real clips in `public/memes/` played through Web Audio in `reactions/sounds.ts` (credits in `public/memes/CREDITS.md`); tiers.json `sounds` can override a tier with another file.
 - Unlock audio on the first user click (browser autoplay rules). Show a "Click to start" screen that also initializes the worker.
 
 ### ✅ Phase 5 acceptance

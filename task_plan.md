@@ -102,6 +102,8 @@ Owner choices: trained ML detector (not a classical edge/quad finder); guide box
 ### Reactions rework (owner, 2026-09-28) — branch `feat/meme-reactions` (stacked on `feat/tier-tuning`)
 - [x] 5 tiers: golf clap · crowd OOOH (1+2 merged) · mogging slow-mo replay · classic air horns · soyjak air horns; tiers.json, sounds, visuals, fx, tests (135)
 - [ ] HUMAN: listen/watch all 5 via T; say what to tweak
+- [x] Real assets (owner: synth "too AI generated"), branch `feat/real-meme-assets`: golf clap / crowd ooh / crowd wow / MLG horn clips + real Two Soyjaks Pointing art in `app/public/memes/` (CREDITS.md); `MOTION_T` 4 → 7
+- [ ] HUMAN: audition the clips via T (golf clap cut, 1.8 s wow under a 4.2 s replay); squash-merge `feat/real-meme-assets` when happy
 
 ### Backlog: Nexus Night pack mode (switched off 2026-09-27, owner)
 - [ ] Find a source that says which printings come out of Nexus Night packs (Riftcodex misses some; TCGCSV doesn't mark them Promo) — 39 TCGCSV-only OPP candidates listed in NOTES.md

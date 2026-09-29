@@ -3,7 +3,7 @@
 export const CFG = {
   // Stability (§5.4–5.5)
   CHANGE_T: 12, // mean abs diff vs the last checked view (0–255): above = something new in the box
-  MOTION_T: 4, // mean abs diff between consecutive frames
+  MOTION_T: 7, // mean abs diff between consecutive frames (was 4; owner raised it 2026-09-28)
   STABLE_FRAMES: 3,
   SHARP_T: 60, // Laplacian variance
   RETRIES: 2,

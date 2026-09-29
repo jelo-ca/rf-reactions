@@ -137,8 +137,8 @@ function SoyEpic({ card, price, priceUsd }: TierProps) {
       <div className="spotlight" />
       <div className="flames" />
       <img className="soy-card" src={card.imageUrl} alt="" />
-      <Soyjak className="soyjak left" />
-      <Soyjak className="soyjak right" />
+      <Soyjak variant="glasses" className="soyjak left" />
+      <Soyjak variant="pointing" className="soyjak right" />
       <div className="soy-pre">NO WAY</div>
       <div className="flash" />
       <div className="fry" />

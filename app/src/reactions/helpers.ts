@@ -37,3 +37,12 @@ export function sampleCardForTier(
   }
   return best;
 }
+
+/**
+ * Index of the first sample louder than `threshold`, so a recording starts on its first clap/horn
+ * instead of on lead-in room noise. Returns 0 for silence (play from the start).
+ */
+export function firstSoundIndex(samples: Float32Array, threshold = 0.05): number {
+  for (let i = 0; i < samples.length; i++) if (Math.abs(samples[i]) >= threshold) return i;
+  return 0;
+}

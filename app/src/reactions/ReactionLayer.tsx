@@ -4,6 +4,7 @@
 // Each tier = one small component + CSS keyframes; stage shakes/confetti live in fx.ts, sounds in sounds.ts.
 import { useEffect, useRef, useState } from "react";
 import "./reactions.css";
+import { assetUrl } from "../assetUrl";
 import { CFG } from "../config";
 import { NICE_AT_MS } from "./fx";
 import { formatUsd } from "../prices/priceCard";
@@ -106,7 +107,7 @@ function RosenNice({ card, price }: TierProps) {
   return (
     <div className="fx-nice" style={{ "--nice": `${NICE_AT_MS}ms` } as React.CSSProperties}>
       {/* holds the first frame (hand at mouth, the *click*) until it plays, then the last (bulge) */}
-      <video ref={ref} className="rosen" src="/memes/rosen-nice.webm" muted playsInline preload="auto" />
+      <video ref={ref} className="rosen" src={assetUrl("/memes/rosen-nice.webm")} muted playsInline preload="auto" />
       <div className="nice-text">NICE</div>
       <div className="nice-lower">
         <b>{card.name}</b> <span>{price}</span>

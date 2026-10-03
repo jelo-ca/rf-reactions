@@ -1,6 +1,7 @@
 /// <reference lib="webworker" />
 // Vision worker (PLAN.md §6.1–6.4): crop → tensor → ONNX embed → search → layout → decide.
 // Exposed to the main thread with Comlink. Everything is loaded once and kept in memory.
+import { assetUrl } from "../assetUrl";
 import * as Comlink from "comlink";
 import * as ort from "onnxruntime-web/webgpu";
 import { CFG } from "../config";
@@ -61,7 +62,7 @@ let detector: { session: ort.InferenceSession } | null = null;
 let detectorOnce: Promise<DetectorInfo> | null = null;
 
 async function fetchOk(url: string): Promise<Response> {
-  const res = await fetch(url);
+  const res = await fetch(assetUrl(url));
   if (!res.ok) throw new Error(`${url}: HTTP ${res.status}`);
   return res;
 }
@@ -106,7 +107,7 @@ function warpedPixels(frame: ImageBitmap, quad: Quad): Uint8ClampedArray {
 
 async function loadDetector(): Promise<DetectorInfo> {
   const t0 = performance.now();
-  const res = await fetch("/models/detector.onnx");
+  const res = await fetch(assetUrl("/models/detector.onnx"));
   // Vite's dev server answers unknown paths with index.html, so check the type too.
   if (!res.ok || (res.headers.get("content-type") ?? "").includes("html")) {
     return { available: false, error: "no /models/detector.onnx - run pipeline/export_detector.py" };
@@ -170,7 +171,7 @@ async function doInit(): Promise<InitInfo> {
       json<Price[]>("/data/prices.json"),
     ]);
     if (!meta.recognizerFile) throw new Error("meta.json has no recognizerFile - run pipeline/export_search.py");
-    const { session, backend } = await createSession(meta.recognizerFile);
+    const { session, backend } = await createSession(assetUrl(meta.recognizerFile));
     state = {
       session,
       index: rowIndex(ids),

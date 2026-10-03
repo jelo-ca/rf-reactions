@@ -28,3 +28,6 @@ app/public/data/*
 !app/public/data/tiers.json
 app/public/models/
 app/public/fixtures/
+
+# Site upload package (scripts/package_site.py)
+out/

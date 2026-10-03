@@ -1,10 +1,11 @@
 // Reaction overlay above the video (PLAN.md §8.2), tiers reworked by the owner (2026-09-28):
-// 0 golf clap · 1 crowd "OOOOH" · 2 "wow" mogging slow-mo replay · 3 classic air horns ·
+// 0 golf clap · 1 crowd "OOOOH" · 2 Michael Rosen's "*click* Nice" (owner, 2026-09-28) · 3 classic air horns ·
 // 4 soyjak air horns (longer, memier; settles into a gold banner until the next card).
 // Each tier = one small component + CSS keyframes; stage shakes/confetti live in fx.ts, sounds in sounds.ts.
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import "./reactions.css";
 import { CFG } from "../config";
+import { NICE_AT_MS } from "./fx";
 import { formatUsd } from "../prices/priceCard";
 import type { Card } from "../types";
 import { countUp } from "./helpers";
@@ -92,18 +93,22 @@ function CrowdOoh({ price }: TierProps) {
   );
 }
 
-/** 2 — slow-motion replay: letterbox, 0.25× tag, 🗿, MOGGED, aura gain. */
-function MogReplay({ card, price }: TierProps) {
+/** The GIF's own "nice" (mouth opens) is ~0.55 s in; start it this late so it lines up with the audio. */
+const NICE_GIF_DELAY_MS = NICE_AT_MS - 550;
+
+/** 2 — Michael Rosen: *click* … "Nice" (the GIF, ending in the face-bulge "nooice"). */
+function RosenNice({ card, price }: TierProps) {
+  const ref = useRef<HTMLVideoElement>(null);
+  useEffect(() => {
+    const t = setTimeout(() => void ref.current?.play().catch(() => {}), NICE_GIF_DELAY_MS);
+    return () => clearTimeout(t);
+  }, []);
   return (
-    <div className="fx-mog">
-      <div className="letterbox top" />
-      <div className="letterbox bottom" />
-      <div className="mog-tag">◀◀ REPLAY · 0.25×</div>
-      <div className="mog-wow">wow.</div>
-      <div className="mog-moai">🗿</div>
-      <div className="mog-text">MOGGED</div>
-      <div className="mog-aura">+1000 aura</div>
-      <div className="mog-lower">
+    <div className="fx-nice" style={{ "--nice": `${NICE_AT_MS}ms` } as React.CSSProperties}>
+      {/* holds the first frame (hand at mouth, the *click*) until it plays, then the last (bulge) */}
+      <video ref={ref} className="rosen" src="/memes/rosen-nice.webm" muted playsInline preload="auto" />
+      <div className="nice-text">NICE</div>
+      <div className="nice-lower">
         <b>{card.name}</b> <span>{price}</span>
       </div>
     </div>
@@ -147,7 +152,7 @@ function SoyEpic({ card, price, priceUsd }: TierProps) {
           ✕
         </span>
       ))}
-      <div className="soy-title" data-text="IT'S REAL!!!">IT&apos;S REAL!!!</div>
+      <div className="soy-title" data-text="IS THIS IRL?!">IS THIS IRL?!</div>
       <div className="soy-bubble left">OMG</div>
       <div className="soy-bubble right">IS THAT A {card.name.split(" - ")[0].toUpperCase()}?!</div>
       <div className="soy-price">{priceUsd === undefined ? price : formatUsd(shown)}</div>
@@ -174,5 +179,5 @@ function useCountUp(target: number | undefined, delayMs: number, durationMs: num
   return v;
 }
 
-const TIERS = [GolfClap, CrowdOoh, MogReplay, AirHorn, SoyEpic];
+const TIERS = [GolfClap, CrowdOoh, RosenNice, AirHorn, SoyEpic];
 const TOP = TIERS.length - 1;

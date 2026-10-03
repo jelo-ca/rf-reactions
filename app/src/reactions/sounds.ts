@@ -13,8 +13,9 @@ const buffers = new Map<string, Promise<AudioBuffer | null>>();
 const MEME = {
   golfClap: "/memes/golf-clap.mp3",
   crowdOoh: "/memes/crowd-ooh.mp3",
-  crowdWow: "/memes/crowd-wow.mp3",
+  nice: "/memes/rosen-nice.mp3", // Michael Rosen "*click* Nice"; starts on the click, "Nice" ~0.8 s later
   airHorn: "/memes/mlg-airhorn.mp3",
+  omg: "/memes/oh-my-god.mp3", // the Xbox kid "OH MY GOD" (owner, 2026-09-28)
 };
 
 /** Create/resume the AudioContext and preload the clips. Call from a user gesture (browser autoplay rules). */
@@ -150,17 +151,21 @@ function distortion(c: AudioContext, amount: number): WaveShaperNode {
 
 /**
  * Tier 4 — soyjak air horns: MLG horn stabs getting faster up to EPIC_IMPACT_MS, a bass-boosted
- * drop, then the full horn twice, the second one slowed down.
+ * drop with the Xbox kid's "OH MY GOD" on top ("IS THIS IRL?!"), then the full horn twice, the
+ * second one slowed down.
  */
 const soyHorns: Tier = async (c, out) => {
-  const horn = await load(c, MEME.airHorn);
+  const [horn, omg] = await Promise.all([load(c, MEME.airHorn), load(c, MEME.omg)]);
   const t0 = c.currentTime + 0.02;
   const hit = t0 + CFG.EPIC_IMPACT_MS / 1000;
+  if (omg) clip(c, out, omg, hit + 0.05, { gain: 1.2, fade: 0.1 });
+  // the full horn waits for the voice (mostly), so "OH MY GOD" isn't buried
+  const after = hit + 0.15 + (omg ? Math.min(omg.duration, 2) * 0.8 : 0);
   if (horn) {
     const pattern = [0, 0.3, 0.55, 0.78, 0.98, 1.15, 1.3, 1.42, 1.53, 1.62, 1.7];
     pattern.forEach((at, i) => clip(c, out, horn, t0 + at, { dur: i < 3 ? 0.2 : 0.08, fade: 0.03, gain: 0.7 }));
-    clip(c, out, horn, hit + 0.15, { gain: 0.9 });
-    clip(c, out, horn, hit + 0.15 + horn.duration * 0.9, { gain: 0.9, rate: 0.8 });
+    clip(c, out, horn, after, { gain: 0.9 });
+    clip(c, out, horn, after + horn.duration * 0.9, { gain: 0.9, rate: 0.8 });
   }
   // the drop: distorted sub thump + crack
   const boom = c.createOscillator();
@@ -175,7 +180,7 @@ const soyHorns: Tier = async (c, out) => {
 const TIERS: Tier[] = [
   single(MEME.golfClap, { dur: CFG.REACTION_MS[0] / 1000, fade: 0.8 }), // 0 — a few people, clearly unimpressed
   single(MEME.crowdOoh), // 1 — crowd "OOOOH"
-  single(MEME.crowdWow), // 2 — crowd "wooow" for the mogging replay
+  single(MEME.nice, { gain: 1.3 }), // 2 — Michael Rosen "*click* Nice"
   single(MEME.airHorn), // 3 — the MLG air horn
   soyHorns, // 4
 ];

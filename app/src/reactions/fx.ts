@@ -15,10 +15,14 @@ function shake(el: HTMLElement, px: number, ms: number, delay = 0): Animation {
   return el.animate(frames, { duration: ms, delay, easing: "linear" });
 }
 
-function slowZoom(el: HTMLElement, scale: number, ms: number): Animation {
-  return el.animate([{ transform: "scale(1)" }, { transform: `scale(${scale})`, offset: 0.7 }, { transform: "scale(1)" }], {
+/** Snap in to `scale` (~90 ms), hold, ease back out over the last third. Uses the CSS `scale`
+ *  property, not `transform`, so a mirrored video (transform: scaleX(-1)) stays mirrored. */
+function zoomPunch(el: HTMLElement, scale: number, ms: number, delay = 0): Animation {
+  const zoomed = { scale: String(scale) };
+  return el.animate([{ scale: "1" }, { ...zoomed, offset: 90 / ms }, { ...zoomed, offset: 0.65 }, { scale: "1" }], {
     duration: ms,
-    easing: "ease-in-out",
+    delay,
+    easing: "linear",
   });
 }
 
@@ -37,6 +41,9 @@ function punches(el: HTMLElement, delay: number): Animation {
     { duration: 1400, delay, easing: "ease-out" },
   );
 }
+
+/** When Rosen says "Nice" after the click, from the start of the trimmed clip (sounds.ts). */
+export const NICE_AT_MS = 800;
 
 const emoji = (text: string) => confetti.shapeFromText({ text, scalar: 3 });
 
@@ -58,9 +65,13 @@ export function stageFx(tier: number, stage: HTMLElement | null): () => void {
     case 0: // golf clap: nothing moves, that's the joke
     case 1: // crowd OOOH: the caption does the work
       break;
-    case 2: // mogging slow-mo replay: a slow, heavy push-in
-      if (stage && !calm) anims.push(slowZoom(stage, 1.1, CFG.REACTION_MS[2]));
+    case 2: {
+      // Michael Rosen: a hard zoom punch on "Nice", held, then eased back. Only the camera video
+      // zooms; zooming the stage would push Rosen and the caption off screen.
+      const video = stage?.querySelector("video");
+      if (video && !calm) anims.push(zoomPunch(video, 1.15, CFG.REACTION_MS[2] - NICE_AT_MS, NICE_AT_MS));
       break;
+    }
     case 3: {
       // classic air horns: a jolt per blast + fire confetti
       if (stage && !calm) anims.push(shake(stage, 14, 260), shake(stage, 14, 260, 240), shake(stage, 20, 800, 480));

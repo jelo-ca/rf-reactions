@@ -33,6 +33,8 @@ import { useDetector } from "./vision/useDetector";
 import { useRecognizer } from "./vision/useRecognizer";
 
 const FIT: ObjectFit = "cover";
+// Built for imajello.com/projects/rift-pulls (npm run build:site): show a link back to the site.
+const ON_SITE = import.meta.env.BASE_URL !== "/";
 const FLASH_MS = 600;
 
 export default function App() {
@@ -229,6 +231,11 @@ export default function App() {
   return (
     <div className={ring ? "app ring-on" : "app"}>
       <header className="bar">
+        {ON_SITE && (
+          <a className="home-link" href="/" title="Back to imajello.com">
+            ← imajello.com
+          </a>
+        )}
         <h1>Rift Pulls</h1>
         <label>
           Camera{" "}

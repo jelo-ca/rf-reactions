@@ -24,6 +24,12 @@ body { background: var(--bg); color: var(--text); }
   padding: 8px 16px; border-bottom: 1px solid #22242c;
 }
 .bar h1 { font-size: 18px; margin: 0 12px 0 0; letter-spacing: 0.02em; }
+.home-link {
+  padding: 5px 10px; border: 1px solid #2c2f39; border-radius: 6px; color: var(--muted); font-size: 13px;
+  text-decoration: none; white-space: nowrap;
+}
+.home-link:hover { color: var(--text); border-color: #444a58; }
+.app.ring-on .home-link { color: #555; border-color: #ddd; }
 .bar select, .bar button {
   background: #1b1d24; color: var(--text); border: 1px solid #2c2f39;
   border-radius: 6px; padding: 6px 10px; font: inherit; font-size: 14px;

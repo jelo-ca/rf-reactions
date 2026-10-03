@@ -8,6 +8,9 @@ card's value.
 All inference runs on the user's device with ONNX Runtime Web (WebGPU, with a WebAssembly
 fallback). There is no backend and no network traffic at runtime beyond loading the static files.
 
+**Live demo:** [imajello.com/projects/rift-pulls](https://imajello.com/projects/rift-pulls/) (needs a
+webcam; Chrome or Edge recommended).
+
 ## How it works
 
 ```

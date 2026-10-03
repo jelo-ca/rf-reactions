@@ -1,6 +1,7 @@
 // Reaction sounds (PLAN.md §8.2): real recordings in public/memes/ (credits in public/memes/CREDITS.md),
 // trimmed to their first sound and faded out. Only the soyjak tier's bass drop is still synthesized.
 // tiers.json `sounds` can point a tier at a different file.
+import { assetUrl } from "../assetUrl";
 import { CFG } from "../config";
 import { firstSoundIndex } from "./helpers";
 
@@ -55,7 +56,7 @@ export async function playTier(tier: number, overrideUrl?: string): Promise<void
 function load(c: AudioContext, url: string): Promise<AudioBuffer | null> {
   let p = buffers.get(url);
   if (!p) {
-    p = fetch(url)
+    p = fetch(assetUrl(url))
       .then((r) => (r.ok ? r.arrayBuffer() : Promise.reject(new Error(`HTTP ${r.status}`))))
       .then((b) => c.decodeAudioData(b))
       .catch((e: unknown) => {

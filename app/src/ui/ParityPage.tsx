@@ -1,4 +1,5 @@
 // Parity page (PLAN.md §6.7, route #parity): run the Python fixtures through the real worker path.
+import { assetUrl } from "../assetUrl";
 import { useEffect, useState } from "react";
 import { transfer, vision } from "../vision/client";
 import type { InitInfo } from "../vision/worker";
@@ -41,9 +42,9 @@ export function ParityPage() {
       const i = await v.init();
       if (cancelled) return;
       setInfo(i);
-      const expected: Expected[] = await (await fetch("/fixtures/parity/expected.json")).json();
+      const expected: Expected[] = await (await fetch(assetUrl("/fixtures/parity/expected.json"))).json();
       for (const e of expected) {
-        const blob = await (await fetch(`/fixtures/parity/${e.file}`)).blob();
+        const blob = await (await fetch(assetUrl(`/fixtures/parity/${e.file}`))).blob();
         const bmp = await createImageBitmap(blob);
         const t = performance.now();
         const got = await v.signatures(transfer(bmp));

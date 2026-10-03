@@ -1,14 +1,17 @@
 // Loaders for the static files in public/data (built by scripts/build_data.sh).
+import { assetUrl } from "../assetUrl";
 import { validateTiers } from "../reactions/tiers";
 import type { Card, Price } from "../types";
 
 async function getJson<T>(url: string): Promise<T> {
-  const res = await fetch(url);
+  const res = await fetch(assetUrl(url));
   if (!res.ok) throw new Error(`${url}: HTTP ${res.status} - run scripts/build_data.sh`);
   return (await res.json()) as T;
 }
 
-export const loadCards = () => getJson<Card[]>("/data/cards.json");
+// imageUrl in cards.json is root-relative ("/data/images/x.jpg"); resolve it under the app's base.
+export const loadCards = () =>
+  getJson<Card[]>("/data/cards.json").then((cs) => cs.map((c) => ({ ...c, imageUrl: assetUrl(c.imageUrl) })));
 export const loadPrices = () => getJson<Price[]>("/data/prices.json");
 export const loadTiers = () => getJson<unknown>("/data/tiers.json").then(validateTiers);
 

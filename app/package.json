@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vitest run src/prices/pricesData.test.ts && vite build",
+    "build:site": "npm run build -- --base=/projects/rift-pulls/",
     "lint": "oxlint",
     "preview": "vite preview",
     "test": "vitest run",

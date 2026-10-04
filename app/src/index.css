@@ -18,6 +18,7 @@ html, body, #root { height: 100%; margin: 0; }
 body { background: var(--bg); color: var(--text); }
 
 .app { display: grid; grid-template-rows: auto 1fr auto; height: 100%; overflow: hidden; } /* stage shakes/zooms (reactions) must not scroll the page */
+@supports (height: 100dvh) { .app { height: 100dvh; } } /* mobile: exclude the browser's address bar */
 
 .bar {
   display: flex; flex-wrap: wrap; align-items: center; gap: 12px;
@@ -86,6 +87,36 @@ body { background: var(--bg); color: var(--text); }
 
 @media (max-width: 600px) {
   .debug { width: auto; left: 12px; }
+}
+
+/* Keyboard-only bits on touch screens: hide the shortcuts link, show tap buttons instead. */
+@media (hover: hover) and (pointer: fine) { .touch-only { display: none; } }
+@media (hover: none) { .keys .linkish { display: none; } }
+.bar button[aria-pressed="true"] { border-color: var(--busy); color: var(--busy); }
+
+/* Phones: one scrollable toolbar row, overlays sized to the screen, status pill moved to the top so
+   it doesn't sit on the price card. */
+@media (max-width: 600px) {
+  .bar {
+    flex-wrap: nowrap; gap: 8px; padding: 6px 12px; overflow-x: auto; scrollbar-width: none;
+  }
+  .bar::-webkit-scrollbar { display: none; }
+  .bar > * { flex: none; white-space: nowrap; }
+  .bar h1 { font-size: 16px; margin-right: 4px; }
+  .bar .bar-label { display: none; }
+  .bar select { max-width: 140px; }
+  .keys { padding: 4px 12px; gap: 2px 10px; font-size: 11px; }
+  .keys .legal { font-size: 9px; }
+  .status-pill { top: 12px; bottom: auto; font-size: 14px; }
+  .price-card { left: 8px; bottom: 8px; gap: 10px; padding: 8px 12px 8px 8px; max-width: calc(100% - 16px); }
+  .price-card h2 { font-size: 16px; }
+  .stage .debug { max-height: 45%; } /* .stage: beats the later .debug max-height */
+  .result-chip { display: none; } /* debug-only, would cover the price card; the panel shows the result */
+  .capture { width: auto; left: 12px; }
+  .chooser { place-content: safe center; overflow: auto; padding: 16px; }
+  .chooser-options { gap: 10px; }
+  .chooser-options button { width: 150px; padding: 8px; }
+  .chooser-options img { width: 120px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

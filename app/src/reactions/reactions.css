@@ -42,15 +42,15 @@
 
 /* 2 — Michael Rosen's "*click* Nice": the GIF pops up on the click and plays so its "nice" lands on the
    audio's; on "Nice" (--nice) the caption slams in and the camera video zoom-punches (fx.ts) */
-.fx-nice { position: absolute; inset: 0; --nice: 800ms; animation: fx-fade-out 400ms 2600ms forwards; }
+.fx-nice { position: absolute; inset: 0; --nice: 800ms; --rosen-w: min(50vw, 620px); animation: fx-fade-out 400ms 2600ms forwards; }
 .fx-nice video.rosen { /* beats .stage video (the camera: 100% × 100%) */
-  position: absolute; right: 3%; bottom: 6%; width: min(50vw, 620px); height: auto; aspect-ratio: 965 / 500; object-fit: cover;
+  position: absolute; right: 3%; bottom: 6%; width: var(--rosen-w); height: auto; aspect-ratio: 965 / 500; object-fit: cover;
   border: 3px solid #fff; border-radius: 14px; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7); background: #000;
   transform-origin: bottom right; animation: fx-rosen-in 220ms cubic-bezier(0.2, 1.2, 0.4, 1) backwards;
 }
 @keyframes fx-rosen-in { from { transform: translateY(40%) scale(0.8); opacity: 0; } }
 .nice-text {
-  position: absolute; right: calc(3% + min(50vw, 620px) - 40px); bottom: calc(6% + min(50vw, 620px) * 0.518 - 30px); color: #fff; font: 900 96px/1 Impact, "Arial Black", sans-serif;
+  position: absolute; right: calc(3% + var(--rosen-w) - 40px); bottom: calc(6% + var(--rosen-w) * 0.518 - 30px); color: #fff; font: 900 96px/1 Impact, "Arial Black", sans-serif;
   letter-spacing: 0.04em; -webkit-text-stroke: 3px #000; text-shadow: 0 8px 30px rgba(0, 0, 0, 0.8);
   animation: fx-pop 260ms var(--nice) backwards;
 }
@@ -184,6 +184,27 @@
 .tier-dev input:focus { outline: none; border-color: #5aa9ff; }
 .tier-dev .error-inline { color: #ff5a5f; }
 .tier-dev button:hover { border-color: #5aa9ff; }
+
+/* Phones: fixed-size text would run off a ~375px screen; Rosen goes near full width with the caption
+   centred above him, and the lower third moves up out of his way. */
+@media (max-width: 600px) {
+  .fx-ooh span { font-size: clamp(40px, 14vw, 64px); }
+  .fx-ooh-price { font-size: clamp(36px, 12vw, 56px); }
+  .fx-ooh-caption { font-size: 16px; }
+  .fx-nice { --rosen-w: 90vw; }
+  .nice-text { left: 50%; right: auto; translate: -50% 0; font-size: clamp(56px, 16vw, 96px); }
+  .nice-lower { top: 64px; bottom: auto; left: 12px; max-width: calc(100% - 24px); font-size: 16px; }
+  .mlg { font-size: clamp(30px, 10vw, 64px); }
+  .mlg-price { font-size: clamp(40px, 12vw, 60px); }
+  .soy-pre { font-size: 32px; }
+  .soyjak { height: min(40vh, 66vw); }
+  .soy-bubble { max-width: 42vw; font-size: 16px; }
+  .fx-soy .watermark { left: 16px; text-align: right; }
+  .epic-settled { white-space: nowrap; font-size: 14px; padding: 6px 12px; }
+  .start-screen { padding: 16px; }
+  .start-screen button { font-size: 20px; padding: 14px 28px; }
+  .tier-dev { right: 12px; max-height: calc(100% - 24px); overflow: auto; }
+}
 
 @media (prefers-reduced-motion: reduce) {
   /* calmer versions: a still frame of each tier for its duration (the layer unmounts it) — no spins,

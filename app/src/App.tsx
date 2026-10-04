@@ -42,7 +42,7 @@ export default function App() {
   const [deviceId, setDeviceId] = useState<string | null>(null);
   const [mirror, setMirror] = useState(false);
   const { ring, toggleRing } = useRingLight();
-  const [showDebug, setShowDebug] = useState(true);
+  const [showDebug, setShowDebug] = useState(false);
   const [flash, setFlash] = useState(false);
   const [capture, setCapture] = useState(false);
   const [cards, setCards] = useState<Card[]>([]);
@@ -238,8 +238,8 @@ export default function App() {
         )}
         <h1>Rift Pulls</h1>
         <label>
-          Camera{" "}
-          <select value={deviceId ?? ""} onChange={(e) => setDeviceId(e.target.value || null)}>
+          <span className="bar-label">Camera </span>
+          <select aria-label="Camera" value={deviceId ?? ""} onChange={(e) => setDeviceId(e.target.value || null)}>
             <option value="">Default</option>
             {devices.map((d, i) => (
               <option key={d.deviceId} value={d.deviceId}>
@@ -266,6 +266,10 @@ export default function App() {
         </label>
         <button type="button" role="switch" aria-checked={ring} onClick={toggleRing} title="L" className="ring-toggle">
           <span className="switch" aria-hidden="true" /> Ring light {ring ? "on" : "off"}
+        </button>
+        {/* Touch screens have no D key */}
+        <button type="button" aria-pressed={showDebug} onClick={() => setShowDebug((v) => !v)} className="touch-only">
+          Debug
         </button>
       </header>
 
